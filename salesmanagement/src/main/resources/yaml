@@ -1,0 +1,866 @@
+openapi: 3.0.3
+info:
+  title: Vehicle Sales Management API
+  description: API for managing vehicle orders, finance, and dispatch/delivery workflows
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local server
+paths:
+  /api/orders/create:
+    post:
+      tags:
+        - Vehicle Order Management
+      summary: Place a new vehicle order
+      description: Initiates a vehicle order and starts the order workflow
+      operationId: placeOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '202':
+          description: Order placed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/orders/cancel:
+    post:
+      tags:
+        - Vehicle Order Management
+      summary: Cancel a vehicle order
+      description: Cancels an existing vehicle order by ID
+      operationId: cancelOrder
+      parameters:
+        - name: customerOrderId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Order canceled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid order ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/orders/addStock:
+    post:
+      tags:
+        - Vehicle Order Management
+      summary: Add vehicle stock
+      description: Adds stock for a vehicle model and variant
+      operationId: addStock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockAddRequest'
+      responses:
+        '200':
+          description: Stock added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/orders/addVehicleModel:
+    post:
+      tags:
+        - Vehicle Order Management
+      summary: Add a vehicle model
+      description: Adds a new vehicle model to the system
+      operationId: addVehicleModel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleModelRequest'
+      responses:
+        '200':
+          description: Vehicle model added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/orders/addVariant:
+    post:
+      tags:
+        - Vehicle Order Management
+      summary: Add a vehicle variant
+      description: Adds a new variant to an existing vehicle model
+      operationId: addVariant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleVariantRequest'
+      responses:
+        '200':
+          description: Variant added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/dispatch-delivery/initiate-dispatch:
+    post:
+      tags:
+        - Dispatch and Delivery Management
+      summary: Initiate dispatch workflow
+      description: Starts a dispatch workflow for a vehicle order
+      operationId: initiateDispatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DispatchRequest'
+      responses:
+        '202':
+          description: Dispatch workflow started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/dispatch-delivery/confirm-delivery:
+    post:
+      tags:
+        - Dispatch and Delivery Management
+      summary: Confirm vehicle delivery
+      description: Confirms delivery and updates order status
+      operationId: confirmDelivery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+      responses:
+        '200':
+          description: Delivery confirmed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/finance/initiate:
+    post:
+      tags:
+        - Finance Management
+      summary: Initiate finance workflow
+      description: Starts a finance workflow for a vehicle order
+      operationId: initiateFinance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceRequest'
+      responses:
+        '202':
+          description: Finance workflow started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request or order not in BLOCKED status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/finance/approve:
+    post:
+      tags:
+        - Finance Management
+      summary: Approve finance for an order
+      description: Approves the finance workflow for a vehicle order
+      operationId: approveFinance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveFinanceRequest'
+      responses:
+        '200':
+          description: Finance approved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/finance/reject:
+    post:
+      tags:
+        - Finance Management
+      summary: Reject finance for an order
+      description: Rejects the finance workflow for a vehicle order
+      operationId: rejectFinance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectFinanceRequest'
+      responses:
+        '200':
+          description: Finance rejected successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          description: HTTP status code
+        statusMessage:
+          type: string
+          description: Descriptive message about the response
+        data:
+          type: object
+          description: Response data (varies by endpoint)
+      required:
+        - statusCode
+        - statusMessage
+    OrderRequest:
+      type: object
+      properties:
+        vehicleModelId:
+          type: integer
+          format: int64
+          description: ID of the vehicle model
+        vehicleVariantId:
+          type: integer
+          format: int64
+          description: ID of the vehicle variant
+        customerName:
+          type: string
+          description: Name of the customer
+          maxLength: 100
+        phoneNumber:
+          type: string
+          description: Customer's phone number (valid international number)
+          pattern: ^\+?[1-9]\d{1,14}$
+          maxLength: 15
+        email:
+          type: string
+          description: Customer's email address
+          format: email
+          maxLength: 100
+        permanentAddress:
+          type: string
+          description: Customer's permanent address
+          maxLength: 500
+        currentAddress:
+          type: string
+          description: Customer's current address
+          maxLength: 500
+        aadharNo:
+          type: string
+          description: Customer's Aadhar number (12-digit number)
+          pattern: ^\d{12}$
+        panNo:
+          type: string
+          description: Customer's PAN number (format ABCDE1234F)
+          pattern: ^[A-Z]{5}[0-9]{4}[A-Z]{1}$
+        modelName:
+          type: string
+          description: Name of the vehicle model
+          maxLength: 100
+        fuelType:
+          type: string
+          description: Fuel type (e.g., Petrol, Diesel)
+          maxLength: 20
+        colour:
+          type: string
+          description: Vehicle color
+          maxLength: 50
+        transmissionType:
+          type: string
+          description: Transmission type (e.g., Manual, Automatic)
+          maxLength: 20
+        variant:
+          type: string
+          description: Vehicle variant name
+          maxLength: 50
+        quantity:
+          type: integer
+          description: Number of vehicles ordered
+          minimum: 1
+        totalPrice:
+          type: number
+          format: double
+          description: Total price of the order
+          minimum: 0.01
+        bookingAmount:
+          type: number
+          format: double
+          description: Booking amount paid
+          minimum: 0.01
+        paymentMode:
+          type: string
+          description: Payment mode (e.g., Cash, Card)
+          maxLength: 50
+        createdBy:
+          type: string
+          description: User who created the order
+          maxLength: 100
+        updatedBy:
+          type: string
+          description: User who last updated the order
+          maxLength: 100
+      required:
+        - vehicleModelId
+        - vehicleVariantId
+        - customerName
+        - phoneNumber
+        - email
+        - aadharNo
+        - panNo
+        - modelName
+        - quantity
+        - totalPrice
+        - bookingAmount
+        - paymentMode
+        - createdBy
+        - updatedBy
+    OrderResponse:
+      type: object
+      properties:
+        customerOrderId:
+          type: integer
+          format: int64
+          description: Unique ID of the order
+        customerName:
+          type: string
+          description: Name of the customer
+        modelName:
+          type: string
+          description: Name of the vehicle model
+        orderStatus:
+          type: string
+          enum: [PENDING, BLOCKED, ALLOTTED, DISPATCHED, DELIVERED, CANCELLED]
+          description: Current status of the order
+        createdAt:
+          type: string
+          format: date-time
+          description: Order creation timestamp
+    StockAddRequest:
+      type: object
+      properties:
+        modelId:
+          type: integer
+          format: int64
+          description: ID of the vehicle model
+        variantId:
+          type: integer
+          format: int64
+          description: ID of the vehicle variant
+        suffix:
+          type: string
+          description: Variant suffix
+        fuelType:
+          type: string
+          description: Fuel type
+        colour:
+          type: string
+          description: Vehicle color
+        engineColour:
+          type: string
+          description: Engine color
+        transmissionType:
+          type: string
+          description: Transmission type
+        variantName:
+          type: string
+          description: Name of the variant
+        quantity:
+          type: integer
+          description: Quantity to add
+        interiorColour:
+          type: string
+          description: Interior color
+        vinNumber:
+          type: string
+          description: Vehicle Identification Number (17 alphanumeric characters, excluding I, O, Q)
+          pattern: ^[A-HJ-NPR-Z0-9]{17}$
+        createdBy:
+          type: string
+          description: User who added the stock
+        updatedBy:
+          type: string
+          description: User who last updated the stock
+      required:
+        - modelId
+        - variantId
+        - suffix
+        - fuelType
+        - colour
+        - engineColour
+        - transmissionType
+        - variantName
+        - interiorColour
+        - vinNumber
+    VehicleModelRequest:
+      type: object
+      properties:
+        modelName:
+          type: string
+          description: Name of the vehicle model
+          maxLength: 100
+        createdBy:
+          type: string
+          description: User who created the model
+          maxLength: 100
+        updatedBy:
+          type: string
+          description: User who last updated the model
+          maxLength: 100
+      required:
+        - modelName
+        - createdBy
+        - updatedBy
+    VehicleModelResponse:
+      type: object
+      properties:
+        vehicleModelId:
+          type: integer
+          format: int64
+          description: ID of the vehicle model
+        modelName:
+          type: string
+          description: Name of the vehicle model
+        message:
+          type: string
+          description: Response message
+    VehicleVariantRequest:
+      type: object
+      properties:
+        modelId:
+          type: integer
+          format: int64
+          description: ID of the vehicle model
+        variant:
+          type: string
+          description: Name of the variant
+          maxLength: 50
+        suffix:
+          type: string
+          description: Variant suffix
+          maxLength: 10
+        safetyFeature:
+          type: string
+          description: Safety features of the variant
+          maxLength: 500
+        colour:
+          type: string
+          description: Vehicle color
+          maxLength: 50
+        engineColour:
+          type: string
+          description: Engine color
+          maxLength: 50
+        transmissionType:
+          type: string
+          description: Transmission type
+          maxLength: 20
+        interiorColour:
+          type: string
+          description: Interior color
+          maxLength: 50
+        vinNumber:
+          type: string
+          description: Vehicle Identification Number (17 alphanumeric characters, excluding I, O, Q)
+          pattern: ^[A-HJ-NPR-Z0-9]{17}$
+        engineCapacity:
+          type: string
+          description: Engine capacity
+          maxLength: 20
+        fuelType:
+          type: string
+          description: Fuel type
+          maxLength: 20
+        price:
+          type: number
+          format: double
+          description: Price of the variant
+          minimum: 0.01
+        yearOfManufacture:
+          type: integer
+          description: Year of manufacture
+          minimum: 1900
+          maximum: 9999
+        bodyType:
+          type: string
+          description: Body type (e.g., Sedan, SUV)
+          maxLength: 50
+        fuelTankCapacity:
+          type: number
+          format: double
+          description: Fuel tank capacity in liters
+          minimum: 0.1
+        seatingCapacity:
+          type: integer
+          description: Number of seats
+          minimum: 1
+        maxPower:
+          type: string
+          description: Maximum power output
+          maxLength: 50
+        maxTorque:
+          type: string
+          description: Maximum torque
+          maxLength: 50
+        topSpeed:
+          type: string
+          description: Top speed
+          maxLength: 50
+        wheelBase:
+          type: string
+          description: Wheelbase measurement
+          maxLength: 50
+        width:
+          type: string
+          description: Vehicle width
+          maxLength: 50
+        length:
+          type: string
+          description: Vehicle length
+          maxLength: 50
+        infotainment:
+          type: string
+          description: Infotainment system details
+          maxLength: 500
+        comfort:
+          type: string
+          description: Comfort features
+          maxLength: 500
+        numberOfAirBags:
+          type: integer
+          description: Number of airbags
+          minimum: 0
+        mileageCity:
+          type: number
+          format: double
+          description: City mileage
+          minimum: 0.0
+        mileageHighway:
+          type: number
+          format: double
+          description: Highway mileage
+          minimum: 0.0
+        createdBy:
+          type: string
+          description: User who created the variant
+          maxLength: 100
+      required:
+        - modelId
+        - variant
+        - colour
+        - transmissionType
+        - vinNumber
+        - engineCapacity
+        - fuelType
+        - price
+        - yearOfManufacture
+        - bodyType
+        - fuelTankCapacity
+        - seatingCapacity
+        - maxPower
+        - maxTorque
+        - topSpeed
+        - wheelBase
+        - width
+        - length
+        - numberOfAirBags
+        - mileageCity
+        - mileageHighway
+        - createdBy
+    VehicleVariant:
+      type: object
+      properties:
+        vehicleVariantId:
+          type: integer
+          format: int64
+          description: ID of the vehicle variant
+        variantName:
+          type: string
+          description: Name of the variant
+        fuelType:
+          type: string
+          description: Fuel type
+        transmissionType:
+          type: string
+          description: Transmission type
+    DispatchRequest:
+      type: object
+      properties:
+        customerOrderId:
+          type: integer
+          format: int64
+          description: ID of the vehicle order
+        dispatchedBy:
+          type: string
+          description: User who dispatched the order
+          maxLength: 100
+        createdBy:
+          type: string
+          description: User who created the dispatch request
+        updatedBy:
+          type: string
+          description: User who last updated the dispatch request
+      required:
+        - customerOrderId
+        - dispatchedBy
+    DispatchResponse:
+      type: object
+      properties:
+        customerOrderId:
+          type: integer
+          format: int64
+          description: ID of the vehicle order
+        dispatchStatus:
+          type: string
+          description: Status of the dispatch
+    DeliveryRequest:
+      type: object
+      properties:
+        customerOrderId:
+          type: integer
+          format: int64
+          description: ID of the vehicle order
+        deliveredBy:
+          type: string
+          description: User who delivered the order
+          maxLength: 100
+        recipientName:
+          type: string
+          description: Name of the recipient
+          maxLength: 100
+        createdBy:
+          type: string
+          description: User who created the delivery request
+        updatedBy:
+          type: string
+          description: User who last updated the delivery request
+      required:
+        - customerOrderId
+        - deliveredBy
+        - recipientName
+    DeliveryResponse:
+      type: object
+      properties:
+        customerOrderId:
+          type: integer
+          format: int64
+          description: ID of the vehicle order
+        deliveryStatus:
+          type: string
+          description: Status of the delivery
+    FinanceRequest:
+      type: object
+      properties:
+        customerOrderId:
+          type: integer
+          format: int64
+          description: ID of the vehicle order
+        loanAmount:
+          type: number
+          format: double
+          description: Requested loan amount
+          minimum: 0.01
+        interestRate:
+          type: number
+          format: double
+          description: Interest rate for the loan
+          minimum: 0.0
+        tenureMonths:
+          type: integer
+          description: Loan tenure in months
+          minimum: 1
+        createdBy:
+          type: string
+          description: User who created the finance request
+          maxLength: 100
+      required:
+        - customerOrderId
+        - loanAmount
+        - interestRate
+        - tenureMonths
+        - createdBy
+    ApproveFinanceRequest:
+      type: object
+      properties:
+        customerOrderId:
+          type: integer
+          format: int64
+          description: ID of the vehicle order
+        approvedBy:
+          type: string
+          description: User who approved the finance
+          maxLength: 100
+      required:
+        - customerOrderId
+        - approvedBy
+    RejectFinanceRequest:
+      type: object
+      properties:
+        customerOrderId:
+          type: integer
+          format: int64
+          description: ID of the vehicle order
+        rejectedBy:
+          type: string
+          description: User who rejected the finance
+          maxLength: 100
+      required:
+        - customerOrderId
+        - rejectedBy
+    FinanceResponse:
+      type: object
+      properties:
+        customerOrderId:
+          type: integer
+          format: int64
+          description: ID of the vehicle order
+        financeStatus:
+          type: string
+          description: Status of the finance (e.g., PENDING, APPROVED, REJECTED)
+        loanAmount:
+          type: number
+          format: double
+          description: Approved loan amount
+        interestRate:
+          type: number
+          format: double
+          description: Approved interest rate
+        tenureMonths:
+          type: integer
+          description: Approved loan tenure in months
+        createdAt:
+          type: string
+          format: date-time
+          description: Finance request creation timestamp

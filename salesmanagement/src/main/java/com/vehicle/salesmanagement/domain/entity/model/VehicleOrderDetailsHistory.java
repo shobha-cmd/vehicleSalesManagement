@@ -1,0 +1,318 @@
+package com.vehicle.salesmanagement.domain.entity.model;
+
+import jakarta.persistence.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "vehicle_order_details_history", schema = "sales_tracking")
+public class VehicleOrderDetailsHistory {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "history_id")
+    private Long historyId;
+
+    @ManyToOne
+    @JoinColumn(name = "customer_order_id", nullable = false)
+    private VehicleOrderDetails vehicleOrderDetailsId;
+
+    @Column(name = "changed_at", nullable = false)
+    private LocalDateTime changedAt;
+
+    @Column(name = "aadhar_no")
+    private String aadharNo;
+
+    @Column(name = "booking_amount")
+    private BigDecimal bookingAmount;
+
+    @Column(name = "colour")
+    private String colour;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @Column(name = "current_address")
+    private String currentAddress;
+
+    @Column(name = "customer_name")
+    private String customerName;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "fuel_type")
+    private String fuelType;
+
+    @Column(name = "model_name")
+    private String modelName;
+
+    @Column(name = "order_status")
+    private String orderStatus;
+
+    @Column(name = "pan_no")
+    private String panNo;
+
+    @Column(name = "payment_mode")
+    private String paymentMode;
+
+    @Column(name = "permanent_address")
+    private String permanentAddress;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "quantity")
+    private Integer quantity;
+
+    @Column(name = "total_price")
+    private BigDecimal totalPrice;
+
+    @Column(name = "transmission_type")
+    private String transmissionType;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
+
+    @Column(name = "variant")
+    private String variant;
+
+    @ManyToOne
+    @JoinColumn(name = "vehicle_model_id")
+    private VehicleModel vehicleModel;
+
+    @ManyToOne
+    @JoinColumn(name = "vehicle_variant_id")
+    private VehicleVariant vehicleVariant;
+
+    @Column(name = "order_status_history")
+    private String orderStatusHistory;
+
+    // Getters and Setters
+
+    public Long getHistoryId() {
+        return historyId;
+    }
+
+    public void setHistoryId(Long historyId) {
+        this.historyId = historyId;
+    }
+
+    public VehicleOrderDetails getVehicleOrderDetailsId() {
+        return vehicleOrderDetailsId;
+    }
+
+    public void setVehicleOrderDetailsId(VehicleOrderDetails vehicleOrderDetailsId) {
+        this.vehicleOrderDetailsId = vehicleOrderDetailsId;
+    }
+
+    public LocalDateTime getChangedAt() {
+        return changedAt;
+    }
+
+    public void setChangedAt(LocalDateTime changedAt) {
+        this.changedAt = changedAt;
+    }
+
+    public String getAadharNo() {
+        return aadharNo;
+    }
+
+    public void setAadharNo(String aadharNo) {
+        this.aadharNo = aadharNo;
+    }
+
+    public BigDecimal getBookingAmount() {
+        return bookingAmount;
+    }
+
+    public void setBookingAmount(BigDecimal bookingAmount) {
+        this.bookingAmount = bookingAmount;
+    }
+
+    public String getColour() {
+        return colour;
+    }
+
+    public void setColour(String colour) {
+        this.colour = colour;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getCurrentAddress() {
+        return currentAddress;
+    }
+
+    public void setCurrentAddress(String currentAddress) {
+        this.currentAddress = currentAddress;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getFuelType() {
+        return fuelType;
+    }
+
+    public void setFuelType(String fuelType) {
+        this.fuelType = fuelType;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
+
+    public String getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(String orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    public String getPanNo() {
+        return panNo;
+    }
+
+    public void setPanNo(String panNo) {
+        this.panNo = panNo;
+    }
+
+    public String getPaymentMode() {
+        return paymentMode;
+    }
+
+    public void setPaymentMode(String paymentMode) {
+        this.paymentMode = paymentMode;
+    }
+
+    public String getPermanentAddress() {
+        return permanentAddress;
+    }
+
+    public void setPermanentAddress(String permanentAddress) {
+        this.permanentAddress = permanentAddress;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public BigDecimal getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(BigDecimal totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public String getTransmissionType() {
+        return transmissionType;
+    }
+
+    public void setTransmissionType(String transmissionType) {
+        this.transmissionType = transmissionType;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public String getVariant() {
+        return variant;
+    }
+
+    public void setVariant(String variant) {
+        this.variant = variant;
+    }
+
+    public VehicleModel getVehicleModel() {
+        return vehicleModel;
+    }
+
+    public void setVehicleModel(VehicleModel vehicleModel) {
+        this.vehicleModel = vehicleModel;
+    }
+
+    public VehicleVariant getVehicleVariant() {
+        return vehicleVariant;
+    }
+
+    public void setVehicleVariant(VehicleVariant vehicleVariant) {
+        this.vehicleVariant = vehicleVariant;
+    }
+
+    public String getOrderStatusHistory() {
+        return orderStatusHistory;
+    }
+
+    public void setOrderStatusHistory(String orderStatusHistory) {
+        this.orderStatusHistory = orderStatusHistory;
+    }
+
+    public void setCustomerOrderId(Long customerOrderId) {
+    }
+}

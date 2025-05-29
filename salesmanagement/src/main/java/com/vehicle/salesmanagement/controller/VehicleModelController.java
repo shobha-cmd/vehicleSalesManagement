@@ -1,5 +1,6 @@
 package com.vehicle.salesmanagement.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.*;
 import com.vehicle.salesmanagement.domain.dto.apirequest.*;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -31,6 +33,16 @@ public class VehicleModelController {
 
     private final VehicleModelService vehicleModelService;
     private final ObjectMapper objectMapper;
+
+    private <T> List<T> normalizeToList(Object payload, Class<T> clazz) {
+        if (payload instanceof List<?>) {
+            return ((List<?>) payload).stream()
+                    .map(item -> objectMapper.convertValue(item, clazz))
+                    .collect(Collectors.toList());
+        } else {
+            return List.of(objectMapper.convertValue(payload, clazz));
+        }
+    }
 
     @GetMapping("/dropdown-data")
     @Operation(summary = "Fetch dropdown data", description = "Fetches all data required for dropdowns including models, variants, fuel types, colors, etc., optionally filtered by model name and variant")
@@ -128,30 +140,22 @@ public class VehicleModelController {
                     }
             )
     )
-    public ResponseEntity<?> saveVehicleModels(@org.springframework.web.bind.annotation.RequestBody Object request) {
+    public ResponseEntity<KendoGridResponse<VehicleModel>> saveVehicleModels(@org.springframework.web.bind.annotation.RequestBody Object request) {
         log.info("Received request to save vehicle models at {}", java.time.LocalDateTime.now());
         try {
-            if (request instanceof List) {
-                List<VehicleModelDTO> dtos = objectMapper.convertValue(request,
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, VehicleModelDTO.class));
-                log.info("Processing {} vehicle models", dtos.size());
-                List<VehicleModel> savedModels = vehicleModelService.saveVehicleModels(dtos);
-                log.info("Successfully saved {} vehicle models", savedModels.size());
-                return ResponseEntity.ok(savedModels);
-            } else {
-                VehicleModelDTO dto = objectMapper.convertValue(request, VehicleModelDTO.class);
-                log.info("Processing single vehicle model");
-                VehicleModel savedModel = vehicleModelService.saveVehicleModel(dto);
-                log.info("Successfully saved vehicle model: {}", savedModel.getModelName());
-                return ResponseEntity.ok(Collections.singletonList(savedModel));
-            }
+            List<VehicleModelDTO> dtos = normalizeToList(request, VehicleModelDTO.class);
+            log.info("Processing {} vehicle models", dtos.size());
+            List<VehicleModel> savedModels = vehicleModelService.saveVehicleModels(dtos).getData(); // Extract data from KendoGridResponse
+            log.info("Successfully saved {} vehicle models", savedModels.size());
+            return ResponseEntity.ok(new KendoGridResponse<VehicleModel>(savedModels, (long) savedModels.size(), null, null));
         } catch (IllegalArgumentException e) {
             log.error("Invalid request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Invalid request: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new KendoGridResponse<VehicleModel>(Collections.emptyList(), 0L, "Invalid request: " + e.getMessage(), null));
         } catch (Exception e) {
             log.error("Error saving vehicle models: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error saving vehicle models: " + e.getMessage());
+                    .body(new KendoGridResponse<VehicleModel>(Collections.emptyList(), 0L, "Error saving vehicle models: " + e.getMessage(), null));
         }
     }
 
@@ -177,37 +181,29 @@ public class VehicleModelController {
                     }
             )
     )
-    public ResponseEntity<?> saveVehicleVariants(@org.springframework.web.bind.annotation.RequestBody Object request) {
+    public ResponseEntity<KendoGridResponse<VehicleVariant>> saveVehicleVariants(@org.springframework.web.bind.annotation.RequestBody Object request) {
         log.info("Received request to save vehicle variants at {}", java.time.LocalDateTime.now());
         try {
-            if (request instanceof List) {
-                List<VehicleVariantDTO> dtos = objectMapper.convertValue(request,
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, VehicleVariantDTO.class));
-                log.info("Processing {} vehicle variants", dtos.size());
-                List<VehicleVariant> savedVariants = vehicleModelService.saveVehicleVariants(dtos);
-                log.info("Successfully saved {} vehicle variants", savedVariants.size());
-                return ResponseEntity.ok(savedVariants);
-            } else {
-                VehicleVariantDTO dto = objectMapper.convertValue(request, VehicleVariantDTO.class);
-                log.info("Processing single vehicle variant");
-                VehicleVariant savedVariant = vehicleModelService.saveVehicleVariant(dto);
-                log.info("Successfully saved vehicle variant: {}", savedVariant.getVariant());
-                return ResponseEntity.ok(Collections.singletonList(savedVariant));
-            }
+            List<VehicleVariantDTO> dtos = normalizeToList(request, VehicleVariantDTO.class);
+            log.info("Processing {} vehicle variants", dtos.size());
+            KendoGridResponse<VehicleVariant> serviceResponse = vehicleModelService.saveVehicleVariants(dtos);
+            List<VehicleVariant> savedVariants = serviceResponse.getData(); // Extract data
+            log.info("Successfully saved {} vehicle variants", savedVariants.size());
+            return ResponseEntity.ok(new KendoGridResponse<VehicleVariant>(savedVariants, (long) savedVariants.size(), null, null));
         } catch (IllegalArgumentException e) {
             log.error("Invalid request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Invalid request: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new KendoGridResponse<VehicleVariant>(Collections.emptyList(), 0L, "Invalid request: " + e.getMessage(), null));
         } catch (Exception e) {
             log.error("Error saving vehicle variants: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error saving vehicle variants: " + e.getMessage());
+                    .body(new KendoGridResponse<VehicleVariant>(Collections.emptyList(), 0L, "Error saving vehicle variants: " + e.getMessage(), null));
         }
     }
-
     @PostMapping("/stockdetails/save")
     @Operation(summary = "Save stock detail(s)", description = "Saves one or multiple stock details. Examples show field data types.")
     @RequestBody(
-            description = "Stock detail(s) to save. Includes fields like vehicleModelId (integer), vehicleVariantId (integer), quantity (integer), etc. Examples show data types.",
+            description = "Stock detail(s) to save. Includes fields like vehicleModelId (integer), vehicleVariantId (integer), vinNumber (string), etc. Examples show data types.",
             required = true,
             content = @Content(
                     mediaType = "application/json",
@@ -216,47 +212,39 @@ public class VehicleModelController {
                             @ExampleObject(
                                     name = "Single Stock Example",
                                     summary = "Data type example for a single stock detail",
-                                    value = "{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}"
+                                    value = "{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}"
                             ),
                             @ExampleObject(
                                     name = "Multiple Stock Example",
                                     summary = "Data type example for multiple stock details",
-                                    value = "[{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}]"
+                                    value = "[{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}]"
                             )
                     }
             )
     )
-    public ResponseEntity<?> saveStockDetails(@org.springframework.web.bind.annotation.RequestBody Object request) {
+    public ResponseEntity<KendoGridResponse<StockDetails>> saveStockDetails(@org.springframework.web.bind.annotation.RequestBody Object request) throws JsonProcessingException {
         log.info("Received request to save stock details at {}", java.time.LocalDateTime.now());
         try {
-            if (request instanceof List) {
-                List<StockDetailsDTO> dtos = objectMapper.convertValue(request,
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, StockDetailsDTO.class));
-                log.info("Processing {} stock entries", dtos.size());
-                List<StockDetails> savedStock = vehicleModelService.saveStockDetails(dtos);
-                log.info("Successfully saved {} stock entries", savedStock.size());
-                return ResponseEntity.ok(savedStock);
-            } else {
-                StockDetailsDTO dto = objectMapper.convertValue(request, StockDetailsDTO.class);
-                log.info("Processing single stock detail");
-                StockDetails savedStock = vehicleModelService.saveStockDetail(dto);
-                log.info("Successfully saved stock detail for VIN: {}", savedStock.getVinNumber());
-                return ResponseEntity.ok(Collections.singletonList(savedStock));
-            }
+            List<StockDetailsDTO> dtos = normalizeToList(request, StockDetailsDTO.class);
+            log.info("Processing {} entries", dtos.size());
+            KendoGridResponse<StockDetails> serviceResponse = vehicleModelService.saveStockDetails(dtos);
+            List<StockDetails> savedStock = serviceResponse.getData(); // Extract data
+            log.info("Successfully saved {} stock details", savedStock.size());
+            return ResponseEntity.ok(new KendoGridResponse<StockDetails>(savedStock, (long) savedStock.size(), null, null));
         } catch (IllegalArgumentException e) {
             log.error("Invalid stock request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Invalid request: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new KendoGridResponse<StockDetails>(Collections.emptyList(), 0L, "Invalid request: " + e.getMessage(), null));
         } catch (Exception e) {
             log.error("Error saving stock details: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error saving stock details: " + e.getMessage());
+                    .body(new KendoGridResponse<StockDetails>(Collections.emptyList(), 0L, "Error saving stock details: " + e.getMessage(), null));
         }
     }
-
     @PostMapping("/mddpstock/save")
-    @Operation(summary = "Save MDDP stock(s)", description = "Saves one or multiple MDDP stock entries. Examples show field data types.")
+    @Operation(summary = "Save MDDP stock detail(s)", description = "Saves one or multiple MDDP stock details. Examples show field data types.")
     @RequestBody(
-            description = "MDDP stock(s) to save. Includes fields like vehicleModelId (integer), vehicleVariantId (integer), expectedDispatchDate (string), etc. Examples show data types.",
+            description = "MDDP stock detail(s) to save. Includes fields like vehicleModelId (integer), vehicleVariantId (integer), vinNumber (string), expectedDispatchDate (string, ISO format), expectedDeliveryDate (string, ISO format), etc. Examples show data types.",
             required = true,
             content = @Content(
                     mediaType = "application/json",
@@ -264,90 +252,75 @@ public class VehicleModelController {
                     examples = {
                             @ExampleObject(
                                     name = "Single MDDP Stock Example",
-                                    summary = "Data type example for a single MDDP stock entry",
-                                    value = "{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\", \"expectedDispatchDate\": \"string\", \"expectedDeliveryDate\": \"string\"}"
+                                    summary = "Data type example for a single MDDP stock detail",
+                                    value = "{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}"
                             ),
                             @ExampleObject(
                                     name = "Multiple MDDP Stock Example",
-                                    summary = "Data type example for multiple MDDP stock entries",
-                                    value = "[{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\", \"expectedDispatchDate\": \"string\", \"expectedDeliveryDate\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\", \"expectedDispatchDate\": \"string\", \"expectedDeliveryDate\": \"string\"}]"
+                                    summary = "Data type example for multiple MDDP stock details",
+                                    value = "[{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}]"
                             )
                     }
             )
     )
-    public ResponseEntity<?> saveMddpStock(@org.springframework.web.bind.annotation.RequestBody Object request) {
+    public ResponseEntity<KendoGridResponse<MddpStock>> saveMddpStock(@org.springframework.web.bind.annotation.RequestBody Object request) throws JsonProcessingException {
         log.info("Received request to save MDDP stock at {}", java.time.LocalDateTime.now());
         try {
-            if (request instanceof List) {
-                List<MddpStockDTO> dtos = objectMapper.convertValue(request,
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, MddpStockDTO.class));
-                log.info("Processing {} MDDP stock entries", dtos.size());
-                List<MddpStock> savedMddpStock = vehicleModelService.saveMddpStock(dtos);
-                log.info("Successfully saved {} MDDP stock entries", savedMddpStock.size());
-                return ResponseEntity.ok(savedMddpStock);
-            } else {
-                MddpStockDTO dto = objectMapper.convertValue(request, MddpStockDTO.class);
-                log.info("Processing single MDDP stock");
-                MddpStock savedMddpStock = vehicleModelService.saveMddpStock(dto);
-                log.info("Successfully saved MDDP stock for VIN: {}", savedMddpStock.getVinNumber());
-                return ResponseEntity.ok(Collections.singletonList(savedMddpStock));
-            }
+            List<MddpStockDTO> dtos = normalizeToList(request, MddpStockDTO.class);
+            log.info("Processing {} MDDP stock entries", dtos.size());
+            KendoGridResponse<MddpStock> serviceResponse = vehicleModelService.saveMddpStock(dtos);
+            List<MddpStock> savedMddpStock = serviceResponse.getData(); // Extract data
+            log.info("Successfully saved {} MDDP stock entries", savedMddpStock.size());
+            return ResponseEntity.ok(new KendoGridResponse<MddpStock>(savedMddpStock, (long) savedMddpStock.size(), null, null));
         } catch (IllegalArgumentException e) {
             log.error("Invalid MDDP stock request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Invalid request: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new KendoGridResponse<MddpStock>(Collections.emptyList(), 0L, "Invalid request: " + e.getMessage(), null));
         } catch (Exception e) {
             log.error("Error saving MDDP stock: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error saving MDDP stock: " + e.getMessage());
+                    .body(new KendoGridResponse<MddpStock>(Collections.emptyList(), 0L, "Error saving MDDP stock: " + e.getMessage(), null));
         }
     }
 
     @PostMapping("/manufacturerorders/save")
     @Operation(summary = "Save manufacturer order(s)", description = "Saves one or multiple manufacturer orders. Examples show field data types.")
     @RequestBody(
-            description = "Manufacturer order(s) to save. Includes fields like vehicleVariantId (integer), manufacturerLocation (string), estimatedArrivalDate (string), etc. Examples show data types.",
+            description = "Manufacturer order(s) to save. Includes fields like vehicleVariantId (integer), manufacturerLocation (string), orderStatus (string), etc. Examples show data types.",
             required = true,
             content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(anyOf = { ManufacturerOrderDTO.class, ManufacturerOrderDTO[].class }),
                     examples = {
                             @ExampleObject(
-                                    name = "Single Manufacturer Order Example",
+                                    name = "Single Order Example",
                                     summary = "Data type example for a single manufacturer order",
-                                    value = "{\"vehicleVariantId\": \"integer\", \"manufacturerLocation\": \"string\", \"orderStatus\": \"string\", \"estimatedArrivalDate\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}"
+                                    value = "{\"vehicleVariantId\": \"integer\", \"manufacturerLocation\": \"string\", \"orderStatus\": \"string\", \"estimatedArrivalDate\": \"2025-12-31T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}"
                             ),
                             @ExampleObject(
-                                    name = "Multiple Manufacturer Orders Example",
+                                    name = "Multiple Orders Example",
                                     summary = "Data type example for multiple manufacturer orders",
-                                    value = "[{\"vehicleVariantId\": \"integer\", \"manufacturerLocation\": \"string\", \"orderStatus\": \"string\", \"estimatedArrivalDate\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleVariantId\": \"integer\", \"manufacturerLocation\": \"string\", \"orderStatus\": \"string\", \"estimatedArrivalDate\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}]"
+                                    value = "[{\"vehicleVariantId\": \"integer\", \"manufacturerLocation\": \"string\", \"orderStatus\": \"string\", \"estimatedArrivalDate\": \"2025-12-31T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleVariantId\": \"integer\", \"manufacturerLocation\": \"string\", \"orderStatus\": \"string\", \"estimatedArrivalDate\": \"2025-12-31T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}]"
                             )
                     }
             )
     )
-    public ResponseEntity<?> saveManufacturerOrders(@org.springframework.web.bind.annotation.RequestBody Object request) {
+    public ResponseEntity<KendoGridResponse<ManufacturerOrder>> saveManufacturerOrders(@org.springframework.web.bind.annotation.RequestBody Object request) throws JsonProcessingException {
         log.info("Received request to save manufacturer orders at {}", java.time.LocalDateTime.now());
         try {
-            if (request instanceof List) {
-                List<ManufacturerOrderDTO> dtos = objectMapper.convertValue(request,
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, ManufacturerOrderDTO.class));
-                log.info("Processing {} manufacturer order entries", dtos.size());
-                List<ManufacturerOrder> savedOrders = vehicleModelService.saveManufacturerOrders(dtos);
-                log.info("Successfully saved {} manufacturer order entries", savedOrders.size());
-                return ResponseEntity.ok(savedOrders);
-            } else {
-                ManufacturerOrderDTO dto = objectMapper.convertValue(request, ManufacturerOrderDTO.class);
-                log.info("Processing single manufacturer order");
-                ManufacturerOrder savedOrder = vehicleModelService.saveManufacturerOrder(dto);
-                log.info("Successfully saved manufacturer order with ID: {}", savedOrder.getManufacturerId());
-                return ResponseEntity.ok(Collections.singletonList(savedOrder));
-            }
+            List<ManufacturerOrderDTO> dtos = normalizeToList(request, ManufacturerOrderDTO.class);
+            log.info("Processing {} manufacturer order entries", dtos.size());
+            KendoGridResponse<ManufacturerOrder> response = vehicleModelService.saveManufacturerOrders(dtos);
+            log.info("Successfully saved {} manufacturer order entries", response.getTotal());
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             log.error("Invalid manufacturer order request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Invalid request: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new KendoGridResponse<ManufacturerOrder>(Collections.emptyList(), 0L, "Invalid request: " + e.getMessage(), null));
         } catch (Exception e) {
             log.error("Error saving manufacturer orders: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error saving manufacturer orders: " + e.getMessage());
+                    .body(new KendoGridResponse<ManufacturerOrder>(Collections.emptyList(), 0L, "Error saving manufacturer orders: " + e.getMessage(), null));
         }
     }
 }

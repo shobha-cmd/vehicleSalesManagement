@@ -371,8 +371,5 @@ public class VehicleVariant {
         this.updatedBy = updatedBy;
     }
 
-    public void setVehicleModel(VehicleModel model) {
-
-    }
 
 }

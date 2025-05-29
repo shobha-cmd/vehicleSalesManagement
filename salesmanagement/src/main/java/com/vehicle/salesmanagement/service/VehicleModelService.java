@@ -26,7 +26,7 @@ public class VehicleModelService {
     private final MddpStockRepository mddpStockRepository;
     private final ManufacturerOrderRepository manufacturerOrderRepository;
 
-    // Modified method to return VehicleAttributesResponse and support filtering
+    // Unchanged: Returns VehicleAttributesResponse as per original
     public VehicleAttributesResponse getDropdownData(String modelName, String variant) {
         log.info("Fetching dropdown data at {}", LocalDateTime.now());
 
@@ -333,13 +333,13 @@ public class VehicleModelService {
         return null;
     }
 
-    // Existing methods (unchanged)
-    public List<VehicleModel> saveVehicleModels(List<VehicleModelDTO> dtos) {
+    @Transactional
+    public KendoGridResponse<VehicleModel> saveVehicleModels(List<VehicleModelDTO> dtos) {
         log.info("Starting insertion of {} vehicle models at {}", dtos != null ? dtos.size() : 0, LocalDateTime.now());
 
         if (dtos == null || dtos.isEmpty()) {
             log.error("Received null or empty DTO list");
-            throw new IllegalArgumentException("Vehicle model list cannot be null or empty");
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Vehicle model list cannot be null or empty", null);
         }
 
         List<VehicleModel> vehicleModelsToSave = dtos.stream()
@@ -371,10 +371,10 @@ public class VehicleModelService {
         try {
             List<VehicleModel> savedModels = vehicleModelRepository.saveAll(vehicleModelsToSave);
             log.info("Successfully saved {} vehicle models", savedModels.size());
-            return savedModels;
+            return new KendoGridResponse<>(savedModels, (long) savedModels.size(), null, null);
         } catch (Exception e) {
             log.error("Failed to save vehicle models: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to save vehicle models: " + e.getMessage(), e);
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save vehicle models: " + e.getMessage(), null);
         }
     }
 
@@ -414,12 +414,13 @@ public class VehicleModelService {
         }
     }
 
-    public List<VehicleVariant> saveVehicleVariants(List<VehicleVariantDTO> dtos) {
+    @Transactional
+    public KendoGridResponse<VehicleVariant> saveVehicleVariants(List<VehicleVariantDTO> dtos) {
         log.info("Saving {} vehicle variants", dtos != null ? dtos.size() : 0);
 
         if (dtos == null || dtos.isEmpty()) {
             log.error("Vehicle variant list is empty");
-            throw new IllegalArgumentException("Vehicle variant list cannot be empty");
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Vehicle variant list cannot be empty", null);
         }
 
         List<VehicleVariant> variantsToSave = dtos.stream()
@@ -485,10 +486,10 @@ public class VehicleModelService {
         try {
             List<VehicleVariant> savedVariants = vehicleVariantRepository.saveAll(variantsToSave);
             log.info("Successfully saved {} vehicle variants", savedVariants.size());
-            return savedVariants;
+            return new KendoGridResponse<>(savedVariants, (long) savedVariants.size(), null, null);
         } catch (Exception e) {
             log.error("Failed to save vehicle variants: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to save vehicle variants: " + e.getMessage(), e);
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save vehicle variants: " + e.getMessage(), null);
         }
     }
 
@@ -565,12 +566,12 @@ public class VehicleModelService {
     }
 
     @Transactional
-    public List<StockDetails> saveStockDetails(List<StockDetailsDTO> dtos) {
+    public KendoGridResponse<StockDetails> saveStockDetails(List<StockDetailsDTO> dtos) {
         log.info("Saving {} stock entries", dtos != null ? dtos.size() : 0);
 
         if (dtos == null || dtos.isEmpty()) {
             log.error("Received empty stock details list");
-            throw new IllegalArgumentException("Stock details list cannot be empty");
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Stock details list cannot be empty", null);
         }
 
         List<StockDetails> stockDetailsToSave = dtos.stream()
@@ -613,10 +614,10 @@ public class VehicleModelService {
         try {
             List<StockDetails> savedStockDetails = stockDetailsRepository.saveAll(stockDetailsToSave);
             log.info("Successfully saved {} stock entries to database", savedStockDetails.size());
-            return savedStockDetails;
+            return new KendoGridResponse<>(savedStockDetails, (long) savedStockDetails.size(), null, null);
         } catch (Exception e) {
             log.error("Failed to save stock details: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to save stock details: " + e.getMessage(), e);
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save stock details: " + e.getMessage(), null);
         }
     }
 
@@ -673,12 +674,12 @@ public class VehicleModelService {
     }
 
     @Transactional
-    public List<MddpStock> saveMddpStock(List<MddpStockDTO> dtos) {
+    public KendoGridResponse<MddpStock> saveMddpStock(List<MddpStockDTO> dtos) {
         log.info("Saving {} MDDP stock entries", dtos != null ? dtos.size() : 0);
 
         if (dtos == null || dtos.isEmpty()) {
             log.error("Received empty MDDP stock details list");
-            throw new IllegalArgumentException("MDDP stock details list cannot be empty");
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "MDDP stock details list cannot be empty", null);
         }
 
         List<MddpStock> mddpStockToSave = dtos.stream()
@@ -731,10 +732,10 @@ public class VehicleModelService {
         try {
             List<MddpStock> savedMddpStock = mddpStockRepository.saveAll(mddpStockToSave);
             log.info("Successfully saved {} MDDP stock entries to database", savedMddpStock.size());
-            return savedMddpStock;
+            return new KendoGridResponse<>(savedMddpStock, (long) savedMddpStock.size(), null, null);
         } catch (Exception e) {
             log.error("Failed to save MDDP stock details: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to save MDDP stock details: " + e.getMessage(), e);
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save MDDP stock details: " + e.getMessage(), null);
         }
     }
 
@@ -803,12 +804,12 @@ public class VehicleModelService {
     }
 
     @Transactional
-    public List<ManufacturerOrder> saveManufacturerOrders(List<ManufacturerOrderDTO> dtos) {
+    public KendoGridResponse<ManufacturerOrder> saveManufacturerOrders(List<ManufacturerOrderDTO> dtos) {
         log.info("Saving {} manufacturer order entries", dtos != null ? dtos.size() : 0);
 
         if (dtos == null || dtos.isEmpty()) {
             log.error("Received empty manufacturer order list");
-            throw new IllegalArgumentException("Manufacturer order list cannot be empty");
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Manufacturer order list cannot be empty", null);
         }
 
         List<ManufacturerOrder> ordersToSave = dtos.stream()
@@ -841,10 +842,10 @@ public class VehicleModelService {
         try {
             List<ManufacturerOrder> savedOrders = manufacturerOrderRepository.saveAll(ordersToSave);
             log.info("Successfully saved {} manufacturer order entries to database", savedOrders.size());
-            return savedOrders;
+            return new KendoGridResponse<>(savedOrders, (long) savedOrders.size(), null, null);
         } catch (Exception e) {
             log.error("Failed to save manufacturer orders: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to save manufacturer orders: " + e.getMessage(), e);
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save manufacturer orders: " + e.getMessage(), null);
         }
     }
 

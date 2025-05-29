@@ -492,6 +492,127 @@ public class VehicleModelService {
             return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save vehicle variants: " + e.getMessage(), null);
         }
     }
+    @Transactional
+    public KendoGridResponse<VehicleVariant> updateVehicleVariants(List<VehicleVariantDTO> dtos) {
+        log.info("Updating {} vehicle variant entries", dtos != null ? dtos.size() : 0);
+
+        if (dtos == null || dtos.isEmpty()) {
+            log.error("Received empty vehicle variant list for update");
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Vehicle variant list cannot be empty", null);
+        }
+
+        List<VehicleVariant> updatedVehicleVariants = new ArrayList<>();
+
+        for (VehicleVariantDTO dto : dtos) {
+            // Validate required fields
+            if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
+                log.error("VIN number is required for update");
+                return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
+            }
+
+            // Find existing VehicleVariant by VIN
+            VehicleVariant existingVariant = vehicleVariantRepository.findByVinNumber(dto.getVinNumber())
+                    .orElseThrow(() -> {
+                        log.error("VehicleVariant not found with VIN: {}", dto.getVinNumber());
+                        return new IllegalArgumentException("VehicleVariant not found with VIN: " + dto.getVinNumber());
+                    });
+
+            // Update fields from DTO
+            if (dto.getVehicleModelId() != null) {
+                existingVariant.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
+            }
+            if (dto.getVariant() != null) {
+                existingVariant.setVariant(dto.getVariant());
+            }
+            if (dto.getSuffix() != null) {
+                existingVariant.setSuffix(dto.getSuffix());
+            }
+            if (dto.getSafetyFeature() != null) {
+                existingVariant.setSafetyFeature(dto.getSafetyFeature());
+            }
+            if (dto.getColour() != null) {
+                existingVariant.setColour(dto.getColour());
+            }
+            if (dto.getEngineColour() != null) {
+                existingVariant.setEngineColour(dto.getEngineColour());
+            }
+            if (dto.getTransmissionType() != null) {
+                existingVariant.setTransmissionType(dto.getTransmissionType());
+            }
+            if (dto.getInteriorColour() != null) {
+                existingVariant.setInteriorColour(dto.getInteriorColour());
+            }
+            if (dto.getEngineCapacity() != null) {
+                existingVariant.setEngineCapacity(dto.getEngineCapacity());
+            }
+            if (dto.getFuelType() != null) {
+                existingVariant.setFuelType(dto.getFuelType());
+            }
+            if (dto.getPrice() != null) {
+                existingVariant.setPrice(dto.getPrice());
+            }
+            if (dto.getYearOfManufacture() != null) {
+                existingVariant.setYearOfManufacture(dto.getYearOfManufacture());
+            }
+            if (dto.getBodyType() != null) {
+                existingVariant.setBodyType(dto.getBodyType());
+            }
+            if (dto.getFuelTankCapacity() != null) {
+                existingVariant.setFuelTankCapacity(dto.getFuelTankCapacity());
+            }
+            if (dto.getSeatingCapacity() != null) {
+                existingVariant.setSeatingCapacity(dto.getSeatingCapacity());
+            }
+            if (dto.getMaxPower() != null) {
+                existingVariant.setMaxPower(dto.getMaxPower());
+            }
+            if (dto.getMaxTorque() != null) {
+                existingVariant.setMaxTorque(dto.getMaxTorque());
+            }
+            if (dto.getTopSpeed() != null) {
+                existingVariant.setTopSpeed(dto.getTopSpeed());
+            }
+            if (dto.getWheelBase() != null) {
+                existingVariant.setWheelBase(dto.getWheelBase());
+            }
+            if (dto.getWidth() != null) {
+                existingVariant.setWidth(dto.getWidth());
+            }
+            if (dto.getLength() != null) {
+                existingVariant.setLength(dto.getLength());
+            }
+            if (dto.getInfotainment() != null) {
+                existingVariant.setInfotainment(dto.getInfotainment());
+            }
+            if (dto.getComfort() != null) {
+                existingVariant.setComfort(dto.getComfort());
+            }
+            if (dto.getNumberOfAirBags() != null) {
+                existingVariant.setNumberOfAirBags(dto.getNumberOfAirBags());
+            }
+            if (dto.getMileageCity() != null) {
+                existingVariant.setMileageCity(dto.getMileageCity());
+            }
+            if (dto.getMileageHighway() != null) {
+                existingVariant.setMileageHighway(dto.getMileageHighway());
+            }
+
+            // Update audit fields
+            existingVariant.setUpdatedAt(LocalDateTime.now());
+            existingVariant.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+
+            updatedVehicleVariants.add(existingVariant);
+        }
+
+        try {
+            List<VehicleVariant> savedVehicleVariants = vehicleVariantRepository.saveAll(updatedVehicleVariants);
+            log.info("Successfully updated {} vehicle variant entries", savedVehicleVariants.size());
+            return new KendoGridResponse<>(savedVehicleVariants, (long) savedVehicleVariants.size(), null, null);
+        } catch (Exception e) {
+            log.error("Failed to update vehicle variants: {}", e.getMessage(), e);
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to update vehicle variants: " + e.getMessage(), null);
+        }
+    }
 
     @Transactional
     public VehicleVariant saveVehicleVariant(VehicleVariantDTO dto) {
@@ -846,6 +967,161 @@ public class VehicleModelService {
         } catch (Exception e) {
             log.error("Failed to save manufacturer orders: {}", e.getMessage(), e);
             return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save manufacturer orders: " + e.getMessage(), null);
+        }
+    }
+    @Transactional
+    public KendoGridResponse<StockDetails> updateStockDetails(List<StockDetailsDTO> dtos) {
+        log.info("Updating {} stock entries", dtos != null ? dtos.size() : 0);
+
+        if (dtos == null || dtos.isEmpty()) {
+            log.error("Received empty stock details list for update");
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Stock details list cannot be empty", null);
+        }
+
+        List<StockDetails> updatedStockDetails = new ArrayList<>();
+
+        for (StockDetailsDTO dto : dtos) {
+            // Validate required fields
+            if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
+                log.error("VIN number is required for update");
+                return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
+            }
+
+            // Find existing stock by VIN
+            StockDetails existingStock = (StockDetails) stockDetailsRepository.findByVinNumber(dto.getVinNumber())
+                    .orElseThrow(() -> {
+                        log.error("Stock not found with VIN: {}", dto.getVinNumber());
+                        return new IllegalArgumentException("Stock not found with VIN: " + dto.getVinNumber());
+                    });
+
+            // Update fields from DTO (based on screenshot fields)
+            if (dto.getVehicleModelId() != null) {
+                existingStock.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
+            }
+            if (dto.getVehicleVariantId() != null) {
+                existingStock.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
+            }
+            if (dto.getFuelType() != null) {
+                existingStock.setFuelType(dto.getFuelType());
+            }
+            if (dto.getTransmissionType() != null) {
+                existingStock.setTransmissionType(dto.getTransmissionType());
+            }
+            if (dto.getVariant() != null) { // Grade is mapped to Variant in the DTO
+                existingStock.setVariant(dto.getVariant());
+            }
+            if (dto.getQuantity() != null) {
+                existingStock.setQuantity(dto.getQuantity());
+            }
+            if (dto.getSuffix() != null) {
+                existingStock.setSuffix(dto.getSuffix());
+            }
+            if (dto.getColour() != null) { // Color
+                existingStock.setColour(dto.getColour());
+            }
+            if (dto.getEngineColour() != null) { // Exterior Color (E.Color)
+                existingStock.setEngineColour(dto.getEngineColour());
+            }
+            if (dto.getInteriorColour() != null) {
+                existingStock.setInteriorColour(dto.getInteriorColour());
+            }
+
+            // Update audit fields
+            existingStock.setUpdatedAt(LocalDateTime.now());
+            existingStock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+
+            updatedStockDetails.add(existingStock);
+        }
+
+        try {
+            List<StockDetails> savedStockDetails = stockDetailsRepository.saveAll(updatedStockDetails);
+            log.info("Successfully updated {} stock entries", savedStockDetails.size());
+            return new KendoGridResponse<>(savedStockDetails, (long) savedStockDetails.size(), null, null);
+        } catch (Exception e) {
+            log.error("Failed to update stock details: {}", e.getMessage(), e);
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to update stock details: " + e.getMessage(), null);
+        }
+    }
+    @Transactional
+    public KendoGridResponse<MddpStock> updateMddpStock(List<MddpStockDTO> dtos) {
+        log.info("Updating {} MDDP stock entries", dtos != null ? dtos.size() : 0);
+
+        if (dtos == null || dtos.isEmpty()) {
+            log.error("Received empty MDDP stock details list for update");
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "MDDP stock details list cannot be empty", null);
+        }
+
+        List<MddpStock> updatedMddpStockDetails = new ArrayList<>();
+
+        for (MddpStockDTO dto : dtos) {
+            // Validate required fields
+            if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
+                log.error("VIN number is required for update");
+                return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
+            }
+
+            // Find existing MDDP stock by VIN
+            MddpStock existingStock = (MddpStock) mddpStockRepository.findByVinNumber(dto.getVinNumber())
+                    .orElseThrow(() -> {
+                        log.error("MDDP stock not found with VIN: {}", dto.getVinNumber());
+                        return new IllegalArgumentException("MDDP stock not found with VIN: " + dto.getVinNumber());
+                    });
+
+            // Update fields from DTO (based on screenshot fields and MDDP-specific fields)
+            if (dto.getVehicleModelId() != null) {
+                existingStock.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
+            }
+            if (dto.getVehicleVariantId() != null) {
+                existingStock.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
+            }
+            if (dto.getFuelType() != null) {
+                existingStock.setFuelType(dto.getFuelType());
+            }
+            if (dto.getTransmissionType() != null) {
+                existingStock.setTransmissionType(dto.getTransmissionType());
+            }
+            if (dto.getVariant() != null) { // Grade is mapped to Variant in the DTO
+                existingStock.setVariant(dto.getVariant());
+            }
+            if (dto.getQuantity() != null) {
+                existingStock.setQuantity(dto.getQuantity());
+            }
+            if (dto.getSuffix() != null) {
+                existingStock.setSuffix(dto.getSuffix());
+            }
+            if (dto.getColour() != null) { // Color
+                existingStock.setColour(dto.getColour());
+            }
+            if (dto.getEngineColour() != null) { // Exterior Color (E.Color)
+                existingStock.setEngineColour(dto.getEngineColour());
+            }
+            if (dto.getInteriorColour() != null) {
+                existingStock.setInteriorColour(dto.getInteriorColour());
+            }
+            if (dto.getStockStatus() != null) {
+                existingStock.setStockStatus(StockStatus.valueOf(dto.getStockStatus()));
+            }
+            if (dto.getExpectedDispatchDate() != null) {
+                existingStock.setExpectedDispatchDate(dto.getExpectedDispatchDate());
+            }
+            if (dto.getExpectedDeliveryDate() != null) {
+                existingStock.setExpectedDeliveryDate(dto.getExpectedDeliveryDate());
+            }
+
+            // Update audit fields
+            existingStock.setUpdatedAt(LocalDateTime.now());
+            existingStock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+
+            updatedMddpStockDetails.add(existingStock);
+        }
+
+        try {
+            List<MddpStock> savedMddpStockDetails = mddpStockRepository.saveAll(updatedMddpStockDetails);
+            log.info("Successfully updated {} MDDP stock entries", savedMddpStockDetails.size());
+            return new KendoGridResponse<>(savedMddpStockDetails, (long) savedMddpStockDetails.size(), null, null);
+        } catch (Exception e) {
+            log.error("Failed to update MDDP stock details: {}", e.getMessage(), e);
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to update MDDP stock details: " + e.getMessage(), null);
         }
     }
 

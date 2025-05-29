@@ -44,7 +44,7 @@ public class VehicleModelController {
         }
     }
 
-    @GetMapping("/dropdown-data")
+    @GetMapping("/dropdownData")
     @Operation(summary = "Fetch dropdown data", description = "Fetches all data required for dropdowns including models, variants, fuel types, colors, etc., optionally filtered by model name and variant")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Dropdown data retrieved successfully",
@@ -321,6 +321,151 @@ public class VehicleModelController {
             log.error("Error saving manufacturer orders: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new KendoGridResponse<ManufacturerOrder>(Collections.emptyList(), 0L, "Error saving manufacturer orders: " + e.getMessage(), null));
+        }
+    }
+    @PutMapping("/stockdetails/update")
+    @Operation(summary = "Update stock detail(s)", description = "Updates one or multiple stock details. Examples show field data types.")
+    @RequestBody(
+            description = "Stock detail(s) to update. Includes fields like vehicleModelId (integer), vehicleVariantId (integer), vinNumber (string), etc. Examples show data types.",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(anyOf = { StockDetailsDTO.class, StockDetailsDTO[].class }),
+                    examples = {
+                            @ExampleObject(
+                                    name = "Single Stock Update Example",
+                                    summary = "Data type example for a single stock detail update",
+                                    value = "{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"updatedBy\": \"string\"}"
+                            ),
+                            @ExampleObject(
+                                    name = "Multiple Stock Update Example",
+                                    summary = "Data type example for multiple stock details update",
+                                    value = "[{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"updatedBy\": \"string\"}]"
+                            )
+                    }
+            )
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Stock details updated successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class)))
+    })
+    public ResponseEntity<KendoGridResponse<StockDetails>> updateStockDetails(@org.springframework.web.bind.annotation.RequestBody Object request) throws JsonProcessingException {
+        log.info("Received request to update stock details at {}", java.time.LocalDateTime.now());
+        try {
+            List<StockDetailsDTO> dtos = normalizeToList(request, StockDetailsDTO.class);
+            log.info("Processing update for {} stock entries", dtos.size());
+            KendoGridResponse<StockDetails> serviceResponse = vehicleModelService.updateStockDetails(dtos);
+            List<StockDetails> updatedStock = serviceResponse.getData();
+            log.info("Successfully updated {} stock details", updatedStock.size());
+            return ResponseEntity.ok(new KendoGridResponse<>(updatedStock, (long) updatedStock.size(), null, null));
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid stock update request: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Invalid request: " + e.getMessage(), null));
+        } catch (Exception e) {
+            log.error("Error updating stock details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Error updating stock details: " + e.getMessage(), null));
+        }
+    }
+    @PutMapping("/mddpstock/update")
+    @Operation(summary = "Update MDDP stock detail(s)", description = "Updates one or multiple MDDP stock details. Examples show field data types.")
+    @RequestBody(
+            description = "MDDP stock detail(s) to update. Includes fields like vehicleModelId (integer), vehicleVariantId (integer), vinNumber (string), expectedDispatchDate (string, ISO format), expectedDeliveryDate (string, ISO format), etc. Examples show data types.",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(anyOf = { MddpStockDTO.class, MddpStockDTO[].class }),
+                    examples = {
+                            @ExampleObject(
+                                    name = "Single MDDP Stock Update Example",
+                                    summary = "Data type example for a single MDDP stock detail update",
+                                    value = "{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"updatedBy\": \"string\"}"
+                            ),
+                            @ExampleObject(
+                                    name = "Multiple MDDP Stock Update Example",
+                                    summary = "Data type example for multiple MDDP stock details update",
+                                    value = "[{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"updatedBy\": \"string\"}]"
+                            )
+                    }
+            )
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "MDDP stock details updated successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class)))
+    })
+    public ResponseEntity<KendoGridResponse<MddpStock>> updateMddpStock(@org.springframework.web.bind.annotation.RequestBody Object request) throws JsonProcessingException {
+        log.info("Received request to update MDDP stock details at {}", java.time.LocalDateTime.now());
+        try {
+            List<MddpStockDTO> dtos = normalizeToList(request, MddpStockDTO.class);
+            log.info("Processing update for {} MDDP stock entries", dtos.size());
+            KendoGridResponse<MddpStock> serviceResponse = vehicleModelService.updateMddpStock(dtos);
+            List<MddpStock> updatedMddpStock = serviceResponse.getData();
+            log.info("Successfully updated {} MDDP stock details", updatedMddpStock.size());
+            return ResponseEntity.ok(new KendoGridResponse<>(updatedMddpStock, (long) updatedMddpStock.size(), null, null));
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid MDDP stock update request: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Invalid request: " + e.getMessage(), null));
+        } catch (Exception e) {
+            log.error("Error updating MDDP stock details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Error updating MDDP stock details: " + e.getMessage(), null));
+        }
+    }
+    @PutMapping("/vehiclevariants/update")
+    @Operation(summary = "Update vehicle variant(s)", description = "Updates one or multiple vehicle variants by VIN. Examples show field data types.")
+    @RequestBody(
+            description = "Vehicle variant(s) to update. Includes fields like vinNumber (string, required), vehicleModelId (integer), variant (string), price (number), etc. Examples show data types.",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(anyOf = { VehicleVariantDTO.class, VehicleVariantDTO[].class }),
+                    examples = {
+                            @ExampleObject(
+                                    name = "Single Variant Update Example",
+                                    summary = "Data type example for a single vehicle variant update",
+                                    value = "{\"vehicleModelId\": \"integer\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"updatedBy\": \"string\"}"
+                            ),
+                            @ExampleObject(
+                                    name = "Multiple Variants Update Example",
+                                    summary = "Data type example for multiple vehicle variant updates",
+                                    value = "[{\"vehicleModelId\": \"integer\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"updatedBy\": \"string\"}]"
+                            )
+                    }
+            )
+    )
+    public ResponseEntity<KendoGridResponse<VehicleVariant>> updateVehicleVariants(@org.springframework.web.bind.annotation.RequestBody Object request) throws JsonProcessingException {
+        log.info("Received request to update vehicle variants at {}", java.time.LocalDateTime.now());
+        try {
+            List<VehicleVariantDTO> dtos = normalizeToList(request, VehicleVariantDTO.class);
+            log.info("Processing {} vehicle variant updates", dtos.size());
+            KendoGridResponse<VehicleVariant> serviceResponse = vehicleModelService.updateVehicleVariants(dtos);
+            List<VehicleVariant> updatedVariants = serviceResponse.getData();
+            log.info("Successfully updated {} vehicle variants", updatedVariants.size());
+            return ResponseEntity.ok(new KendoGridResponse<VehicleVariant>(updatedVariants, (long) updatedVariants.size(), null, null));
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid vehicle variant update request: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new KendoGridResponse<VehicleVariant>(Collections.emptyList(), 0L, "Invalid request: " + e.getMessage(), null));
+        } catch (Exception e) {
+            log.error("Error updating vehicle variants: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new KendoGridResponse<VehicleVariant>(Collections.emptyList(), 0L, "Error updating vehicle variants: " + e.getMessage(), null));
         }
     }
 }

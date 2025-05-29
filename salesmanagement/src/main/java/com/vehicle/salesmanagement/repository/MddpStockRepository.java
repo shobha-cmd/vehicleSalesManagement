@@ -11,4 +11,6 @@ import java.util.Optional;
 @Repository
 public interface MddpStockRepository extends JpaRepository<MddpStock, Long> { // Adjust ID type if needed
     Optional<MddpStock> findByVehicleVariantIdAndStockStatus(VehicleVariant vehicleVariantId, StockStatus stockStatus);
+
+    Optional<MddpStock> findByVinNumber(String vinNumber);
 }

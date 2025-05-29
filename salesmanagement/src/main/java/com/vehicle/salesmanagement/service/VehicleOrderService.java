@@ -5,6 +5,7 @@ import com.vehicle.salesmanagement.domain.dto.apirequest.VehicleModelRequest;
 import com.vehicle.salesmanagement.domain.dto.apirequest.VehicleVariantRequest;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.OrderResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.VehicleModelResponse;
+import com.vehicle.salesmanagement.domain.dto.apiresponse.VehicleOrderGridDTO;
 import com.vehicle.salesmanagement.domain.entity.model.*;
 import com.vehicle.salesmanagement.enums.OrderStatus;
 import com.vehicle.salesmanagement.enums.StockStatus;
@@ -62,14 +63,23 @@ public class VehicleOrderService {
         if (stock.getQuantity() == 0) {
             stock.setStockStatus(StockStatus.DEPLETED);
         }
-        stockRepository.save(stock);
-        historyService.saveStockHistory(stock, orderRequest.getUpdatedBy() != null ? orderRequest.getUpdatedBy() : "system", "Stock Blocked for Order: " + orderRequest.getCustomerOrderId());
+        // Save and ensure stockId is populated
+        stock = stockRepository.save(stock);
+        if (stock.getStockId() == null) {
+            log.error("Stock ID is null after saving StockDetails for VIN: {}", stock.getVinNumber());
+            throw new IllegalStateException("Stock ID is null after saving StockDetails");
+        }
+        log.info("Stock ID: {} for VIN: {}", stock.getStockId(), stock.getVinNumber());
+
+        // Save history with the updated stock
+        historyService.saveStockHistory(stock, orderRequest.getUpdatedBy() != null ? orderRequest.getUpdatedBy() : "system",
+                "Stock Blocked for Order: " + orderRequest.getCustomerOrderId());
+
         OrderResponse response = mapToOrderResponse(orderRequest);
         response.setOrderStatus(OrderStatus.BLOCKED);
         response.setCreatedAt(LocalDateTime.now());
         return response;
     }
-
     @Transactional
     public OrderResponse checkAndReserveMddpStock(OrderRequest orderRequest) {
         VehicleVariant vehicleVariant = variantRepository.findById(orderRequest.getVehicleVariantId())
@@ -311,122 +321,6 @@ public class VehicleOrderService {
         response.setOrderStatus(orderDetails.getOrderStatus());
         return response;
     }
-
-    private List<VehicleVariant> getVariantsForModel(String modelName) {
-        Optional<Object> vehicleModelOptional = vehicleModelRepository.findByModelName(modelName);
-        if (vehicleModelOptional.isEmpty()) {
-            throw new IllegalArgumentException("Model name not found: " + modelName);
-        }
-        VehicleModel vehicleModel = (VehicleModel) vehicleModelOptional.get();
-        return variantRepository.findByVehicleModelId(vehicleModel);
-    }
-
-    public List<String> getModelNames() {
-        return vehicleModelRepository.findAll().stream()
-                .map(VehicleModel::getModelName)
-                .filter(name -> name != null)
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    public List<String> getFuelTypes(String modelName) {
-        List<VehicleVariant> variants = getVariantsForModel(modelName);
-        if (variants.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return variants.stream()
-                .map(VehicleVariant::getFuelType)
-                .filter(fuelType -> fuelType != null)
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    public List<String> getVinNumbers(String modelName) {
-        List<VehicleVariant> variants = getVariantsForModel(modelName);
-        if (variants.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return variants.stream()
-                .map(VehicleVariant::getVinNumber)
-                .filter(vin -> vin != null)
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    public List<String> getSuffixes(String modelName) {
-        List<VehicleVariant> variants = getVariantsForModel(modelName);
-        if (variants.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return variants.stream()
-                .map(VehicleVariant::getSuffix)
-                .filter(suffix -> suffix != null)
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    public List<String> getExteriorColors(String modelName) {
-        List<VehicleVariant> variants = getVariantsForModel(modelName);
-        if (variants.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return variants.stream()
-                .map(VehicleVariant::getColour)
-                .filter(colour -> colour != null)
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    public List<String> getInteriorColors(String modelName) {
-        List<VehicleVariant> variants = getVariantsForModel(modelName);
-        if (variants.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return variants.stream()
-                .map(VehicleVariant::getInteriorColour)
-                .filter(colour -> colour != null)
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    public List<String> getTransmissionTypes(String modelName) {
-        List<VehicleVariant> variants = getVariantsForModel(modelName);
-        if (variants.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return variants.stream()
-                .map(VehicleVariant::getTransmissionType)
-                .filter(type -> type != null)
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    public List<Integer> getQuantities(String modelName) {
-        return IntStream.rangeClosed(1, 10)
-                .boxed()
-                .collect(Collectors.toList());
-    }
-
-    public List<String> getGrades(String modelName) {
-        return Arrays.asList("Standard", "Premium", "Luxury");
-    }
-
-    public List<String> getVariants(String modelName) {
-        List<VehicleVariant> variants = getVariantsForModel(modelName);
-        if (variants.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return variants.stream()
-                .map(VehicleVariant::getVariant)
-                .filter(variant -> variant != null)
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    public List<String> getColors(String modelName) {
-        return getExteriorColors(modelName);
-    }
-
     public long getTotalOrders() {
         return orderRepository.count();
     }
@@ -441,5 +335,18 @@ public class VehicleOrderService {
 
     public long getClosedOrders() {
         return orderRepository.countByOrderStatus(OrderStatus.COMPLETED);
+    }
+
+    public List<VehicleOrderGridDTO> getAllOrders() {
+        return orderRepository.findAll().stream()
+                .map(order -> new VehicleOrderGridDTO(
+                        order.getCustomerOrderId(),
+                        order.getCustomerName(),
+                        order.getModelName(),
+                        order.getQuantity(),
+                        order.getVariant(),
+                        order.getOrderStatus()
+                ))
+                .collect(Collectors.toList());
     }
 }

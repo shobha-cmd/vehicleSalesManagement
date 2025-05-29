@@ -86,7 +86,7 @@ public class StockDetailsHistory {
     }
 
     public void setStockId(StockDetails stockDetails) {
-        this.stockId = stockId;
+        this.stockId = stockDetails;
     }
 
     public LocalDateTime getChangedAt() {
@@ -112,6 +112,7 @@ public class StockDetailsHistory {
     public void setVehicleVariantId(VehicleVariant vehicleVariantId) {
         this.vehicleVariantId = vehicleVariantId;
     }
+
 
     public String getSuffix() {
         return suffix;

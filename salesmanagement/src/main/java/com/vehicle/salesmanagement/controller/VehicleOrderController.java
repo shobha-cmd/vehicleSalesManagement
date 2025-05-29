@@ -2,8 +2,10 @@ package com.vehicle.salesmanagement.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vehicle.salesmanagement.domain.dto.apirequest.*;
+import com.vehicle.salesmanagement.domain.dto.apiresponse.KendoGridResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.MultiOrderResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.OrderResponse;
+import com.vehicle.salesmanagement.domain.dto.apiresponse.VehicleOrderGridDTO;
 import com.vehicle.salesmanagement.domain.entity.model.VehicleOrderDetails;
 import com.vehicle.salesmanagement.enums.OrderStatus;
 import com.vehicle.salesmanagement.repository.VehicleModelRepository;
@@ -597,6 +599,45 @@ public class VehicleOrderController {
                     null
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
+        }
+    }
+    @GetMapping("/vehicleorders")
+    @Operation(
+            summary = "Get all vehicle orders for Kendo Grid",
+            description = "Fetches all customer vehicle orders to be displayed in a Kendo UI Grid.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Successful retrieval of vehicle orders",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = KendoGridResponse.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse.class)
+                            )
+                    )
+            }
+    )
+    public ResponseEntity<KendoGridResponse<VehicleOrderGridDTO>> getVehicleOrdersForGrid() {
+        try {
+            List<VehicleOrderGridDTO> gridData = vehicleOrderService.getAllOrders();
+            log.info("Retrieved {} vehicle orders for Kendo Grid", gridData.size());
+            return ResponseEntity.ok(new KendoGridResponse<>(gridData, (long) gridData.size(), null, null));
+        } catch (Exception e) {
+            log.error("Failed to retrieve vehicle orders for Kendo Grid: {}", e.getMessage(), e);
+            com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Internal server error: " + e.getMessage(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Error retrieving vehicle orders: " + e.getMessage(), null));
         }
     }
 

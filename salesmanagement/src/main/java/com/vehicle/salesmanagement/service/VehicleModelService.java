@@ -27,13 +27,31 @@ public class VehicleModelService {
     private final ManufacturerOrderRepository manufacturerOrderRepository;
 
     // Unchanged: Returns VehicleAttributesResponse as per original
-    public VehicleAttributesResponse getDropdownData(String modelName, String variant) {
-        log.info("Fetching dropdown data at {}", LocalDateTime.now());
+
+    public VehicleAttributesResponse getDropdownData(String modelName, String variant, Long vehicleModelId, Long vehicleVariantId) {
+        log.info("Fetching dropdown data with filters: modelName={}, variant={}, vehicleModelId={}, vehicleVariantId={} at {}",
+                modelName, variant, vehicleModelId, vehicleVariantId, LocalDateTime.now());
 
         VehicleAttributesResponse response = new VehicleAttributesResponse();
 
-        // Fetch all model names
-        List<String> modelNames = vehicleModelRepository.findAll().stream()
+        // Fetch models
+        List<VehicleModel> models;
+        if (vehicleModelId != null) {
+            models = vehicleModelRepository.findById(vehicleModelId)
+                    .map(Collections::singletonList)
+                    .orElse(Collections.emptyList());
+        } else {
+            models = vehicleModelRepository.findAll();
+        }
+
+        if (modelName != null) {
+            models = models.stream()
+                    .filter(model -> model.getModelName() != null && model.getModelName().equalsIgnoreCase(modelName))
+                    .collect(Collectors.toList());
+        }
+
+        // Set model names
+        List<String> modelNames = models.stream()
                 .map(model -> model.getModelName() != null ? model.getModelName() : "")
                 .filter(name -> !name.isEmpty())
                 .distinct()
@@ -45,14 +63,39 @@ public class VehicleModelService {
         Map<String, VehicleAttributesResponse.ModelAttributes> modelDetails = new HashMap<>();
         response.setModelDetails(modelDetails);
 
-        // Fetch variants based on modelName and variant
+        // Handle case where no models match
+        if (models.isEmpty() && modelName != null) {
+            VehicleAttributesResponse.ModelAttributes emptyAttributes = new VehicleAttributesResponse.ModelAttributes();
+            if (variant != null) {
+                emptyAttributes.setVariants(Collections.singletonList(variant));
+            }
+            modelDetails.put(modelName, emptyAttributes);
+            return response;
+        }
+
+        // Fetch variants
         List<VehicleVariant> variants;
-        if (modelName != null && variant != null) {
+        if (vehicleVariantId != null) {
+            variants = vehicleVariantRepository.findById(vehicleVariantId)
+                    .map(Collections::singletonList)
+                    .orElse(Collections.emptyList());
+        } else if (modelName != null && variant != null) {
             variants = vehicleVariantRepository.findByVehicleModelId_ModelNameAndVariant(modelName, variant);
         } else if (modelName != null) {
             variants = vehicleVariantRepository.findByVehicleModelId_ModelName(modelName);
         } else {
             variants = vehicleVariantRepository.findAll();
+        }
+
+        // Filter variants by model IDs if models are filtered
+        if (!models.isEmpty()) {
+            List<Long> modelIds = models.stream()
+                    .map(VehicleModel::getVehicleModelId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            variants = variants.stream()
+                    .filter(v -> v.getVehicleModelId() != null && modelIds.contains(v.getVehicleModelId().getVehicleModelId()))
+                    .collect(Collectors.toList());
         }
 
         // Handle empty variants for specific model or model+variant
@@ -332,6 +375,7 @@ public class VehicleModelService {
         }
         return null;
     }
+
 
     @Transactional
     public KendoGridResponse<VehicleModel> saveVehicleModels(List<VehicleModelDTO> dtos) {

@@ -59,63 +59,70 @@ public class VehicleModelController {
     })
     public ResponseEntity<ApiResponse> getDropdownData(
             @RequestParam(value = "modelName", required = false) String modelName,
-            @RequestParam(value = "variant", required = false) String variant) {
-        log.info("Received request to fetch dropdown data with modelName: {}, variant: {}", modelName, variant);
+            @RequestParam(value = "variant", required = false) String variant,
+            @RequestParam(value = "vehicleModelId", required = false) Long vehicleModelId,
+            @RequestParam(value = "vehicleVariantId", required = false) Long vehicleVariantId) {
+        log.info("Received request to fetch dropdown data with modelName: {}, variant: {}, vehicleModelId: {}, vehicleVariantId: {}",
+                modelName, variant, vehicleModelId, vehicleVariantId);
         try {
             if (modelName != null && modelName.trim().isEmpty()) {
                 log.error("Model name cannot be empty when provided");
-                ApiResponse apiResponse = new ApiResponse(
-                        HttpStatus.BAD_REQUEST.value(),
-                        "Model name cannot be empty",
-                        null
-                );
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Model name cannot be empty", null));
             }
             if (variant != null && variant.trim().isEmpty()) {
                 log.error("Variant cannot be empty when provided");
-                ApiResponse apiResponse = new ApiResponse(
-                        HttpStatus.BAD_REQUEST.value(),
-                        "Variant cannot be empty",
-                        null
-                );
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Variant cannot be empty", null));
+            }
+            if (vehicleModelId != null && vehicleModelId <= 0) {
+                log.error("Vehicle model ID must be positive when provided");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Vehicle model ID must be positive", null));
+            }
+            if (vehicleVariantId != null && vehicleVariantId <= 0) {
+                log.error("Vehicle variant ID must be positive when provided");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Vehicle variant ID must be positive", null));
             }
 
-            VehicleAttributesResponse response = vehicleModelService.getDropdownData(modelName, variant);
-            String message = buildResponseMessage(modelName, variant);
-            ApiResponse apiResponse = new ApiResponse(
-                    HttpStatus.OK.value(),
-                    message,
-                    response
-            );
-            return ResponseEntity.ok(apiResponse);
+            VehicleAttributesResponse response = vehicleModelService.getDropdownData(modelName, variant, vehicleModelId, vehicleVariantId);
+            String message = buildResponseMessage(modelName, variant, vehicleModelId, vehicleVariantId);
+            return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), message, response));
         } catch (NumberFormatException e) {
             log.error("Invalid numeric data provided: {}", e.getMessage());
-            ApiResponse apiResponse = new ApiResponse(
-                    HttpStatus.BAD_REQUEST.value(),
-                    "Invalid numeric data: " + e.getMessage(),
-                    null
-            );
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Invalid numeric data: " + e.getMessage(), null));
         } catch (Exception e) {
             log.error("Unexpected error retrieving dropdown data: {}", e.getMessage());
-            ApiResponse apiResponse = new ApiResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Internal server error: " + e.getMessage(),
-                    null
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal server error: " + e.getMessage(), null));
         }
     }
 
-    private String buildResponseMessage(String modelName, String variant) {
-        if (modelName != null && variant != null) {
-            return "Dropdown data for model " + modelName + " and variant " + variant + " retrieved successfully";
-        } else if (modelName != null) {
-            return "Dropdown data for model " + modelName + " retrieved successfully";
-        } else {
-            return "All dropdown data retrieved successfully";
+    private String buildResponseMessage(String modelName, String variant, Long vehicleModelId, Long vehicleVariantId) {
+        StringBuilder message = new StringBuilder("Dropdown data");
+        boolean hasFilter = false;
+
+        if (modelName != null) {
+            message.append(" for model ").append(modelName);
+            hasFilter = true;
         }
+        if (variant != null) {
+            message.append(hasFilter ? " and variant " : " for variant ").append(variant);
+            hasFilter = true;
+        }
+        if (vehicleModelId != null) {
+            message.append(hasFilter ? " and model ID " : " for model ID ").append(vehicleModelId);
+            hasFilter = true;
+        }
+        if (vehicleVariantId != null) {
+            message.append(hasFilter ? " and variant ID " : " for variant ID ").append(vehicleVariantId);
+            hasFilter = true;
+        }
+
+        message.append(hasFilter ? " retrieved successfully" : "All dropdown data retrieved successfully");
+        return message.toString();
     }
 
     @PostMapping("/vehiclemodels/save")

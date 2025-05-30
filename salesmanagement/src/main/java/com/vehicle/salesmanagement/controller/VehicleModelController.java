@@ -433,6 +433,23 @@ public class VehicleModelController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Error updating MDDP stock details: " + e.getMessage(), null));
         }
+
+    }
+    @GetMapping("/stockdetails")
+    @Operation(summary = "Get all stock details", description = "Returns stock information including variant, color, quantity, VIN, fuel type, etc.")
+    public ResponseEntity<KendoGridResponse<StockDetailsDTO>> getAllStockDetails() {
+        List<StockDetailsDTO> stockDTOs = vehicleModelService.getAllStockDetails();
+        return ResponseEntity.ok(new KendoGridResponse<>(stockDTOs, stockDTOs.size(), null, null));
+    }
+    @GetMapping("/mddpstock")
+    @Operation(summary = "Get all MDDP stock entries", description = "Returns MDDP stock data compatible with Kendo Grid")
+    public ResponseEntity<KendoGridResponse<MddpStockDTO>> getAllMddpStock() {
+        return ResponseEntity.ok(vehicleModelService.getAllMddpStock());
+    }
+    @GetMapping("/finance")
+    @Operation(summary = "Get finance details", description = "Returns list of finance records for Kendo Grid")
+    public ResponseEntity<KendoGridResponse<FinanceDTO>> getFinanceDetails() {
+        return ResponseEntity.ok(vehicleModelService.getAllFinanceDetails());
     }
     @PutMapping("/vehiclevariants/update")
     @Operation(summary = "Update vehicle variant(s)", description = "Updates one or multiple vehicle variants by VIN. Examples show field data types.")

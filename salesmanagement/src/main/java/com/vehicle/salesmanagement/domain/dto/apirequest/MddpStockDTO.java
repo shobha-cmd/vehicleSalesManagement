@@ -147,4 +147,7 @@ public class MddpStockDTO {
     public void setExpectedDeliveryDate(LocalDateTime expectedDeliveryDate) {
         this.expectedDeliveryDate = expectedDeliveryDate;
     }
+
+    public void setMddpId(Integer mddpId) {
+    }
 }

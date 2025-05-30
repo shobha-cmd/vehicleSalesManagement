@@ -19,6 +19,8 @@ public class VehicleAttributesResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ModelAttributes {
+        private List<Long> vehicleModelId;
+        private List<Long> vehicleVariantId;
         private List<String> variants;
         private List<String> colours;
         private List<String> engineColours;

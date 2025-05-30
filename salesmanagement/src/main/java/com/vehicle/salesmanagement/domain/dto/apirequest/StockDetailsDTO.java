@@ -132,4 +132,6 @@ public class StockDetailsDTO {
     }
 
 
+    public void setStockId(Long stockId) {
+    }
 }

@@ -25,6 +25,7 @@ public class VehicleModelService {
     private final StockDetailsRepository stockDetailsRepository;
     private final MddpStockRepository mddpStockRepository;
     private final ManufacturerOrderRepository manufacturerOrderRepository;
+    private final FinanceDetailsRepository financeDetailsRepository;
 
     // Unchanged: Returns VehicleAttributesResponse as per original
 
@@ -1225,5 +1226,64 @@ public class VehicleModelService {
                     log.error("VehicleVariant not found with ID: {}", variantId);
                     return new IllegalArgumentException("Invalid VehicleVariant ID: " + variantId);
                 });
+    }
+    public List<StockDetailsDTO> getAllStockDetails() {
+        return stockDetailsRepository.findAll().stream().map(stock -> {
+            StockDetailsDTO dto = new StockDetailsDTO();
+            dto.setStockId(stock.getStockId());
+            dto.setVehicleModelId(stock.getVehicleModelId().getVehicleModelId());
+            dto.setVehicleVariantId(stock.getVehicleVariantId().getVehicleVariantId());
+            dto.setVariant(stock.getVariant());
+            dto.setColour(stock.getColour());
+            dto.setEngineColour(stock.getEngineColour());
+            dto.setInteriorColour(stock.getInteriorColour());
+            dto.setFuelType(stock.getFuelType());
+            dto.setTransmissionType(stock.getTransmissionType());
+            dto.setQuantity(stock.getQuantity());
+            dto.setVinNumber(stock.getVinNumber());
+            dto.setStockStatus(stock.getStockStatus() != null ? stock.getStockStatus().name() : null);
+            dto.setSuffix(stock.getSuffix());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    public KendoGridResponse<MddpStockDTO> getAllMddpStock() {
+        List<MddpStockDTO> dtoList = mddpStockRepository.findAll().stream().map(stock -> {
+            MddpStockDTO dto = new MddpStockDTO();
+            dto.setMddpId(stock.getMddpId());
+            dto.setVehicleModelId(stock.getVehicleModelId().getVehicleModelId());
+            dto.setVehicleVariantId(stock.getVehicleVariantId().getVehicleVariantId());
+            dto.setVariant(stock.getVariant());
+            dto.setSuffix(stock.getSuffix());
+            dto.setColour(stock.getColour());
+            dto.setEngineColour(stock.getEngineColour());
+            dto.setInteriorColour(stock.getInteriorColour());
+            dto.setFuelType(stock.getFuelType());
+            dto.setTransmissionType(stock.getTransmissionType());
+            dto.setQuantity(stock.getQuantity());
+            dto.setVinNumber(stock.getVinNumber());
+            dto.setStockStatus(stock.getStockStatus() != null ? stock.getStockStatus().name() : null);
+            dto.setExpectedDispatchDate(stock.getExpectedDispatchDate());
+            dto.setExpectedDeliveryDate(stock.getExpectedDeliveryDate());
+            dto.setCreatedBy(stock.getCreatedBy());
+            dto.setUpdatedBy(stock.getUpdatedBy());
+            return dto;
+        }).collect(Collectors.toList());
+
+        return new KendoGridResponse<>(dtoList, dtoList.size(), null, null);
+    }
+    public KendoGridResponse<FinanceDTO> getAllFinanceDetails() {
+        List<FinanceDTO> dtoList = financeDetailsRepository.findAll().stream().map(entity -> {
+            FinanceDTO dto = new FinanceDTO();
+            dto.setFinanceId(entity.getFinanceId());
+            dto.setCustomerOrderId(entity.getCustomerOrderId());
+            dto.setCustomerName(entity.getCustomerName());
+            dto.setFinanceStatus(entity.getFinanceStatus() != null ? entity.getFinanceStatus().name() : null);
+            dto.setApprovedBy(entity.getApprovedBy());
+            dto.setRejectedBy(entity.getRejectedBy());
+            return dto;
+        }).collect(Collectors.toList());
+
+        return new KendoGridResponse<>(dtoList, dtoList.size(), null, null);
     }
 }

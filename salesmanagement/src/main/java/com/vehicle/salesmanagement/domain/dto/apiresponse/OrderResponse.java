@@ -32,15 +32,15 @@ public class OrderResponse {
     private String transmissionType;
     private String variant;
     private Integer quantity;
-    private BigDecimal totalPrice;
-    private BigDecimal bookingAmount;
+//    private BigDecimal totalPrice;
+//    private BigDecimal bookingAmount;
     private String paymentMode;
     @NonNull
     private OrderStatus orderStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private String createdBy;
-    private String updatedBy;
+//    private String createdBy;
+//    private String updatedBy;
     private String message;
 
     // Add custom constructor

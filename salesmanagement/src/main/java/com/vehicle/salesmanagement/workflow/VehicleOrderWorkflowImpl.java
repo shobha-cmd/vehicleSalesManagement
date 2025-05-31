@@ -101,8 +101,8 @@ public class VehicleOrderWorkflowImpl implements VehicleOrderWorkflow {
         response.setTransmissionType(request.getTransmissionType());
         response.setVariant(request.getVariant());
         response.setQuantity(request.getQuantity());
-        response.setTotalPrice(request.getTotalPrice());
-        response.setBookingAmount(request.getBookingAmount());
+//        response.setTotalPrice(request.getTotalPrice());
+//        response.setBookingAmount(request.getBookingAmount());
         response.setPaymentMode(request.getPaymentMode());
         response.setCreatedAt(LocalDateTime.now());
         return response;

@@ -37,10 +37,10 @@ public class HistoryService {
         history.setCustomerOrderId(orderDetails.getCustomerOrderId());
         history.setCustomerName(orderDetails.getCustomerName());
         history.setAadharNo(orderDetails.getAadharNo());
-        history.setBookingAmount(orderDetails.getBookingAmount());
+        //history.setBookingAmount(orderDetails.getBookingAmount());
         history.setColour(orderDetails.getColour());
-        history.setCreatedAt(orderDetails.getCreatedAt());
-        history.setCreatedBy(orderDetails.getCreatedBy());
+       // history.setCreatedAt(orderDetails.getCreatedAt());
+        //history.setCreatedBy(orderDetails.getCreatedBy());
         history.setCurrentAddress(orderDetails.getCurrentAddress());
         history.setEmail(orderDetails.getEmail());
         history.setFuelType(orderDetails.getFuelType());
@@ -51,9 +51,9 @@ public class HistoryService {
         history.setPermanentAddress(orderDetails.getPermanentAddress());
         history.setPhoneNumber(orderDetails.getPhoneNumber());
         history.setQuantity(orderDetails.getQuantity());
-        history.setTotalPrice(orderDetails.getTotalPrice());
+        //history.setTotalPrice(orderDetails.getTotalPrice());
         history.setTransmissionType(orderDetails.getTransmissionType());
-        history.setUpdatedAt(orderDetails.getUpdatedAt());
+        //history.setUpdatedAt(orderDetails.getUpdatedAt());
         history.setUpdatedBy(updatedBy != null ? updatedBy : "system");
         history.setVariant(orderDetails.getVariant());
         history.setVehicleModel(orderDetails.getVehicleModelId());

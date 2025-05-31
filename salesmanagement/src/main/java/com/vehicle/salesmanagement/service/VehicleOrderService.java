@@ -72,8 +72,8 @@ public class VehicleOrderService {
         log.info("Stock ID: {} for VIN: {}", stock.getStockId(), stock.getVinNumber());
 
         // Save history with the updated stock
-        historyService.saveStockHistory(stock, orderRequest.getUpdatedBy() != null ? orderRequest.getUpdatedBy() : "system",
-                "Stock Blocked for Order: " + orderRequest.getCustomerOrderId());
+        //historyService.saveStockHistory(stock, orderRequest.getUpdatedBy() != null ? orderRequest.getUpdatedBy() : "system",
+          //      "Stock Blocked for Order: " + orderRequest.getCustomerOrderId());
 
         OrderResponse response = mapToOrderResponse(orderRequest);
         response.setOrderStatus(OrderStatus.BLOCKED);
@@ -109,7 +109,7 @@ public class VehicleOrderService {
                     mddpStock.setStockStatus(StockStatus.DEPLETED);
                 }
                 mddpStockRepository.save(mddpStock);
-                historyService.saveStockHistory(newStock, orderRequest.getUpdatedBy() != null ? orderRequest.getUpdatedBy() : "system", "Stock Transferred from MDDP for Order: " + orderRequest.getCustomerOrderId());
+               // historyService.saveStockHistory(newStock, orderRequest.getUpdatedBy() != null ? orderRequest.getUpdatedBy() : "system", "Stock Transferred from MDDP for Order: " + orderRequest.getCustomerOrderId());
 
                 OrderResponse response = mapToOrderResponse(orderRequest);
                 response.setOrderStatus(OrderStatus.BLOCKED);
@@ -145,11 +145,11 @@ public class VehicleOrderService {
         }
 
         orderDetails.setOrderStatus(OrderStatus.CONFIRMED);
-        orderDetails.setUpdatedAt(LocalDateTime.now());
+       // orderDetails.setUpdatedAt(LocalDateTime.now());
         orderDetails = orderRepository.save(orderDetails);
         log.info("Saved VehicleOrderDetails with customerOrderId: {}", orderDetails.getCustomerOrderId());
 
-        historyService.saveOrderHistory(orderDetails, orderDetails.getUpdatedBy(), OrderStatus.CONFIRMED);
+        //historyService.saveOrderHistory(orderDetails, orderDetails.getUpdatedBy(), OrderStatus.CONFIRMED);
 
         return mapToOrderResponseFromDetails(orderDetails);
     }
@@ -158,9 +158,9 @@ public class VehicleOrderService {
         OrderResponse orderResponse = mapToOrderResponse(orderRequest);
         VehicleOrderDetails orderDetails = mapToOrderDetails(orderResponse);
         orderDetails.setOrderStatus(OrderStatus.NOTIFIED);
-        orderDetails.setUpdatedAt(LocalDateTime.now());
+        //orderDetails.setUpdatedAt(LocalDateTime.now());
         orderDetails = orderRepository.save(orderDetails);
-        historyService.saveOrderHistory(orderDetails, orderDetails.getUpdatedBy(), OrderStatus.NOTIFIED);
+        //historyService.saveOrderHistory(orderDetails, orderDetails.getUpdatedBy(), OrderStatus.NOTIFIED);
         orderResponse.setOrderStatus(OrderStatus.NOTIFIED);
         orderResponse.setUpdatedAt(LocalDateTime.now());
         return orderResponse;
@@ -208,7 +208,7 @@ public class VehicleOrderService {
 
         historyService.saveOrderHistory(orderDetails, "system", OrderStatus.CANCELED);
         orderDetails.setOrderStatus(OrderStatus.CANCELED);
-        orderDetails.setUpdatedAt(LocalDateTime.now());
+        //orderDetails.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(orderDetails);
 
         return mapToOrderResponseFromDetails(orderDetails);
@@ -240,23 +240,23 @@ public class VehicleOrderService {
         response.setTransmissionType(request.getTransmissionType());
         response.setVariant(request.getVariant());
         response.setQuantity(request.getQuantity());
-        BigDecimal totalPrice = request.getTotalPrice();
-        if (totalPrice == null) {
-            BigDecimal quantity = new BigDecimal(request.getQuantity());
-            totalPrice = variant.getPrice().multiply(quantity);
-        }
-        response.setTotalPrice(totalPrice);
-
-        BigDecimal bookingAmount = request.getBookingAmount();
-        if (bookingAmount == null) {
-            bookingAmount = totalPrice.multiply(new BigDecimal("0.1"));
-        }
-        response.setBookingAmount(bookingAmount);
+        //BigDecimal totalPrice = request.getTotalPrice();
+//        if (totalPrice == null) {
+//            BigDecimal quantity = new BigDecimal(request.getQuantity());
+//            totalPrice = variant.getPrice().multiply(quantity);
+//        }
+//        response.setTotalPrice(totalPrice);
+//
+//        BigDecimal bookingAmount = request.getBookingAmount();
+//        if (bookingAmount == null) {
+//            bookingAmount = totalPrice.multiply(new BigDecimal("0.1"));
+//        }
+//        response.setBookingAmount(bookingAmount);
 
         response.setPaymentMode(request.getPaymentMode() != null ? request.getPaymentMode() : "");
         response.setCreatedAt(LocalDateTime.now());
-        response.setCreatedBy(request.getCreatedBy() != null ? request.getCreatedBy() : "system");
-        response.setUpdatedBy(request.getUpdatedBy() != null ? request.getUpdatedBy() : "system");
+//        response.setCreatedBy(request.getCreatedBy() != null ? request.getCreatedBy() : "system");
+//        response.setUpdatedBy(request.getUpdatedBy() != null ? request.getUpdatedBy() : "system");
         return response;
     }
 
@@ -282,14 +282,14 @@ public class VehicleOrderService {
         orderDetails.setTransmissionType(response.getTransmissionType());
         orderDetails.setVariant(response.getVariant());
         orderDetails.setQuantity(response.getQuantity());
-        orderDetails.setTotalPrice(response.getTotalPrice());
-        orderDetails.setBookingAmount(response.getBookingAmount());
+//        orderDetails.setTotalPrice(response.getTotalPrice());
+//        orderDetails.setBookingAmount(response.getBookingAmount());
         orderDetails.setPaymentMode(response.getPaymentMode());
         orderDetails.setOrderStatus(response.getOrderStatus());
-        orderDetails.setCreatedAt(response.getCreatedAt());
-        orderDetails.setUpdatedAt(response.getUpdatedAt());
-        orderDetails.setCreatedBy(response.getCreatedBy());
-        orderDetails.setUpdatedBy(response.getUpdatedBy());
+//        orderDetails.setCreatedAt(response.getCreatedAt());
+//        orderDetails.setUpdatedAt(response.getUpdatedAt());
+//        orderDetails.setCreatedBy(response.getCreatedBy());
+//        orderDetails.setUpdatedBy(response.getUpdatedBy());
         return orderDetails;
     }
 
@@ -311,13 +311,13 @@ public class VehicleOrderService {
         response.setTransmissionType(orderDetails.getTransmissionType());
         response.setVariant(orderDetails.getVariant());
         response.setQuantity(orderDetails.getQuantity());
-        response.setTotalPrice(orderDetails.getTotalPrice());
-        response.setBookingAmount(orderDetails.getBookingAmount());
+//        response.setTotalPrice(orderDetails.getTotalPrice());
+//        response.setBookingAmount(orderDetails.getBookingAmount());
         response.setPaymentMode(orderDetails.getPaymentMode());
-        response.setCreatedAt(orderDetails.getCreatedAt());
-        response.setUpdatedAt(orderDetails.getUpdatedAt());
-        response.setCreatedBy(orderDetails.getCreatedBy());
-        response.setUpdatedBy(orderDetails.getUpdatedBy());
+//        response.setCreatedAt(orderDetails.getCreatedAt());
+//        response.setUpdatedAt(orderDetails.getUpdatedAt());
+//        response.setCreatedBy(orderDetails.getCreatedBy());
+//        response.setUpdatedBy(orderDetails.getUpdatedBy());
         response.setOrderStatus(orderDetails.getOrderStatus());
         return response;
     }

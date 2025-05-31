@@ -55,7 +55,7 @@ public class VehicleOrderController {
     private final VehicleOrderService vehicleOrderService;
     private final ObjectMapper objectMapper;
 
-    @Transactional
+    //@Transactional
     @PostMapping("/placeOrder")
     @Operation(
             summary = "Place vehicle order(s)",
@@ -246,8 +246,8 @@ public class VehicleOrderController {
 
     private ResponseEntity<com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse> handleSingleOrder(@Valid OrderRequest orderRequest) {
         VehicleOrderDetails orderDetails = mapOrderRequestToEntity(orderRequest);
-        orderDetails.setCreatedAt(LocalDateTime.now());
-        orderDetails.setUpdatedAt(LocalDateTime.now());
+//        orderDetails.setCreatedAt(LocalDateTime.now());
+//        orderDetails.setUpdatedAt(LocalDateTime.now());
         orderDetails = orderRepository.saveAndFlush(orderDetails);
         Long customerOrderId = orderDetails.getCustomerOrderId(); // Changed from orderId
         if (customerOrderId == null) {
@@ -345,8 +345,8 @@ public class VehicleOrderController {
 
         for (OrderRequest orderRequest : multiOrderRequest.getVehicleOrders()) {
             VehicleOrderDetails orderDetails = mapOrderRequestToEntity(orderRequest);
-            orderDetails.setCreatedAt(LocalDateTime.now());
-            orderDetails.setUpdatedAt(LocalDateTime.now());
+//            orderDetails.setCreatedAt(LocalDateTime.now());
+//            orderDetails.setUpdatedAt(LocalDateTime.now());
             orderDetails = orderRepository.saveAndFlush(orderDetails);
             final Long customerOrderId = orderDetails.getCustomerOrderId(); // Changed from orderId
             if (customerOrderId == null) {
@@ -660,12 +660,12 @@ public class VehicleOrderController {
         order.setTransmissionType(request.getTransmissionType());
         order.setVariant(request.getVariant());
         order.setQuantity(request.getQuantity());
-        order.setTotalPrice(BigDecimal.valueOf(request.getTotalPrice().doubleValue()));
-        order.setBookingAmount(BigDecimal.valueOf(request.getBookingAmount().doubleValue()));
+//        order.setTotalPrice(BigDecimal.valueOf(request.getTotalPrice().doubleValue()));
+//        order.setBookingAmount(BigDecimal.valueOf(request.getBookingAmount().doubleValue()));
         order.setPaymentMode(request.getPaymentMode() != null ? request.getPaymentMode() : "");
-        order.setCreatedBy(request.getCreatedBy() != null ? request.getCreatedBy() : "system");
-        order.setUpdatedBy(request.getUpdatedBy() != null ? request.getUpdatedBy() : "system");
-        order.setCreatedAt(LocalDateTime.now());
+//        order.setCreatedBy(request.getCreatedBy() != null ? request.getCreatedBy() : "system");
+//        order.setUpdatedBy(request.getUpdatedBy() != null ? request.getUpdatedBy() : "system");
+        //order.setCreatedAt(LocalDateTime.now());
 
         return order;
     }
@@ -700,13 +700,13 @@ public class VehicleOrderController {
         order.setTransmissionType(orderDetails.getTransmissionType());
         order.setVariant(orderDetails.getVariant());
         order.setQuantity(orderDetails.getQuantity());
-        order.setTotalPrice(orderDetails.getTotalPrice());
-        order.setBookingAmount(orderDetails.getBookingAmount());
+//        order.setTotalPrice(orderDetails.getTotalPrice());
+//        order.setBookingAmount(orderDetails.getBookingAmount());
         order.setPaymentMode(orderDetails.getPaymentMode());
-        order.setCreatedAt(orderDetails.getCreatedAt());
-        order.setUpdatedAt(orderDetails.getUpdatedAt());
-        order.setCreatedBy(orderDetails.getCreatedBy());
-        order.setUpdatedBy(orderDetails.getUpdatedBy());
+//        order.setCreatedAt(orderDetails.getCreatedAt());
+//        order.setUpdatedAt(orderDetails.getUpdatedAt());
+////        order.setCreatedBy(orderDetails.getCreatedBy());
+//        order.setUpdatedBy(orderDetails.getUpdatedBy());
         return order;
     }
 

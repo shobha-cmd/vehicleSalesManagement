@@ -89,7 +89,7 @@ public class FinanceService {
 
         historyService.saveOrderHistory(orderDetails, approvedBy, OrderStatus.ALLOTTED); // Pass new status
         orderDetails.setOrderStatus(OrderStatus.ALLOTTED);
-        orderDetails.setUpdatedAt(LocalDateTime.now());
+        //orderDetails.setUpdatedAt(LocalDateTime.now());
         vehicleOrderDetailsRepository.save(orderDetails);
 
         return mapToFinanceResponse(financeDetails, orderDetails);
@@ -118,7 +118,7 @@ public class FinanceService {
 
         historyService.saveOrderHistory(orderDetails, rejectedBy, OrderStatus.PENDING); // Pass new status
         orderDetails.setOrderStatus(OrderStatus.PENDING);
-        orderDetails.setUpdatedAt(LocalDateTime.now());
+        //orderDetails.setUpdatedAt(LocalDateTime.now());
         vehicleOrderDetailsRepository.save(orderDetails);
 
         return mapToFinanceResponse(financeDetails, orderDetails);

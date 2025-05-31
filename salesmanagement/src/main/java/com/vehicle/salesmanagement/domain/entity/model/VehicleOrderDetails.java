@@ -79,13 +79,13 @@ public class VehicleOrderDetails {
     @NotNull(message = "Quantity is required")
     private Integer quantity;
 
-    @Column(name = "total_price", precision = 15, scale = 2, nullable = false)
-    @NotNull(message = "Total price is required")
-    private BigDecimal totalPrice;
+//    @Column(name = "total_price", precision = 15, scale = 2, nullable = false)
+//    //@NotNull(message = "Total price is required")
+//    private BigDecimal totalPrice;
 
-    @Column(name = "booking_amount", precision = 15, scale = 2, nullable = false)
-    @NotNull(message = "Booking amount is required")
-    private BigDecimal bookingAmount;
+//    @Column(name = "booking_amount", precision = 15, scale = 2, nullable = false)
+//    //@NotNull(message = "Booking amount is required")
+//    private BigDecimal bookingAmount;
 
     @Column(name = "payment_mode", length = 50, nullable = false)
     @NotBlank(message = "Payment mode is required")
@@ -95,19 +95,19 @@ public class VehicleOrderDetails {
     @Column(name = "order_status")
     private OrderStatus orderStatus;
 
-    @Column(name = "created_at", nullable = false)
-    @NotNull(message = "Created at is required")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    @NotNull(message = "Updated at is required")
-    private LocalDateTime updatedAt;
-
-    @Column(name = "created_by", length = 100, nullable = false)
-    @NotBlank(message = "Created by is required")
-    private String createdBy;
-
-    @Column(name = "updated_by", length = 100, nullable = false)
-    @NotBlank(message = "Updated by is required")
-    private String updatedBy;
+//    @Column(name = "created_at", nullable = false)
+//   // @NotNull(message = "Created at is required")
+//    private LocalDateTime createdAt;
+//
+//    @Column(name = "updated_at", nullable = false)
+//    //@NotNull(message = "Updated at is required")
+//    private LocalDateTime updatedAt;
+//
+//    @Column(name = "created_by", length = 100, nullable = false)
+//    //@NotBlank(message = "Created by is required")
+//    private String createdBy;
+//
+//    @Column(name = "updated_by", length = 100, nullable = false)
+//    //@NotBlank(message = "Updated by is required")
+//    private String updatedBy;
 }

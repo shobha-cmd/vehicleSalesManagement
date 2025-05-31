@@ -72,7 +72,7 @@ public class DispatchDeliveryService {
 
         historyService.saveOrderHistory(orderDetails, request.getDispatchedBy(), OrderStatus.DISPATCHED);
         orderDetails.setOrderStatus(OrderStatus.DISPATCHED);
-        orderDetails.setUpdatedAt(LocalDateTime.now());
+        //orderDetails.setUpdatedAt(LocalDateTime.now());
         vehicleOrderDetailsRepository.save(orderDetails);
         log.info("Vehicle order details updated to DISPATCHED for order ID: {}", request.getCustomerOrderId());
 
@@ -121,7 +121,7 @@ public class DispatchDeliveryService {
 
         historyService.saveOrderHistory(orderDetails, request.getDeliveredBy(), OrderStatus.DELIVERED);
         orderDetails.setOrderStatus(OrderStatus.DELIVERED);
-        orderDetails.setUpdatedAt(LocalDateTime.now());
+        //orderDetails.setUpdatedAt(LocalDateTime.now());
         vehicleOrderDetailsRepository.save(orderDetails);
         log.info("Vehicle order details updated to DELIVERED for order ID: {}", request.getCustomerOrderId());
 

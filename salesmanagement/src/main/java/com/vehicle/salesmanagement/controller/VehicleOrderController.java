@@ -669,6 +669,17 @@ public class VehicleOrderController {
 
         return order;
     }
+    @GetMapping("/orderstatus/{orderId}")
+    public ResponseEntity<KendoGridResponse<OrderResponse>> getOrderStatusProgress(@PathVariable Long orderId) {
+        return orderRepository.findByCustomerOrderId(orderId)
+                .map(order -> {
+                    OrderResponse response = mapOrderDetailsToResponse(order, order.getOrderStatus());
+                    List<OrderResponse> result = List.of(response);
+                    return ResponseEntity.ok(new KendoGridResponse<>(result, result.size(), null, null));
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new KendoGridResponse<>(Collections.emptyList(), 0, null, null)));
+    }
 
     private OrderResponse mapOrderDetailsToResponse(VehicleOrderDetails orderDetails, OrderStatus status) {
         OrderResponse order = new OrderResponse();
@@ -698,4 +709,5 @@ public class VehicleOrderController {
         order.setUpdatedBy(orderDetails.getUpdatedBy());
         return order;
     }
+
 }

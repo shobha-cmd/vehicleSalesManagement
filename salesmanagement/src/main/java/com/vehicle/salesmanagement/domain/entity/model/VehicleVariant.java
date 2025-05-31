@@ -24,6 +24,9 @@ public class VehicleVariant {
     @JoinColumn(name = "vehicle_model_id", nullable = false)
     private VehicleModel vehicleModelId;
 
+    @Column(name="modelName",length=50)
+    private String modelName;
+
     @Column(name = "variant", length = 100, nullable = false)
     private String variant;
 
@@ -114,6 +117,14 @@ public class VehicleVariant {
 
     @Column(name = "updated_by", length = 100)
     private String updatedBy;
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
 
     public Long getVehicleVariantId() {
         return vehicleVariantId;

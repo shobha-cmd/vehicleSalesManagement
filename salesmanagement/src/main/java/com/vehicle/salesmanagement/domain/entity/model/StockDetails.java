@@ -29,6 +29,9 @@ public class StockDetails {
     @JoinColumn(name = "vehicle_variant_id", nullable = false)
     private VehicleVariant vehicleVariantId;
 
+    @Column(name="modelName",length=50)
+    private String modelName;
+
     @Column(name = "suffix", length = 10)
     private String suffix;
 
@@ -73,6 +76,14 @@ public class StockDetails {
 
     public Long getStockId() {
         return stockId;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 
     public void setStockId(Long stockId) {

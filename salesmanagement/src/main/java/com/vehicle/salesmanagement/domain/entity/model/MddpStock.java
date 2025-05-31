@@ -33,6 +33,10 @@ public class MddpStock {
     @JoinColumn(name = "vehicle_variant_id", nullable = false)
     private VehicleVariant vehicleVariantId;
 
+    @Column(name="model_name",length=50)
+    private String modelName;
+
+
     @Column(name = "suffix", length = 50)
     private String suffix;
 
@@ -125,6 +129,14 @@ public class MddpStock {
 
     public String getFuelType() {
         return fuelType;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 
     public void setFuelType(String fuelType) {

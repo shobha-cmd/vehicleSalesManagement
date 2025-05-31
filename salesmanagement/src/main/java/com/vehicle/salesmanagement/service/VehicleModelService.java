@@ -424,42 +424,6 @@ public class VehicleModelService {
     }
 
     @Transactional
-    public VehicleModel saveVehicleModel(VehicleModelDTO dto) {
-        log.info("Starting insertion of single vehicle model at {}", LocalDateTime.now());
-
-        if (dto == null) {
-            log.error("Received null DTO");
-            throw new IllegalArgumentException("Vehicle model DTO cannot be null");
-        }
-
-        if (dto.getModelName() == null || dto.getModelName().trim().isEmpty()) {
-            log.error("Invalid modelName in DTO: {}", dto);
-            throw new IllegalArgumentException("modelName cannot be null or empty");
-        }
-
-        if (vehicleModelRepository.findByModelName(dto.getModelName()).isPresent()) {
-            log.error("Model already exists: {}", dto.getModelName());
-            throw new IllegalArgumentException("Vehicle model already exists");
-        }
-
-        VehicleModel model = new VehicleModel();
-        model.setModelName(dto.getModelName());
-        model.setCreatedAt(LocalDateTime.now());
-        model.setUpdatedAt(LocalDateTime.now());
-        model.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "admin");
-        model.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "admin");
-
-        try {
-            VehicleModel savedModel = vehicleModelRepository.save(model);
-            log.info("Successfully saved vehicle model: {}", savedModel.getModelName());
-            return savedModel;
-        } catch (Exception e) {
-            log.error("Failed to save vehicle model: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to save vehicle model: " + e.getMessage(), e);
-        }
-    }
-
-    @Transactional
     public KendoGridResponse<VehicleVariant> saveVehicleVariants(List<VehicleVariantDTO> dtos) {
         log.info("Saving {} vehicle variants", dtos != null ? dtos.size() : 0);
 
@@ -495,6 +459,7 @@ public class VehicleModelService {
                     VehicleVariant variant = new VehicleVariant();
                     variant.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
                     variant.setVariant(dto.getVariant());
+                    variant.setModelName(dto.getModelName());
                     variant.setSuffix(dto.getSuffix());
                     variant.setSafetyFeature(dto.getSafetyFeature());
                     variant.setColour(dto.getColour());
@@ -563,8 +528,12 @@ public class VehicleModelService {
                     });
 
             // Update fields from DTO
+
             if (dto.getVehicleModelId() != null) {
                 existingVariant.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
+            }
+            if(dto.getModelName()!=null){
+                existingVariant.setModelName(dto.getModelName());
             }
             if (dto.getVariant() != null) {
                 existingVariant.setVariant(dto.getVariant());
@@ -660,78 +629,6 @@ public class VehicleModelService {
     }
 
     @Transactional
-    public VehicleVariant saveVehicleVariant(VehicleVariantDTO dto) {
-        log.info("Starting insertion of single vehicle variant at {}", LocalDateTime.now());
-
-        if (dto == null) {
-            log.error("Received null DTO");
-            throw new IllegalArgumentException("Vehicle variant DTO cannot be null");
-        }
-
-        if (dto.getVariant() == null || dto.getVariant().trim().isEmpty()) {
-            log.error("Variant name is required");
-            throw new IllegalArgumentException("Variant name is required");
-        }
-
-        if (dto.getVehicleModelId() == null) {
-            log.error("VehicleModel ID is required");
-            throw new IllegalArgumentException("VehicleModel ID is required");
-        }
-
-        if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
-            log.error("VIN number is required");
-            throw new IllegalArgumentException("VIN number is required");
-        }
-
-        if (vehicleVariantRepository.findByVinNumber(dto.getVinNumber()).isPresent()) {
-            log.error("Duplicate VIN: {}", dto.getVinNumber());
-            throw new IllegalArgumentException("VIN number already exists");
-        }
-
-        VehicleVariant variant = new VehicleVariant();
-        variant.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
-        variant.setVariant(dto.getVariant());
-        variant.setSuffix(dto.getSuffix());
-        variant.setSafetyFeature(dto.getSafetyFeature());
-        variant.setColour(dto.getColour());
-        variant.setEngineColour(dto.getEngineColour());
-        variant.setTransmissionType(dto.getTransmissionType());
-        variant.setInteriorColour(dto.getInteriorColour());
-        variant.setVinNumber(dto.getVinNumber());
-        variant.setEngineCapacity(dto.getEngineCapacity());
-        variant.setFuelType(dto.getFuelType());
-        variant.setPrice(dto.getPrice());
-        variant.setYearOfManufacture(dto.getYearOfManufacture());
-        variant.setBodyType(dto.getBodyType());
-        variant.setFuelTankCapacity(dto.getFuelTankCapacity());
-        variant.setSeatingCapacity(dto.getSeatingCapacity());
-        variant.setMaxPower(dto.getMaxPower());
-        variant.setMaxTorque(dto.getMaxTorque());
-        variant.setTopSpeed(dto.getTopSpeed());
-        variant.setWheelBase(dto.getWheelBase());
-        variant.setWidth(dto.getWidth());
-        variant.setLength(dto.getLength());
-        variant.setInfotainment(dto.getInfotainment());
-        variant.setComfort(dto.getComfort());
-        variant.setNumberOfAirBags(dto.getNumberOfAirBags());
-        variant.setMileageCity(dto.getMileageCity());
-        variant.setMileageHighway(dto.getMileageHighway());
-        variant.setCreatedAt(LocalDateTime.now());
-        variant.setUpdatedAt(LocalDateTime.now());
-        variant.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-        variant.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
-
-        try {
-            VehicleVariant savedVariant = vehicleVariantRepository.save(variant);
-            log.info("Successfully saved vehicle variant: {}", savedVariant.getVariant());
-            return savedVariant;
-        } catch (Exception e) {
-            log.error("Failed to save vehicle variant: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to save vehicle variant: " + e.getMessage(), e);
-        }
-    }
-
-    @Transactional
     public KendoGridResponse<StockDetails> saveStockDetails(List<StockDetailsDTO> dtos) {
         log.info("Saving {} stock entries", dtos != null ? dtos.size() : 0);
 
@@ -760,6 +657,7 @@ public class VehicleModelService {
                     stock.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
                     stock.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
                     stock.setSuffix(dto.getSuffix());
+                    stock.setModelName(dto.getModelName());
                     stock.setFuelType(dto.getFuelType());
                     stock.setColour(dto.getColour());
                     stock.setEngineColour(dto.getEngineColour());
@@ -787,57 +685,6 @@ public class VehicleModelService {
         }
     }
 
-    @Transactional
-    public StockDetails saveStockDetail(StockDetailsDTO dto) {
-        log.info("Starting insertion of single stock detail at {}", LocalDateTime.now());
-
-        if (dto == null) {
-            log.error("Received null DTO");
-            throw new IllegalArgumentException("Stock details DTO cannot be null");
-        }
-
-        if (dto.getVehicleModelId() == null) {
-            log.error("VehicleModel ID is required");
-            throw new IllegalArgumentException("VehicleModel ID is required");
-        }
-
-        if (dto.getVehicleVariantId() == null) {
-            log.error("VehicleVariant ID is required");
-            throw new IllegalArgumentException("VehicleVariant ID is required");
-        }
-
-        if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
-            log.error("VIN number is required");
-            throw new IllegalArgumentException("VIN number is required");
-        }
-
-        StockDetails stock = new StockDetails();
-        stock.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
-        stock.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
-        stock.setSuffix(dto.getSuffix());
-        stock.setFuelType(dto.getFuelType());
-        stock.setColour(dto.getColour());
-        stock.setEngineColour(dto.getEngineColour());
-        stock.setTransmissionType(dto.getTransmissionType());
-        stock.setVariant(dto.getVariant());
-        stock.setQuantity(dto.getQuantity());
-        stock.setStockStatus(StockStatus.valueOf(dto.getStockStatus()));
-        stock.setInteriorColour(dto.getInteriorColour());
-        stock.setVinNumber(dto.getVinNumber());
-        stock.setCreatedAt(LocalDateTime.now());
-        stock.setUpdatedAt(LocalDateTime.now());
-        stock.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-        stock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
-
-        try {
-            StockDetails savedStock = stockDetailsRepository.save(stock);
-            log.info("Successfully saved stock detail for VIN: {}", savedStock.getVinNumber());
-            return savedStock;
-        } catch (Exception e) {
-            log.error("Failed to save stock detail: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to save stock detail: " + e.getMessage(), e);
-        }
-    }
 
     @Transactional
     public KendoGridResponse<MddpStock> saveMddpStock(List<MddpStockDTO> dtos) {
@@ -876,6 +723,7 @@ public class VehicleModelService {
                     stock.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
                     stock.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
                     stock.setSuffix(dto.getSuffix());
+                    stock.setModelName(dto.getModelName());
                     stock.setFuelType(dto.getFuelType());
                     stock.setColour(dto.getColour());
                     stock.setEngineColour(dto.getEngineColour());
@@ -905,116 +753,7 @@ public class VehicleModelService {
         }
     }
 
-    @Transactional
-    public MddpStock saveMddpStock(MddpStockDTO dto) {
-        log.info("Starting insertion of single MDDP stock at {}", LocalDateTime.now());
-
-        if (dto == null) {
-            log.error("Received null DTO");
-            throw new IllegalArgumentException("MDDP stock DTO cannot be null");
-        }
-
-        if (dto.getVehicleModelId() == null) {
-            log.error("VehicleModel ID is required");
-            throw new IllegalArgumentException("VehicleModel ID is required");
-        }
-
-        if (dto.getVehicleVariantId() == null) {
-            log.error("VehicleVariant ID is required");
-            throw new IllegalArgumentException("VehicleVariant ID is required");
-        }
-
-        if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
-            log.error("VIN number is required");
-            throw new IllegalArgumentException("VIN number is required");
-        }
-
-        if (dto.getExpectedDispatchDate() == null) {
-            log.error("Expected dispatch date is required");
-            throw new IllegalArgumentException("Expected dispatch date is required");
-        }
-
-        if (dto.getExpectedDeliveryDate() == null) {
-            log.error("Expected delivery date is required");
-            throw new IllegalArgumentException("Expected delivery date is required");
-        }
-
-        MddpStock stock = new MddpStock();
-        stock.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
-        stock.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
-        stock.setSuffix(dto.getSuffix());
-        stock.setFuelType(dto.getFuelType());
-        stock.setColour(dto.getColour());
-        stock.setEngineColour(dto.getEngineColour());
-        stock.setTransmissionType(dto.getTransmissionType());
-        stock.setVariant(dto.getVariant());
-        stock.setQuantity(dto.getQuantity());
-        stock.setStockStatus(StockStatus.valueOf(dto.getStockStatus()));
-        stock.setInteriorColour(dto.getInteriorColour());
-        stock.setVinNumber(dto.getVinNumber());
-        stock.setExpectedDispatchDate(dto.getExpectedDispatchDate());
-        stock.setExpectedDeliveryDate(dto.getExpectedDeliveryDate());
-        stock.setCreatedAt(LocalDateTime.now());
-        stock.setUpdatedAt(LocalDateTime.now());
-        stock.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-        stock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
-
-        try {
-            MddpStock savedMddpStock = mddpStockRepository.save(stock);
-            log.info("Successfully saved MDDP stock for VIN: {}", savedMddpStock.getVinNumber());
-            return savedMddpStock;
-        } catch (Exception e) {
-            log.error("Failed to save MDDP stock: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to save MDDP stock: " + e.getMessage(), e);
-        }
-    }
-
-    @Transactional
-    public KendoGridResponse<ManufacturerOrder> saveManufacturerOrders(List<ManufacturerOrderDTO> dtos) {
-        log.info("Saving {} manufacturer order entries", dtos != null ? dtos.size() : 0);
-
-        if (dtos == null || dtos.isEmpty()) {
-            log.error("Received empty manufacturer order list");
-            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Manufacturer order list cannot be empty", null);
-        }
-
-        List<ManufacturerOrder> ordersToSave = dtos.stream()
-                .peek(dto -> {
-                    if (dto.getVehicleVariantId() == null) {
-                        log.error("VehicleVariant ID is required");
-                        throw new IllegalArgumentException("VehicleVariant ID is required");
-                    }
-                    if (dto.getManufacturerLocation() == null || dto.getManufacturerLocation().trim().isEmpty()) {
-                        log.error("Manufacturer location is required");
-                        throw new IllegalArgumentException("Manufacturer location is required");
-                    }
-                    if (dto.getOrderStatus() == null || dto.getOrderStatus().trim().isEmpty()) {
-                        log.error("Order status is required");
-                        throw new IllegalArgumentException("Order status is required");
-                    }
-                })
-                .map(dto -> {
-                    ManufacturerOrder order = new ManufacturerOrder();
-                    order.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
-                    order.setManufacturerLocation(dto.getManufacturerLocation());
-                    order.setOrderStatus(OrderStatus.valueOf(dto.getOrderStatus()));
-                    order.setEstimatedArrivalDate(dto.getEstimatedArrivalDate());
-                    order.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-                    order.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
-                    return order;
-                })
-                .collect(Collectors.toList());
-
-        try {
-            List<ManufacturerOrder> savedOrders = manufacturerOrderRepository.saveAll(ordersToSave);
-            log.info("Successfully saved {} manufacturer order entries to database", savedOrders.size());
-            return new KendoGridResponse<>(savedOrders, (long) savedOrders.size(), null, null);
-        } catch (Exception e) {
-            log.error("Failed to save manufacturer orders: {}", e.getMessage(), e);
-            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save manufacturer orders: " + e.getMessage(), null);
-        }
-    }
-    @Transactional
+        @Transactional
     public KendoGridResponse<StockDetails> updateStockDetails(List<StockDetailsDTO> dtos) {
         log.info("Updating {} stock entries", dtos != null ? dtos.size() : 0);
 
@@ -1042,6 +781,9 @@ public class VehicleModelService {
             // Update fields from DTO (based on screenshot fields)
             if (dto.getVehicleModelId() != null) {
                 existingStock.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
+            }
+            if (dto.getModelName()!=null){
+                existingStock.setModelName(dto.getModelName());
             }
             if (dto.getVehicleVariantId() != null) {
                 existingStock.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
@@ -1119,6 +861,9 @@ public class VehicleModelService {
             if (dto.getVehicleVariantId() != null) {
                 existingStock.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
             }
+            if(dto.getModelName()!=null){
+                existingStock.setModelName(dto.getModelName());
+            }
             if (dto.getFuelType() != null) {
                 existingStock.setFuelType(dto.getFuelType());
             }
@@ -1171,47 +916,67 @@ public class VehicleModelService {
     }
 
     @Transactional
-    public ManufacturerOrder saveManufacturerOrder(ManufacturerOrderDTO dto) {
-        log.info("Starting insertion of single manufacturer order at {}", LocalDateTime.now());
+    public KendoGridResponse<ManufacturerOrder> saveManufacturerOrders(List<ManufacturerOrderDTO> dtos) {
+        log.info("Saving {} manufacturer order entries", dtos != null ? dtos.size() : 0);
 
-        if (dto == null) {
-            log.error("Received null DTO");
-            throw new IllegalArgumentException("Manufacturer order DTO cannot be null");
+        if (dtos == null || dtos.isEmpty()) {
+            log.error("Received empty manufacturer order list");
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Manufacturer order list cannot be empty", null);
         }
 
-        if (dto.getVehicleVariantId() == null) {
-            log.error("VehicleVariant ID is required");
-            throw new IllegalArgumentException("VehicleVariant ID is required");
-        }
-
-        if (dto.getManufacturerLocation() == null || dto.getManufacturerLocation().trim().isEmpty()) {
-            log.error("Manufacturer location is required");
-            throw new IllegalArgumentException("Manufacturer location is required");
-        }
-
-        if (dto.getOrderStatus() == null || dto.getOrderStatus().trim().isEmpty()) {
-            log.error("Order status is required");
-            throw new IllegalArgumentException("Order status is required");
-        }
-
-        ManufacturerOrder order = new ManufacturerOrder();
-        order.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
-        order.setManufacturerLocation(dto.getManufacturerLocation());
-        order.setOrderStatus(OrderStatus.valueOf(dto.getOrderStatus()));
-        order.setEstimatedArrivalDate(dto.getEstimatedArrivalDate());
-        order.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-        order.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+        List<ManufacturerOrder> ordersToSave = dtos.stream()
+                .peek(dto -> {
+                    if (dto.getVehicleVariantId() == null) {
+                        log.error("VehicleVariant ID is required");
+                        throw new IllegalArgumentException("VehicleVariant ID is required");
+                    }
+                    if (dto.getManufacturerLocation() == null || dto.getManufacturerLocation().trim().isEmpty()) {
+                        log.error("Manufacturer location is required");
+                        throw new IllegalArgumentException("Manufacturer location is required");
+                    }
+                    if (dto.getOrderStatus() == null || dto.getOrderStatus().trim().isEmpty()) {
+                        log.error("Order status is required");
+                        throw new IllegalArgumentException("Order status is required");
+                    }
+                    // Validate vinNumber uniqueness if provided
+                    if (dto.getVinNumber() != null && !dto.getVinNumber().trim().isEmpty()) {
+                        if (manufacturerOrderRepository.findByVinNumber(dto.getVinNumber()).isPresent()) {
+                            log.error("Duplicate VIN number: {}", dto.getVinNumber());
+                            throw new IllegalArgumentException("VIN number already exists: " + dto.getVinNumber());
+                        }
+                    }
+                })
+                .map(dto -> {
+                    ManufacturerOrder order = new ManufacturerOrder();
+                    order.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
+                    order.setManufacturerLocation(dto.getManufacturerLocation());
+                    order.setOrderStatus(OrderStatus.valueOf(dto.getOrderStatus()));
+                    order.setEstimatedArrivalDate(dto.getEstimatedArrivalDate());
+                    // Map additional fields
+                    order.setModelName(dto.getModelName());
+                    order.setFuelType(dto.getFuelType());
+                    order.setColour(dto.getColour());
+                    order.setVariant(dto.getVariant());
+                    order.setVinNumber(dto.getVinNumber());
+                    order.setSuffix(dto.getSuffix());
+                    order.setInteriorColour(dto.getInteriorColour());
+                    order.setEngineColour(dto.getEngineColour());
+                    order.setTransmissionType(dto.getTransmissionType());
+                    order.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
+                    order.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+                    return order;
+                })
+                .collect(Collectors.toList());
 
         try {
-            ManufacturerOrder savedOrder = manufacturerOrderRepository.save(order);
-            log.info("Successfully saved manufacturer order with ID: {}", savedOrder.getManufacturerId());
-            return savedOrder;
+            List<ManufacturerOrder> savedOrders = manufacturerOrderRepository.saveAll(ordersToSave);
+            log.info("Successfully saved {} manufacturer order entries to database", savedOrders.size());
+            return new KendoGridResponse<>(savedOrders, (long) savedOrders.size(), null, null);
         } catch (Exception e) {
-            log.error("Failed to save manufacturer order: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to save manufacturer order: " + e.getMessage(), e);
+            log.error("Failed to save manufacturer orders: {}", e.getMessage(), e);
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save manufacturer orders: " + e.getMessage(), null);
         }
     }
-
     private VehicleModel getVehicleModelEntity(Long modelId) {
         return vehicleModelRepository.findById(modelId)
                 .orElseThrow(() -> {
@@ -1233,6 +998,7 @@ public class VehicleModelService {
             dto.setStockId(stock.getStockId());
             dto.setVehicleModelId(stock.getVehicleModelId().getVehicleModelId());
             dto.setVehicleVariantId(stock.getVehicleVariantId().getVehicleVariantId());
+            dto.setModelName(stock.getModelName());
             dto.setVariant(stock.getVariant());
             dto.setColour(stock.getColour());
             dto.setEngineColour(stock.getEngineColour());
@@ -1254,6 +1020,7 @@ public class VehicleModelService {
             dto.setVehicleModelId(stock.getVehicleModelId().getVehicleModelId());
             dto.setVehicleVariantId(stock.getVehicleVariantId().getVehicleVariantId());
             dto.setVariant(stock.getVariant());
+            dto.setModelName(stock.getModelName());
             dto.setSuffix(stock.getSuffix());
             dto.setColour(stock.getColour());
             dto.setEngineColour(stock.getEngineColour());
@@ -1285,5 +1052,128 @@ public class VehicleModelService {
         }).collect(Collectors.toList());
 
         return new KendoGridResponse<>(dtoList, dtoList.size(), null, null);
+    }
+    public KendoGridResponse<ManufacturerOrderDTO> getAllManufacturerOrders() {
+        log.info("Retrieving all manufacturer orders");
+
+        try {
+            List<ManufacturerOrder> orders = manufacturerOrderRepository.findAll();
+            List<ManufacturerOrderDTO> dtos = orders.stream()
+                    .map(this::mapToManufacturerOrderDTO)
+                    .collect(Collectors.toList());
+
+            log.info("Successfully retrieved {} manufacturer orders", dtos.size());
+            return new KendoGridResponse<>(dtos, (long) dtos.size(), null, null);
+        } catch (Exception e) {
+            log.error("Failed to retrieve manufacturer orders: {}", e.getMessage(), e);
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Error retrieving manufacturer orders: " + e.getMessage(), null);
+        }
+    }
+    @Transactional
+    public KendoGridResponse<ManufacturerOrder> updateManufacturerOrders(List<ManufacturerOrderDTO> dtos) {
+        log.info("Updating {} manufacturer order entries", dtos != null ? dtos.size() : 0);
+
+        if (dtos == null || dtos.isEmpty()) {
+            log.error("Received empty manufacturer order list for update");
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Manufacturer order list cannot be empty", null);
+        }
+
+        List<ManufacturerOrder> updatedOrders = new ArrayList<>();
+
+        for (ManufacturerOrderDTO dto : dtos) {
+            // Validate required fields
+            if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
+                log.error("VIN number is required for update");
+                return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
+            }
+
+            // Find existing manufacturer order by VIN
+            ManufacturerOrder existingOrder = manufacturerOrderRepository.findByVinNumber(dto.getVinNumber())
+                    .orElseThrow(() -> {
+                        log.error("Manufacturer order not found with VIN: {}", dto.getVinNumber());
+                        return new IllegalArgumentException("Manufacturer order not found with VIN: " + dto.getVinNumber());
+                    });
+
+            // Update fields from DTO
+            if (dto.getManufacturerId() != null) {
+                existingOrder.setManufacturerId(dto.getManufacturerId());
+            }
+            if (dto.getVehicleVariantId() != null) {
+                existingOrder.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
+            }
+            if (dto.getManufacturerLocation() != null) {
+                existingOrder.setManufacturerLocation(dto.getManufacturerLocation());
+            }
+            if (dto.getOrderStatus() != null) {
+                existingOrder.setOrderStatus(OrderStatus.valueOf(dto.getOrderStatus()));
+            }
+            if (dto.getEstimatedArrivalDate() != null) {
+                existingOrder.setEstimatedArrivalDate(dto.getEstimatedArrivalDate());
+            }
+            if (dto.getModelName() != null) {
+                existingOrder.setModelName(dto.getModelName());
+            }
+            if (dto.getFuelType() != null) {
+                existingOrder.setFuelType(dto.getFuelType());
+            }
+            if (dto.getColour() != null) {
+                existingOrder.setColour(dto.getColour());
+            }
+            if (dto.getVariant() != null) {
+                existingOrder.setVariant(dto.getVariant());
+            }
+            if (dto.getSuffix() != null) {
+                existingOrder.setSuffix(dto.getSuffix());
+            }
+            if (dto.getInteriorColour() != null) {
+                existingOrder.setInteriorColour(dto.getInteriorColour());
+            }
+            if (dto.getEngineColour() != null) {
+                existingOrder.setEngineColour(dto.getEngineColour());
+            }
+            if (dto.getTransmissionType() != null) {
+                existingOrder.setTransmissionType(dto.getTransmissionType());
+            }
+
+            // Update audit fields
+            existingOrder.setUpdatedAt(LocalDateTime.now());
+            existingOrder.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+
+            updatedOrders.add(existingOrder);
+        }
+
+        try {
+            List<ManufacturerOrder> savedOrders = manufacturerOrderRepository.saveAll(updatedOrders);
+            log.info("Successfully updated {} manufacturer order entries", savedOrders.size());
+            return new KendoGridResponse<>(savedOrders, (long) savedOrders.size(), null, null);
+        } catch (Exception e) {
+            log.error("Failed to update manufacturer orders: {}", e.getMessage(), e);
+            return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to update manufacturer orders: " + e.getMessage(), null);
+        }
+    }
+
+    private ManufacturerOrderDTO mapToManufacturerOrderDTO(ManufacturerOrder order) {
+        ManufacturerOrderDTO dto = new ManufacturerOrderDTO();
+        dto.setManufacturerId(order.getManufacturerId());
+        dto.setVehicleVariantId(order.getVehicleVariantId() != null ? order.getVehicleVariantId().getVehicleVariantId() : null);
+        dto.setManufacturerLocation(order.getManufacturerLocation());
+        dto.setModelName(order.getModelName());
+        dto.setFuelType(order.getFuelType());
+        dto.setColour(order.getColour());
+        dto.setVariant(order.getVariant());
+        dto.setVinNumber(order.getVinNumber());
+        dto.setSuffix(order.getSuffix());
+        dto.setInteriorColour(order.getInteriorColour());
+        dto.setEngineColour(order.getEngineColour());
+        dto.setTransmissionType(order.getTransmissionType());
+        dto.setOrderStatus(order.getOrderStatus() != null ? order.getOrderStatus().name() : null);
+        dto.setEstimatedArrivalDate(order.getEstimatedArrivalDate());
+        dto.setCreatedBy(order.getCreatedBy());
+        dto.setUpdatedBy(order.getUpdatedBy());
+        return dto;
+    }
+    public KendoGridResponse<VehicleVariant> getAllVehicleVariants() {
+        List<VehicleVariant> variants =vehicleVariantRepository.findAll();
+        return new KendoGridResponse<>(variants, variants.size(), null, null);
     }
 }

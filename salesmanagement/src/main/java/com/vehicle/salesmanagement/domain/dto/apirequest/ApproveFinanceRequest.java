@@ -8,6 +8,7 @@ public class ApproveFinanceRequest {
 
     @NotNull(message = "Customer order ID cannot be null")
     private Long customerOrderId;
+    private String financeStatus;
 
     @NotNull(message = "Approved by cannot be null")
     @jakarta.validation.constraints.Size(min = 1, max = 100, message = "Approved by must be between 1 and 100 characters")

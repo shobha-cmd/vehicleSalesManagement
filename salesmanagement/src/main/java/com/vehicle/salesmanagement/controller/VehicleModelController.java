@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -178,12 +179,12 @@ public class VehicleModelController {
                             @ExampleObject(
                                     name = "Single Variant Example",
                                     summary = "Data type example for a single vehicle variant",
-                                    value = "{\"vehicleModelId\": \"integer\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}"
+                                    value = "{\"vehicleModelId\": \"integer\", \"modelName\":\"string\",\"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}"
                             ),
                             @ExampleObject(
                                     name = "Multiple Variants Example",
                                     summary = "Data type example for multiple vehicle variants",
-                                    value = "[{\"vehicleModelId\": \"integer\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}]"
+                                    value = "[{\"vehicleModelId\": \"integer\", \"modelName\":\"string\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}]"
                             )
                     }
             )
@@ -219,12 +220,12 @@ public class VehicleModelController {
                             @ExampleObject(
                                     name = "Single Stock Example",
                                     summary = "Data type example for a single stock detail",
-                                    value = "{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}"
+                                    value = "{\"vehicleModelId\": \"integer\", \"modelName\":\"string\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}"
                             ),
                             @ExampleObject(
                                     name = "Multiple Stock Example",
                                     summary = "Data type example for multiple stock details",
-                                    value = "[{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}]"
+                                    value = "[{\"vehicleModelId\": \"integer\", \"modelName\":\"string\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}]"
                             )
                     }
             )
@@ -260,12 +261,12 @@ public class VehicleModelController {
                             @ExampleObject(
                                     name = "Single MDDP Stock Example",
                                     summary = "Data type example for a single MDDP stock detail",
-                                    value = "{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}"
+                                    value = "{\"vehicleModelId\": \"integer\", \"modelName\":\"string\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}"
                             ),
                             @ExampleObject(
                                     name = "Multiple MDDP Stock Example",
                                     summary = "Data type example for multiple MDDP stock details",
-                                    value = "[{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}]"
+                                    value = "[{\"vehicleModelId\": \"integer\", \"modelName\":\"string\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"createdBy\": \"string\", \"updatedBy\": \"string\"}]"
                             )
                     }
             )
@@ -312,7 +313,7 @@ public class VehicleModelController {
                     }
             )
     )
-    public ResponseEntity<KendoGridResponse<ManufacturerOrder>> saveManufacturerOrders(@org.springframework.web.bind.annotation.RequestBody Object request) throws JsonProcessingException {
+    public ResponseEntity<KendoGridResponse<ManufacturerOrder>> saveManufacturerOrders(@Valid @org.springframework.web.bind.annotation.RequestBody Object request) throws JsonProcessingException {
         log.info("Received request to save manufacturer orders at {}", java.time.LocalDateTime.now());
         try {
             List<ManufacturerOrderDTO> dtos = normalizeToList(request, ManufacturerOrderDTO.class);
@@ -342,12 +343,12 @@ public class VehicleModelController {
                             @ExampleObject(
                                     name = "Single Stock Update Example",
                                     summary = "Data type example for a single stock detail update",
-                                    value = "{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"updatedBy\": \"string\"}"
+                                    value = "{\"vehicleModelId\": \"integer\", \"modelName\":\"string\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"updatedBy\": \"string\"}"
                             ),
                             @ExampleObject(
                                     name = "Multiple Stock Update Example",
                                     summary = "Data type example for multiple stock details update",
-                                    value = "[{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"updatedBy\": \"string\"}]"
+                                    value = "[{\"vehicleModelId\": \"integer\",\"modelName\":\"string\",\"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"updatedBy\": \"string\"}]"
                             )
                     }
             )
@@ -394,12 +395,12 @@ public class VehicleModelController {
                             @ExampleObject(
                                     name = "Single MDDP Stock Update Example",
                                     summary = "Data type example for a single MDDP stock detail update",
-                                    value = "{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"updatedBy\": \"string\"}"
+                                    value = "{\"vehicleModelId\": \"integer\",\"modelName\":\"string\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"updatedBy\": \"string\"}"
                             ),
                             @ExampleObject(
                                     name = "Multiple MDDP Stock Update Example",
                                     summary = "Data type example for multiple MDDP stock details update",
-                                    value = "[{\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"updatedBy\": \"string\"}]"
+                                    value = "[{\"vehicleModelId\": \"integer\",\"modelName\":\"string\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"vehicleVariantId\": \"integer\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"quantity\": \"integer\", \"stockStatus\": \"string\", \"expectedDispatchDate\": \"2025-12-31T00:00:00\", \"expectedDeliveryDate\": \"2026-01-07T00:00:00\", \"updatedBy\": \"string\"}]"
                             )
                     }
             )
@@ -451,6 +452,17 @@ public class VehicleModelController {
     public ResponseEntity<KendoGridResponse<FinanceDTO>> getFinanceDetails() {
         return ResponseEntity.ok(vehicleModelService.getAllFinanceDetails());
     }
+    @GetMapping("/vehiclevariants")
+    @Operation(summary = "Get all vehicle variants", description = "Returns a list of all vehicle variants for the Kendo Grid")
+    public ResponseEntity<KendoGridResponse<VehicleVariant>> getAllVehicleVariants() {
+        return ResponseEntity.ok(vehicleModelService.getAllVehicleVariants());
+    }
+    @GetMapping("/manufacturerOrders")
+    @Operation(summary = "Get all manufacturer orders", description = "Returns manufacturer order data compatible with Kendo Grid")
+    public ResponseEntity<KendoGridResponse<ManufacturerOrderDTO>> getAllManufacturerOrders() {
+        return ResponseEntity.ok(vehicleModelService.getAllManufacturerOrders());
+    }
+
     @PutMapping("/vehiclevariants/update")
     @Operation(summary = "Update vehicle variant(s)", description = "Updates one or multiple vehicle variants by VIN. Examples show field data types.")
     @RequestBody(
@@ -463,12 +475,12 @@ public class VehicleModelController {
                             @ExampleObject(
                                     name = "Single Variant Update Example",
                                     summary = "Data type example for a single vehicle variant update",
-                                    value = "{\"vehicleModelId\": \"integer\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"updatedBy\": \"string\"}"
+                                    value = "{\"vehicleModelId\": \"integer\",\"modelName\":\"string\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"updatedBy\": \"string\"}"
                             ),
                             @ExampleObject(
                                     name = "Multiple Variants Update Example",
                                     summary = "Data type example for multiple vehicle variant updates",
-                                    value = "[{\"vehicleModelId\": \"integer\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"updatedBy\": \"string\"}]"
+                                    value = "[{\"vehicleModelId\": \"integer\",\"modelName\":\"string\",\"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"updatedBy\": \"string\"}, {\"vehicleModelId\": \"integer\", \"variant\": \"string\", \"suffix\": \"string\", \"safetyFeature\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"engineCapacity\": \"string\", \"fuelType\": \"string\", \"price\": \"number\", \"yearOfManufacture\": \"integer\", \"bodyType\": \"string\", \"fuelTankCapacity\": \"number\", \"seatingCapacity\": \"integer\", \"maxPower\": \"string\", \"maxTorque\": \"string\", \"topSpeed\": \"string\", \"wheelBase\": \"string\", \"width\": \"string\", \"length\": \"string\", \"infotainment\": \"string\", \"comfort\": \"string\", \"numberOfAirBags\": \"integer\", \"mileageCity\": \"number\", \"mileageHighway\": \"number\", \"updatedBy\": \"string\"}]"
                             )
                     }
             )
@@ -492,4 +504,61 @@ public class VehicleModelController {
                     .body(new KendoGridResponse<VehicleVariant>(Collections.emptyList(), 0L, "Error updating vehicle variants: " + e.getMessage(), null));
         }
     }
-}
+    @PutMapping("/manufacturerorders/update")
+    @Operation(summary = "Update manufacturer order(s)", description = "Updates one or multiple manufacturer orders by VIN. Examples show field data types.")
+    @RequestBody(
+            description = "Manufacturer order(s) to update. Includes fields like manufacturerId (integer), vehicleVariantId (integer), manufacturerLocation (string), orderStatus (string), vinNumber (string, required), etc. Examples show data types.",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(anyOf = { ManufacturerOrderDTO.class, ManufacturerOrderDTO[].class }),
+                    examples = {
+                            @ExampleObject(
+                                    name = "Single Manufacturer Order Update Example",
+                                    summary = "Data type example for a single manufacturer order update",
+                                    value = "{\"manufacturerId\": 2, \"vehicleVariantId\": \"integer\", \"manufacturerLocation\": \"string\", \"orderStatus\": \"string\", \"estimatedArrivalDate\": \"2025-12-31T00:00:00\", \"modelName\": \"string\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"updatedBy\": \"string\"}"
+                            ),
+                            @ExampleObject(
+                                    name = "Multiple Manufacturer Orders Update Example",
+                                    summary = "Data type example for multiple manufacturer orders update",
+                                    value = "[{\"manufacturerId\": 2, \"vehicleVariantId\": \"integer\", \"manufacturerLocation\": \"string\", \"orderStatus\": \"string\", \"estimatedArrivalDate\": \"2025-12-31T00:00:00\", \"modelName\": \"string\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"updatedBy\": \"string\"}, {\"manufacturerId\": \"integer\", \"vehicleVariantId\": \"integer\", \"manufacturerLocation\": \"string\", \"orderStatus\": \"string\", \"estimatedArrivalDate\": \"2025-12-31T00:00:00\", \"modelName\": \"string\", \"suffix\": \"string\", \"fuelType\": \"string\", \"colour\": \"string\", \"engineColour\": \"string\", \"transmissionType\": \"string\", \"variant\": \"string\", \"interiorColour\": \"string\", \"vinNumber\": \"string\", \"updatedBy\": \"string\"}]"
+                            )
+                    }
+            )
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Manufacturer orders updated successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class)))
+    })
+    public ResponseEntity<KendoGridResponse<ManufacturerOrder>> updateManufacturerOrders(@Valid @org.springframework.web.bind.annotation.RequestBody List<ManufacturerOrderDTO> dtos) {
+        log.info("Received request to update {} manufacturer orders at {}", dtos.size(), java.time.LocalDateTime.now());
+        try {
+            if (dtos == null || dtos.isEmpty()) {
+                log.error("Request body is null or empty");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Request body cannot be null or empty", null));
+            }
+            KendoGridResponse<ManufacturerOrder> serviceResponse = vehicleModelService.updateManufacturerOrders(dtos);
+            List<ManufacturerOrder> updatedOrders = serviceResponse.getData();
+            log.info("Successfully updated {} manufacturer orders", updatedOrders.size());
+            return ResponseEntity.ok(new KendoGridResponse<>(updatedOrders, (long) updatedOrders.size(), null, null));
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid manufacturer order update request: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Invalid request: " + e.getMessage(), null));
+        } catch (Exception e) {
+            log.error("Error updating manufacturer orders: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Error updating manufacturer orders: " + e.getMessage(), null));
+        }
+    }
+
+    }
+

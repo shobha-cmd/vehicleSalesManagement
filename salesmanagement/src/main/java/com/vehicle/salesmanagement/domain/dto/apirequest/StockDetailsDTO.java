@@ -16,8 +16,15 @@ public class StockDetailsDTO {
     private String vinNumber;
     private String createdBy;
     private String updatedBy;
+    private String modelName;
 
+    public String getModelName() {
+        return modelName;
+    }
 
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
 
     public Long getVehicleModelId() {
         return vehicleModelId;

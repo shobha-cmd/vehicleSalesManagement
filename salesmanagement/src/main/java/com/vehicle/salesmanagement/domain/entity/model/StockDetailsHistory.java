@@ -37,6 +37,10 @@ public class StockDetailsHistory {
     @Column(name = "colour")
     private String colour;
 
+    @Column(name="modelName")
+    private String modelName;
+
+
     @Column(name = "engine_colour")
     private String engineColour;
 
@@ -72,6 +76,14 @@ public class StockDetailsHistory {
 
     @Column(name = "stock_history")
     private String stockHistory;
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
 
     public Long getHistoryId() {
         return historyId;

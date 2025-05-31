@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 public class VehicleVariantDTO {
 
     private Long vehicleModelId;
+    private String modelName;
     private String variant;
     private String suffix;
     private String safetyFeature;
@@ -34,6 +35,14 @@ public class VehicleVariantDTO {
     private BigDecimal mileageHighway;
     private String createdBy;
     private String updatedBy;
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
 
     // Getters and Setters
     public Long getVehicleModelId() {

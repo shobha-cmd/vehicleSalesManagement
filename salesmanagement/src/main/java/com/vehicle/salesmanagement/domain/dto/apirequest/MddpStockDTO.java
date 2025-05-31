@@ -1,10 +1,13 @@
 package com.vehicle.salesmanagement.domain.dto.apirequest;
 
+import jakarta.persistence.Column;
+
 import java.time.LocalDateTime;
 
 public class MddpStockDTO {
     private Long vehicleModelId;
     private Long vehicleVariantId;
+    private String modelName;
     private String suffix;
     private String fuelType;
     private String colour;
@@ -19,6 +22,14 @@ public class MddpStockDTO {
     private String updatedBy;
     private LocalDateTime expectedDispatchDate;
     private LocalDateTime expectedDeliveryDate;
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
 
     public Long getVehicleModelId() {
         return vehicleModelId;

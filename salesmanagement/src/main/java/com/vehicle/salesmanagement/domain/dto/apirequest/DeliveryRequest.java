@@ -17,6 +17,6 @@ public class DeliveryRequest {
     @NotNull(message = "Recipient name cannot be null")
     @Size(min = 1, max = 100, message = "Recipient name must be between 1 and 100 characters")
     private String recipientName;
-    private String createdBy;
-    private String updatedBy;
+//    private String createdBy;
+//    private String updatedBy;
 }

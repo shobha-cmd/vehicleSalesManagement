@@ -18,6 +18,6 @@ public class FinanceResponse {
     private String variant;
     private String approvedBy;
     private String rejectedBy;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+//    private LocalDateTime createdAt;
+//    private LocalDateTime updatedAt;
 }

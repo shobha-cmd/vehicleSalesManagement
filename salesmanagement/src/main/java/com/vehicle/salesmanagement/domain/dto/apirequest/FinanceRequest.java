@@ -43,13 +43,13 @@ public class FinanceRequest {
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;
 
-    @NotNull(message = "Total price cannot be null")
-    @DecimalMin(value = "0.01", message = "Total price must be greater than 0")
-    private Double totalPrice;
-
-    @NotNull(message = "Booking amount cannot be null")
-    @DecimalMin(value = "0.01", message = "Booking amount must be greater than 0")
-    private Double bookingAmount;
+//    @NotNull(message = "Total price cannot be null")
+//    @DecimalMin(value = "0.01", message = "Total price must be greater than 0")
+//    private Double totalPrice;
+//
+//    @NotNull(message = "Booking amount cannot be null")
+//    @DecimalMin(value = "0.01", message = "Booking amount must be greater than 0")
+//    private Double bookingAmount;
 
     @NotBlank(message = "Payment mode cannot be blank")
     @Size(min = 1, max = 50, message = "Payment mode must be between 1 and 50 characters")

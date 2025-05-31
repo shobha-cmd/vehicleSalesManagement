@@ -66,8 +66,8 @@ public class DispatchDeliveryService {
         dispatchDetails.setDispatchStatus(DispatchStatus.PREPARING);
         dispatchDetails.setDispatchedBy(request.getDispatchedBy());
         dispatchDetails.setDispatchDate(LocalDateTime.now());
-        dispatchDetails.setCreatedAt(LocalDateTime.now());
-        dispatchDetails.setUpdatedAt(LocalDateTime.now());
+//        dispatchDetails.setCreatedAt(LocalDateTime.now());
+//        dispatchDetails.setUpdatedAt(LocalDateTime.now());
         dispatchDetailsRepository.save(dispatchDetails);
 
         historyService.saveOrderHistory(orderDetails, request.getDispatchedBy(), OrderStatus.DISPATCHED);
@@ -115,8 +115,8 @@ public class DispatchDeliveryService {
         deliveryDetails.setDeliveryDate(LocalDateTime.now());
         deliveryDetails.setDeliveredBy(request.getDeliveredBy());
         deliveryDetails.setRecipientName(request.getRecipientName());
-        deliveryDetails.setCreatedAt(LocalDateTime.now());
-        deliveryDetails.setUpdatedAt(LocalDateTime.now());
+//        deliveryDetails.setCreatedAt(LocalDateTime.now());
+//        deliveryDetails.setUpdatedAt(LocalDateTime.now());
         deliveryDetailsRepository.save(deliveryDetails);
 
         historyService.saveOrderHistory(orderDetails, request.getDeliveredBy(), OrderStatus.DELIVERED);
@@ -152,8 +152,8 @@ public class DispatchDeliveryService {
         response.setVariant(orderDetails.getVariant());
         response.setDispatchDate(dispatchDetails.getDispatchDate());
         response.setDispatchedBy(dispatchDetails.getDispatchedBy());
-        response.setCreatedAt(dispatchDetails.getCreatedAt());
-        response.setUpdatedAt(dispatchDetails.getUpdatedAt());
+//        response.setCreatedAt(dispatchDetails.getCreatedAt());
+//        response.setUpdatedAt(dispatchDetails.getUpdatedAt());
         return response;
     }
 
@@ -176,8 +176,8 @@ public class DispatchDeliveryService {
         response.setDeliveryDate(deliveryDetails.getDeliveryDate());
         response.setDeliveredBy(deliveryDetails.getDeliveredBy());
         response.setRecipientName(deliveryDetails.getRecipientName());
-        response.setCreatedAt(deliveryDetails.getCreatedAt());
-        response.setUpdatedAt(deliveryDetails.getUpdatedAt());
+//        response.setCreatedAt(deliveryDetails.getCreatedAt());
+//        response.setUpdatedAt(deliveryDetails.getUpdatedAt());
         return response;
     }
 }

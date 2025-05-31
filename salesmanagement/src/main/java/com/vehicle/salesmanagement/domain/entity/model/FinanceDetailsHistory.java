@@ -29,9 +29,9 @@ public class FinanceDetailsHistory {
     @Column(nullable = false)
     private FinanceStatus financeStatus;
 
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
+//    private LocalDateTime createdAt;
+//
+//    private LocalDateTime updatedAt;
 
     private String approvedBy;
 

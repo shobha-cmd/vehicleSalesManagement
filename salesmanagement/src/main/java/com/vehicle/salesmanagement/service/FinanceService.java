@@ -44,8 +44,8 @@ public class FinanceService {
         financeDetails.setCustomerOrderId(request.getCustomerOrderId());
         financeDetails.setCustomerName(request.getCustomerName());
         financeDetails.setFinanceStatus(FinanceStatus.PENDING);
-        financeDetails.setCreatedAt(LocalDateTime.now());
-        financeDetails.setUpdatedAt(LocalDateTime.now());
+//        financeDetails.setCreatedAt(LocalDateTime.now());
+//        financeDetails.setUpdatedAt(LocalDateTime.now());
         financeDetailsRepository.save(financeDetails);
 
         return mapToFinanceResponse(financeDetails, orderDetails);
@@ -84,7 +84,7 @@ public class FinanceService {
         historyService.saveFinanceHistory(financeDetails, approvedBy);
         financeDetails.setFinanceStatus(FinanceStatus.APPROVED);
         financeDetails.setApprovedBy(approvedBy);
-        financeDetails.setUpdatedAt(LocalDateTime.now());
+        //financeDetails.setUpdatedAt(LocalDateTime.now());
         financeDetailsRepository.save(financeDetails);
 
         historyService.saveOrderHistory(orderDetails, approvedBy, OrderStatus.ALLOTTED); // Pass new status
@@ -113,7 +113,7 @@ public class FinanceService {
         historyService.saveFinanceHistory(financeDetails, rejectedBy);
         financeDetails.setFinanceStatus(FinanceStatus.REJECTED);
         financeDetails.setRejectedBy(rejectedBy);
-        financeDetails.setUpdatedAt(LocalDateTime.now());
+       // financeDetails.setUpdatedAt(LocalDateTime.now());
         financeDetailsRepository.save(financeDetails);
 
         historyService.saveOrderHistory(orderDetails, rejectedBy, OrderStatus.PENDING); // Pass new status
@@ -135,8 +135,8 @@ public class FinanceService {
         response.setVariant(orderDetails.getVariant());
         response.setApprovedBy(financeDetails.getApprovedBy());
         response.setRejectedBy(financeDetails.getRejectedBy());
-        response.setCreatedAt(financeDetails.getCreatedAt());
-        response.setUpdatedAt(financeDetails.getUpdatedAt());
+//        response.setCreatedAt(financeDetails.getCreatedAt());
+//        response.setUpdatedAt(financeDetails.getUpdatedAt());
         return response;
     }
 }

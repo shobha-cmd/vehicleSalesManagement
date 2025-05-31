@@ -77,7 +77,7 @@ public class VehicleOrderService {
 
         OrderResponse response = mapToOrderResponse(orderRequest);
         response.setOrderStatus(OrderStatus.BLOCKED);
-        response.setCreatedAt(LocalDateTime.now());
+       // response.setCreatedAt(LocalDateTime.now());
         return response;
     }
     @Transactional
@@ -113,7 +113,7 @@ public class VehicleOrderService {
 
                 OrderResponse response = mapToOrderResponse(orderRequest);
                 response.setOrderStatus(OrderStatus.BLOCKED);
-                response.setCreatedAt(LocalDateTime.now());
+                //response.setCreatedAt(LocalDateTime.now());
                 return response;
             }
         }
@@ -162,7 +162,7 @@ public class VehicleOrderService {
         orderDetails = orderRepository.save(orderDetails);
         //historyService.saveOrderHistory(orderDetails, orderDetails.getUpdatedBy(), OrderStatus.NOTIFIED);
         orderResponse.setOrderStatus(OrderStatus.NOTIFIED);
-        orderResponse.setUpdatedAt(LocalDateTime.now());
+       // orderResponse.setUpdatedAt(LocalDateTime.now());
         return orderResponse;
     }
 
@@ -254,7 +254,7 @@ public class VehicleOrderService {
 //        response.setBookingAmount(bookingAmount);
 
         response.setPaymentMode(request.getPaymentMode() != null ? request.getPaymentMode() : "");
-        response.setCreatedAt(LocalDateTime.now());
+       // response.setCreatedAt(LocalDateTime.now());
 //        response.setCreatedBy(request.getCreatedBy() != null ? request.getCreatedBy() : "system");
 //        response.setUpdatedBy(request.getUpdatedBy() != null ? request.getUpdatedBy() : "system");
         return response;

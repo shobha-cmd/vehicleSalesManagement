@@ -25,9 +25,9 @@ public class FinanceDetails {
     @Column(nullable = false)
     private FinanceStatus financeStatus; // PENDING, APPROVED, REJECTED
 
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
+//    private LocalDateTime createdAt;
+//
+//    private LocalDateTime updatedAt;
 
     private String approvedBy;
 

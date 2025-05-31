@@ -13,6 +13,6 @@ public class DispatchRequest {
     @NotNull(message = "Dispatched by cannot be null")
     @Size(min = 1, max = 100, message = "Dispatched by must be between 1 and 100 characters")
     private String dispatchedBy;
-    private String createdBy;
-    private String updatedBy;
+//    private String createdBy;
+//    private String updatedBy;
 }

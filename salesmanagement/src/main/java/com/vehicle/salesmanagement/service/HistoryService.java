@@ -74,8 +74,8 @@ public class HistoryService {
         history.setCustomerOrderId(financeDetails.getCustomerOrderId());
         history.setCustomerName(financeDetails.getCustomerName());
         history.setFinanceStatus(financeDetails.getFinanceStatus());
-        history.setCreatedAt(financeDetails.getCreatedAt());
-        history.setUpdatedAt(financeDetails.getUpdatedAt());
+//        history.setCreatedAt(financeDetails.getCreatedAt());
+//        history.setUpdatedAt(financeDetails.getUpdatedAt());
         history.setApprovedBy(financeDetails.getApprovedBy());
         history.setRejectedBy(financeDetails.getRejectedBy());
         history.setChangedAt(LocalDateTime.now());
@@ -94,9 +94,9 @@ public class HistoryService {
         history.setDispatchStatus(dispatchDetails.getDispatchStatus());
         history.setDispatchDate(dispatchDetails.getDispatchDate());
         history.setDispatchedBy(dispatchDetails.getDispatchedBy());
-        history.setCreatedAt(dispatchDetails.getCreatedAt());
-        history.setUpdatedAt(dispatchDetails.getUpdatedAt());
-        history.setCreatedBy(dispatchDetails.getCreatedBy());
+//        history.setCreatedAt(dispatchDetails.getCreatedAt());
+//        history.setUpdatedAt(dispatchDetails.getUpdatedAt());
+//        history.setCreatedBy(dispatchDetails.getCreatedBy());
         history.setUpdatedBy(updatedBy != null ? updatedBy : "system");
         history.setChangedAt(LocalDateTime.now());
         history.setDispatchStatusHistory("Dispatch status changed to: " + dispatchDetails.getDispatchStatus().name() + " at " + history.getChangedAt());
@@ -115,12 +115,12 @@ public class HistoryService {
         history.setDeliveryDate(deliveryDetails.getDeliveryDate());
         history.setDeliveredBy(deliveryDetails.getDeliveredBy());
         history.setRecipientName(deliveryDetails.getRecipientName());
-        history.setCreatedAt(deliveryDetails.getCreatedAt());
-        history.setUpdatedAt(deliveryDetails.getUpdatedAt());
-        history.setCreatedBy(deliveryDetails.getCreatedBy());
-        history.setUpdatedBy(updatedBy != null ? updatedBy : "system");
-        history.setChangedAt(LocalDateTime.now());
-        history.setDeliveryStatusHistory("Delivery status changed to: " + deliveryDetails.getDeliveryStatus().name() + " at " + history.getChangedAt());
+//        history.setCreatedAt(deliveryDetails.getCreatedAt());
+//        history.setUpdatedAt(deliveryDetails.getUpdatedAt());
+//        history.setCreatedBy(deliveryDetails.getCreatedBy());
+//        history.setUpdatedBy(updatedBy != null ? updatedBy : "system");
+//        history.setChangedAt(LocalDateTime.now());
+        //history.setDeliveryStatusHistory("Delivery status changed to: " + deliveryDetails.getDeliveryStatus().name() + " at " + history.getChangedAt());
         deliveryHistoryRepository.save(history);
         log.info("DeliveryDetailsHistory saved for delivery ID: {}", deliveryDetails.getDeliveryId());
     }

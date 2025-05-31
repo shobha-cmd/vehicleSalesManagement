@@ -18,6 +18,6 @@ public class DeliveryResponse {
     private LocalDateTime deliveryDate;
     private String deliveredBy;
     private String recipientName;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+//    private LocalDateTime createdAt;
+//    private LocalDateTime updatedAt;
 }

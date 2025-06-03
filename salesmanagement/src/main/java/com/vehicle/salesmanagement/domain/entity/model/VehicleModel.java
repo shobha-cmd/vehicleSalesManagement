@@ -22,17 +22,17 @@ public class VehicleModel {
     @Column(name = "model_name", length = 255, nullable = false)
     private String modelName;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", updatable = false)
-    private LocalDateTime updatedAt;
-
-    @Column(name = "created_by", length = 100)
-    private String createdBy;
-
-    @Column(name = "updated_by", length = 100)
-    private String updatedBy;
+//    @Column(name = "created_at", updatable = false)
+//    private LocalDateTime createdAt;
+//
+//    @Column(name = "updated_at", updatable = false)
+//    private LocalDateTime updatedAt;
+//
+//    @Column(name = "created_by", length = 100)
+//    private String createdBy;
+//
+//    @Column(name = "updated_by", length = 100)
+//    private String updatedBy;
 
     public Long getVehicleModelId() {
         return vehicleModelId;
@@ -50,35 +50,35 @@ public class VehicleModel {
         this.modelName = modelName;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
+//    public LocalDateTime getCreatedAt() {
+//        return createdAt;
+//    }
+//
+//    public void setCreatedAt(LocalDateTime createdAt) {
+//        this.createdAt = createdAt;
+//    }
+//
+//    public LocalDateTime getUpdatedAt() {
+//        return updatedAt;
+//    }
+//
+//    public void setUpdatedAt(LocalDateTime updatedAt) {
+//        this.updatedAt = updatedAt;
+//    }
+//
+//    public String getCreatedBy() {
+//        return createdBy;
+//    }
+//
+//    public void setCreatedBy(String createdBy) {
+//        this.createdBy = createdBy;
+//    }
+//
+//    public String getUpdatedBy() {
+//        return updatedBy;
+//    }
+//
+//    public void setUpdatedBy(String updatedBy) {
+//        this.updatedBy = updatedBy;
+//    }
 }

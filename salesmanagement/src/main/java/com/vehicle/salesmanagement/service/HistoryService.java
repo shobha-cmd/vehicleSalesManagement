@@ -54,7 +54,7 @@ public class HistoryService {
         //history.setTotalPrice(orderDetails.getTotalPrice());
         history.setTransmissionType(orderDetails.getTransmissionType());
         //history.setUpdatedAt(orderDetails.getUpdatedAt());
-        history.setUpdatedBy(updatedBy != null ? updatedBy : "system");
+       // history.setUpdatedBy(updatedBy != null ? updatedBy : "system");
         history.setVariant(orderDetails.getVariant());
         history.setVehicleModel(orderDetails.getVehicleModelId());
         history.setVehicleVariant(orderDetails.getVehicleVariantId());
@@ -97,7 +97,7 @@ public class HistoryService {
 //        history.setCreatedAt(dispatchDetails.getCreatedAt());
 //        history.setUpdatedAt(dispatchDetails.getUpdatedAt());
 //        history.setCreatedBy(dispatchDetails.getCreatedBy());
-        history.setUpdatedBy(updatedBy != null ? updatedBy : "system");
+      //  history.setUpdatedBy(updatedBy != null ? updatedBy : "system");
         history.setChangedAt(LocalDateTime.now());
         history.setDispatchStatusHistory("Dispatch status changed to: " + dispatchDetails.getDispatchStatus().name() + " at " + history.getChangedAt());
         dispatchHistoryRepository.save(history);
@@ -143,10 +143,10 @@ public class HistoryService {
         history.setStockStatus(stockDetails.getStockStatus().name());
         history.setInteriorColour(stockDetails.getInteriorColour());
         history.setVinNumber(stockDetails.getVinNumber());
-        history.setCreatedAt(LocalDateTime.now());
-        history.setUpdatedAt(LocalDateTime.now());
-        history.setCreatedBy(updatedBy);
-        history.setUpdatedBy(updatedBy);
+//        history.setCreatedAt(LocalDateTime.now());
+//        history.setUpdatedAt(LocalDateTime.now());
+//        history.setCreatedBy(updatedBy);
+//        history.setUpdatedBy(updatedBy);
         history.setStockHistory(action); // e.g., "Stock Blocked", "Stock Restored", "Stock Transferred from MDDP"
 
         stockDetailsHistoryRepository.save(history);

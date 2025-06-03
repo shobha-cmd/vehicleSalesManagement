@@ -68,11 +68,11 @@ public class StockDetails {
     @Column(name = "vin_number", unique = true, length = 50)
     private String vinNumber;
 
-    @Column(name = "created_by", length = 100)
-    private String createdBy;
-
-    @Column(name = "updated_by", length = 100)
-    private String updatedBy;
+//    @Column(name = "created_by", length = 100)
+//    private String createdBy;
+//
+//    @Column(name = "updated_by", length = 100)
+//    private String updatedBy;
 
     public Long getStockId() {
         return stockId;
@@ -202,21 +202,21 @@ public class StockDetails {
         this.vinNumber = vinNumber;
     }
 
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
+//    public String getCreatedBy() {
+//        return createdBy;
+//    }
+//
+//    public void setCreatedBy(String createdBy) {
+//        this.createdBy = createdBy;
+//    }
+//
+//    public String getUpdatedBy() {
+//        return updatedBy;
+//    }
+//
+//    public void setUpdatedBy(String updatedBy) {
+//        this.updatedBy = updatedBy;
+//    }
 
     public void setVehicleVariant(VehicleVariant vehicleVariant) {
     }

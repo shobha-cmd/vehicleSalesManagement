@@ -30,11 +30,11 @@ public class VehicleOrderDetailsHistory {
     @Column(name = "colour")
     private String colour;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "created_by")
-    private String createdBy;
+//    @Column(name = "created_at")
+//    private LocalDateTime createdAt;
+//
+//    @Column(name = "created_by")
+//    private String createdBy;
 
     @Column(name = "current_address")
     private String currentAddress;
@@ -75,11 +75,11 @@ public class VehicleOrderDetailsHistory {
     @Column(name = "transmission_type")
     private String transmissionType;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @Column(name = "updated_by")
-    private String updatedBy;
+//    @Column(name = "updated_at")
+//    private LocalDateTime updatedAt;
+//
+//    @Column(name = "updated_by")
+//    private String updatedBy;
 
     @Column(name = "variant")
     private String variant;
@@ -145,21 +145,21 @@ public class VehicleOrderDetailsHistory {
         this.colour = colour;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
+//    public LocalDateTime getCreatedAt() {
+//        return createdAt;
+//    }
+//
+//    public void setCreatedAt(LocalDateTime createdAt) {
+//        this.createdAt = createdAt;
+//    }
+//
+//    public String getCreatedBy() {
+//        return createdBy;
+//    }
+//
+//    public void setCreatedBy(String createdBy) {
+//        this.createdBy = createdBy;
+//    }
 
     public String getCurrentAddress() {
         return currentAddress;
@@ -265,21 +265,21 @@ public class VehicleOrderDetailsHistory {
         this.transmissionType = transmissionType;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
+//    public LocalDateTime getUpdatedAt() {
+//        return updatedAt;
+//    }
+//
+//    public void setUpdatedAt(LocalDateTime updatedAt) {
+//        this.updatedAt = updatedAt;
+//    }
+//
+//    public String getUpdatedBy() {
+//        return updatedBy;
+//    }
+//
+//    public void setUpdatedBy(String updatedBy) {
+//        this.updatedBy = updatedBy;
+//    }
 
     public String getVariant() {
         return variant;

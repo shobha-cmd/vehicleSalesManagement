@@ -61,11 +61,11 @@ public class MddpStock {
     @Enumerated(EnumType.STRING)
     private StockStatus stockStatus; // Block/Reserve
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+//    @Column(name = "created_at", updatable = false)
+//    private LocalDateTime createdAt;
+//
+//    @Column(name = "updated_at")
+//    private LocalDateTime updatedAt;
 
     @Column(name = "interior_colour", length = 50)
     private String interiorColour;
@@ -73,11 +73,11 @@ public class MddpStock {
     @Column(name = "vin_Number", length = 50, unique = true, nullable = false)
     private String vinNumber;
 
-    @Column(name = "created_by", length = 100)
-    private String createdBy;
-
-    @Column(name = "updated_by", length = 100)
-    private String updatedBy;
+//    @Column(name = "created_by", length = 100)
+//    private String createdBy;
+//
+//    @Column(name = "updated_by", length = 100)
+//    private String updatedBy;
 
     public Integer getMddpId() {
         return mddpId;
@@ -191,21 +191,21 @@ public class MddpStock {
         this.stockStatus = stockStatus;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+//    public LocalDateTime getCreatedAt() {
+//        return createdAt;
+//    }
+//
+//    public void setCreatedAt(LocalDateTime createdAt) {
+//        this.createdAt = createdAt;
+//    }
+//
+//    public LocalDateTime getUpdatedAt() {
+//        return updatedAt;
+//    }
+//
+//    public void setUpdatedAt(LocalDateTime updatedAt) {
+//        this.updatedAt = updatedAt;
+//    }
 
     public String getInteriorColour() {
         return interiorColour;
@@ -223,19 +223,19 @@ public class MddpStock {
         this.vinNumber = vinNumber;
     }
 
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
+//    public String getCreatedBy() {
+//        return createdBy;
+//    }
+//
+//    public void setCreatedBy(String createdBy) {
+//        this.createdBy = createdBy;
+//    }
+//
+//    public String getUpdatedBy() {
+//        return updatedBy;
+//    }
+//
+//    public void setUpdatedBy(String updatedBy) {
+//        this.updatedBy = updatedBy;
+//    }
 }

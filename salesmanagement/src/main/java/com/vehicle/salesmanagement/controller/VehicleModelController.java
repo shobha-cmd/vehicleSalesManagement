@@ -66,6 +66,7 @@ public class VehicleModelController {
         log.info("Received request to fetch dropdown data with modelName: {}, variant: {}, vehicleModelId: {}, vehicleVariantId: {}",
                 modelName, variant, vehicleModelId, vehicleVariantId);
         try {
+            // Validate input parameters
             if (modelName != null && modelName.trim().isEmpty()) {
                 log.error("Model name cannot be empty when provided");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -87,6 +88,7 @@ public class VehicleModelController {
                         .body(new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Vehicle variant ID must be positive", null));
             }
 
+            // Fetch dropdown data with IDs
             VehicleAttributesResponse response = vehicleModelService.getDropdownData(modelName, variant, vehicleModelId, vehicleVariantId);
             String message = buildResponseMessage(modelName, variant, vehicleModelId, vehicleVariantId);
             return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), message, response));
@@ -125,7 +127,6 @@ public class VehicleModelController {
         message.append(hasFilter ? " retrieved successfully" : "All dropdown data retrieved successfully");
         return message.toString();
     }
-
     @PostMapping("/vehiclemodels/save")
     @Operation(summary = "Save vehicle model(s)", description = "Saves one or multiple vehicle models. Examples show field data types.")
     @RequestBody(

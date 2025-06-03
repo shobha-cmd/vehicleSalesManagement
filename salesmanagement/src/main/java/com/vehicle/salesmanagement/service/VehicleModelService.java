@@ -68,7 +68,7 @@ public class VehicleModelService {
         if (models.isEmpty() && modelName != null) {
             VehicleAttributesResponse.ModelAttributes emptyAttributes = new VehicleAttributesResponse.ModelAttributes();
             if (variant != null) {
-                emptyAttributes.setVariants(Collections.singletonList(variant));
+                emptyAttributes.setVariants(Collections.singletonList(new VehicleAttributesResponse.Variant(variant, null)));
             }
             modelDetails.put(modelName, emptyAttributes);
             return response;
@@ -103,7 +103,7 @@ public class VehicleModelService {
         if (variants.isEmpty() && modelName != null) {
             VehicleAttributesResponse.ModelAttributes emptyAttributes = new VehicleAttributesResponse.ModelAttributes();
             if (variant != null) {
-                emptyAttributes.setVariants(Collections.singletonList(variant));
+                emptyAttributes.setVariants(Collections.singletonList(new VehicleAttributesResponse.Variant(variant, null)));
             }
             modelDetails.put(modelName, emptyAttributes);
             return response;
@@ -118,11 +118,20 @@ public class VehicleModelService {
         variantsByModel.forEach((mName, modelVariants) -> {
             VehicleAttributesResponse.ModelAttributes attributes = new VehicleAttributesResponse.ModelAttributes();
 
-            attributes.setVariants(modelVariants.stream()
-                    .map(VehicleVariant::getVariant)
+            // Set vehicleModelId (assuming the first variant's model ID is representative)
+            Long modelId = modelVariants.stream()
+                    .map(v -> v.getVehicleModelId().getVehicleModelId())
                     .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+            attributes.setVehicleModelId(modelId);
+
+            // Set variants as a list of Variant objects with name and vehicleVariantId
+            attributes.setVariants(modelVariants.stream()
+                    .map(v -> new VehicleAttributesResponse.Variant(v.getVariant(), v.getVehicleVariantId()))
+                    .filter(v -> v.getName() != null)
                     .distinct()
-                    .sorted()
+                    .sorted(Comparator.comparing(VehicleAttributesResponse.Variant::getName))
                     .collect(Collectors.toList()));
 
             attributes.setColours(modelVariants.stream()
@@ -167,7 +176,7 @@ public class VehicleModelService {
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList()).reversed());
 
             attributes.setYearsOfManufacture(modelVariants.stream()
                     .map(VehicleVariant::getYearOfManufacture)
@@ -377,7 +386,6 @@ public class VehicleModelService {
         return null;
     }
 
-
     @Transactional
     public KendoGridResponse<VehicleModel> saveVehicleModels(List<VehicleModelDTO> dtos) {
         log.info("Starting insertion of {} vehicle models at {}", dtos != null ? dtos.size() : 0, LocalDateTime.now());
@@ -405,10 +413,10 @@ public class VehicleModelService {
                 .map(dto -> {
                     VehicleModel model = new VehicleModel();
                     model.setModelName(dto.getModelName());
-                    model.setCreatedAt(LocalDateTime.now());
-                    model.setUpdatedAt(LocalDateTime.now());
-                    model.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "admin");
-                    model.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "admin");
+//                    model.setCreatedAt(LocalDateTime.now());
+//                    model.setUpdatedAt(LocalDateTime.now());
+//                    model.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "admin");
+//                    model.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "admin");
                     return model;
                 })
                 .collect(Collectors.toList());
@@ -485,10 +493,10 @@ public class VehicleModelService {
                     variant.setNumberOfAirBags(dto.getNumberOfAirBags());
                     variant.setMileageCity(dto.getMileageCity());
                     variant.setMileageHighway(dto.getMileageHighway());
-                    variant.setCreatedAt(LocalDateTime.now());
-                    variant.setUpdatedAt(LocalDateTime.now());
-                    variant.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-                    variant.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+//                    variant.setCreatedAt(LocalDateTime.now());
+//                    variant.setUpdatedAt(LocalDateTime.now());
+//                    variant.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
+//                    variant.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
                     return variant;
                 })
                 .collect(Collectors.toList());
@@ -612,8 +620,8 @@ public class VehicleModelService {
             }
 
             // Update audit fields
-            existingVariant.setUpdatedAt(LocalDateTime.now());
-            existingVariant.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+//            existingVariant.setUpdatedAt(LocalDateTime.now());
+//            existingVariant.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
 
             updatedVehicleVariants.add(existingVariant);
         }
@@ -669,8 +677,8 @@ public class VehicleModelService {
                     stock.setVinNumber(dto.getVinNumber());
                     stock.setCreatedAt(LocalDateTime.now());
                     stock.setUpdatedAt(LocalDateTime.now());
-                    stock.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-                    stock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+//                    stock.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
+//                    stock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
                     return stock;
                 })
                 .collect(Collectors.toList());
@@ -735,10 +743,10 @@ public class VehicleModelService {
                     stock.setVinNumber(dto.getVinNumber());
                     stock.setExpectedDispatchDate(dto.getExpectedDispatchDate());
                     stock.setExpectedDeliveryDate(dto.getExpectedDeliveryDate());
-                    stock.setCreatedAt(LocalDateTime.now());
-                    stock.setUpdatedAt(LocalDateTime.now());
-                    stock.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-                    stock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+//                    stock.setCreatedAt(LocalDateTime.now());
+//                    stock.setUpdatedAt(LocalDateTime.now());
+//                    stock.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
+//                    stock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
                     return stock;
                 })
                 .collect(Collectors.toList());
@@ -815,7 +823,7 @@ public class VehicleModelService {
 
             // Update audit fields
             existingStock.setUpdatedAt(LocalDateTime.now());
-            existingStock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+           // existingStock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
 
             updatedStockDetails.add(existingStock);
         }
@@ -899,8 +907,8 @@ public class VehicleModelService {
             }
 
             // Update audit fields
-            existingStock.setUpdatedAt(LocalDateTime.now());
-            existingStock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+//            existingStock.setUpdatedAt(LocalDateTime.now());
+//            existingStock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
 
             updatedMddpStockDetails.add(existingStock);
         }
@@ -962,8 +970,8 @@ public class VehicleModelService {
                     order.setInteriorColour(dto.getInteriorColour());
                     order.setEngineColour(dto.getEngineColour());
                     order.setTransmissionType(dto.getTransmissionType());
-                    order.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-                    order.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+//                    order.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
+//                    order.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
                     return order;
                 })
                 .collect(Collectors.toList());
@@ -1032,8 +1040,8 @@ public class VehicleModelService {
             dto.setStockStatus(stock.getStockStatus() != null ? stock.getStockStatus().name() : null);
             dto.setExpectedDispatchDate(stock.getExpectedDispatchDate());
             dto.setExpectedDeliveryDate(stock.getExpectedDeliveryDate());
-            dto.setCreatedBy(stock.getCreatedBy());
-            dto.setUpdatedBy(stock.getUpdatedBy());
+//            dto.setCreatedBy(stock.getCreatedBy());
+//            dto.setUpdatedBy(stock.getUpdatedBy());
             return dto;
         }).collect(Collectors.toList());
 
@@ -1136,8 +1144,8 @@ public class VehicleModelService {
             }
 
             // Update audit fields
-            existingOrder.setUpdatedAt(LocalDateTime.now());
-            existingOrder.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+//            existingOrder.setUpdatedAt(LocalDateTime.now());
+//            existingOrder.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
 
             updatedOrders.add(existingOrder);
         }
@@ -1168,8 +1176,8 @@ public class VehicleModelService {
         dto.setTransmissionType(order.getTransmissionType());
         dto.setOrderStatus(order.getOrderStatus() != null ? order.getOrderStatus().name() : null);
         dto.setEstimatedArrivalDate(order.getEstimatedArrivalDate());
-        dto.setCreatedBy(order.getCreatedBy());
-        dto.setUpdatedBy(order.getUpdatedBy());
+//        dto.setCreatedBy(order.getCreatedBy());
+//        dto.setUpdatedBy(order.getUpdatedBy());
         return dto;
     }
     public KendoGridResponse<VehicleVariant> getAllVehicleVariants() {

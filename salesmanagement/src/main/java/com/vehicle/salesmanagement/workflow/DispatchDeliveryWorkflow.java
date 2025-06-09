@@ -2,9 +2,7 @@ package com.vehicle.salesmanagement.workflow;
 
 import com.vehicle.salesmanagement.domain.dto.apirequest.DeliveryRequest;
 import com.vehicle.salesmanagement.domain.dto.apirequest.DispatchRequest;
-import com.vehicle.salesmanagement.domain.dto.apirequest.OrderRequest;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.DeliveryResponse;
-import com.vehicle.salesmanagement.domain.dto.apiresponse.OrderResponse;
 import io.temporal.workflow.SignalMethod;
 import io.temporal.workflow.WorkflowInterface;
 import io.temporal.workflow.WorkflowMethod;
@@ -19,4 +17,3 @@ public interface DispatchDeliveryWorkflow {
     void confirmDelivery(DeliveryRequest deliveryRequest);
 
 }
-

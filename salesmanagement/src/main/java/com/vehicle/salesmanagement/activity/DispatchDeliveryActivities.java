@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @ActivityInterface
 public interface DispatchDeliveryActivities {
-    DispatchResponse initiateDispatch(DispatchRequest request);
+    DispatchResponse initiateDispatch(DispatchRequest dispatchRequest);
     DeliveryResponse confirmDelivery(DeliveryRequest request);
-    Optional<VehicleOrderDetails> getVehicleOrderDetails(Long orderId);
+    Optional<VehicleOrderDetails> getVehicleOrderDetails(String orderId);
 }

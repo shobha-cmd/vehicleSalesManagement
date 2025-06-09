@@ -15,24 +15,28 @@ public interface VehicleSalesParentWorkflow {
 
     @WorkflowMethod
     OrderResponse processOrder(OrderRequest orderRequest);
-@SignalMethod
-    void initiateFinance(FinanceRequest financeRequest);
-@SignalMethod
-    void approveFinance(String approvedBy);
-@SignalMethod
-    void rejectFinance(String rejectedBy);
-@SignalMethod
-    void initiateDispatch(DispatchRequest dispatchRequest);
-@SignalMethod
-    void confirmDelivery(DeliveryRequest deliveryRequest);
-@SignalMethod
-    void cancelOrder(Long customerOrderId);
 
-//    @QueryMethod
-//    String getWorkflowStatus();
+    @SignalMethod
+    void initiateFinance(FinanceRequest financeRequest);
+
+    @SignalMethod
+    void approveFinance(String approvedBy);
+
+    @SignalMethod
+    void rejectFinance(String rejectedBy);
+
+    @SignalMethod
+    void initiateDispatch(DispatchRequest dispatchRequest);
+
+    @SignalMethod
+    void confirmDelivery(DeliveryRequest deliveryRequest);
+
+    @SignalMethod
+    void cancelOrder(String customerOrderId);
+
     @QueryMethod
     OrderResponse getOrderStatus();
-    @QueryMethod
-    String getWorkflowStatus(); // The missing method
 
+    @QueryMethod
+    String getWorkflowStatus();
 }

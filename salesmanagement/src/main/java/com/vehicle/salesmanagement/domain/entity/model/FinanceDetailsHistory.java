@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "finance_details_history")
+@Table(name = "finance_details_history",schema="sales_tracking")
 public class FinanceDetailsHistory {
 
     @Id
@@ -19,8 +19,8 @@ public class FinanceDetailsHistory {
     @JoinColumn(name = "finance_id")
     private FinanceDetails financeDetails;
 
-    @Column(nullable = false)
-    private Long customerOrderId;
+    @Column(name = "customer_order_id", nullable = false, length = 20)
+    private String customerOrderId;
 
     @Column(nullable = false)
     private String customerName;
@@ -39,7 +39,6 @@ public class FinanceDetailsHistory {
 
     @Column(nullable = false)
     private LocalDateTime changedAt;
-
 
     @Column(length = 1000)
     private String financeStatusHistory;

@@ -1,7 +1,8 @@
 package com.vehicle.salesmanagement.service;
 
-import com.vehicle.salesmanagement.domain.dto.apiresponse.*;
 import com.vehicle.salesmanagement.domain.dto.apirequest.*;
+import com.vehicle.salesmanagement.domain.dto.apiresponse.KendoGridResponse;
+import com.vehicle.salesmanagement.domain.dto.apiresponse.VehicleAttributesResponse;
 import com.vehicle.salesmanagement.domain.entity.model.*;
 import com.vehicle.salesmanagement.enums.OrderStatus;
 import com.vehicle.salesmanagement.enums.StockStatus;
@@ -1184,4 +1185,7 @@ public class VehicleModelService {
         List<VehicleVariant> variants =vehicleVariantRepository.findAll();
         return new KendoGridResponse<>(variants, variants.size(), null, null);
     }
+
+
+
 }

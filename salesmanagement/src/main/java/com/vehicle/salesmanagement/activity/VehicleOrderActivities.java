@@ -10,5 +10,5 @@ public interface VehicleOrderActivities {
     void saveOrderDetails(VehicleOrderDetails vehicleOrderDetails);
     OrderResponse checkStockAvailability(OrderRequest orderRequest);
     OrderResponse confirmOrder(OrderResponse orderResponse);
-    OrderResponse cancelOrder(Long customerOrderId); // Add this
+    OrderResponse cancelOrder(String customerOrderId);
 }

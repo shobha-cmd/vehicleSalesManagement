@@ -5,7 +5,6 @@ import com.vehicle.salesmanagement.domain.dto.apirequest.DispatchRequest;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.DeliveryResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.DispatchResponse;
 import com.vehicle.salesmanagement.service.DispatchDeliveryService;
-import com.vehicle.salesmanagement.workflow.VehicleSalesParentWorkflow;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -121,10 +120,11 @@ public class DispatchDeliveryController {
             workflow.signal("confirmDelivery", deliveryRequest);
             log.info("Delivery confirmation signal sent to parent workflow for order ID: {}", deliveryRequest.getCustomerOrderId());
         } catch (WorkflowNotFoundException e) {
-            log.warn("Parent workflow not found for order ID: {}: {}", deliveryRequest.getCustomerOrderId(), e.getMessage());
+            log.warn("Parent workflow not found for order ID: {}: workflowId='{}', attempting to query workflow history",
+                    deliveryRequest.getCustomerOrderId(), parentWorkflowId);
             return new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse<>(
                     HttpStatus.OK.value(),
-                    "Delivery confirmed, but parent workflow not found for workflowId='" + parentWorkflowId + "'",
+                    "Delivery confirmed, but parent workflow not found for workflowId='" + parentWorkflowId + "'. Check workflow history for details.",
                     deliveryResponse
             );
         } catch (Exception e) {

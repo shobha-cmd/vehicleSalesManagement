@@ -1,7 +1,9 @@
 package com.vehicle.salesmanagement.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vehicle.salesmanagement.domain.dto.apirequest.*;
+import com.vehicle.salesmanagement.domain.dto.apirequest.MultiOrderRequest;
+import com.vehicle.salesmanagement.domain.dto.apirequest.OrderRequest;
+import com.vehicle.salesmanagement.domain.dto.apirequest.OrderStatsResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.KendoGridResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.MultiOrderResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.OrderResponse;
@@ -11,8 +13,8 @@ import com.vehicle.salesmanagement.enums.OrderStatus;
 import com.vehicle.salesmanagement.repository.VehicleModelRepository;
 import com.vehicle.salesmanagement.repository.VehicleOrderDetailsRepository;
 import com.vehicle.salesmanagement.repository.VehicleVariantRepository;
+import com.vehicle.salesmanagement.service.OrderIdGeneratorService;
 import com.vehicle.salesmanagement.service.VehicleOrderService;
-import com.vehicle.salesmanagement.workflow.VehicleCancelWorkflow;
 import com.vehicle.salesmanagement.workflow.VehicleSalesParentWorkflow;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,18 +27,16 @@ import io.temporal.api.common.v1.WorkflowExecution;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowOptions;
 import io.temporal.client.WorkflowStub;
-import jakarta.transaction.Transactional;
 import jakarta.validation.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -54,8 +54,8 @@ public class VehicleOrderController {
     private final VehicleVariantRepository vehicleVariantRepository;
     private final VehicleOrderService vehicleOrderService;
     private final ObjectMapper objectMapper;
+    private final OrderIdGeneratorService orderIdGeneratorService;
 
-    //@Transactional
     @PostMapping("/placeOrder")
     @Operation(
             summary = "Place vehicle order(s)",
@@ -245,11 +245,14 @@ public class VehicleOrderController {
     }
 
     private ResponseEntity<com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse> handleSingleOrder(@Valid OrderRequest orderRequest) {
+        // Generate and set customerOrderId before mapping
+        String customerOrderId = orderIdGeneratorService.generateCustomerOrderId();
+        orderRequest.setCustomerOrderId(customerOrderId);
+        log.debug("Generated and set customerOrderId: {}", customerOrderId);
+
         VehicleOrderDetails orderDetails = mapOrderRequestToEntity(orderRequest);
-//        orderDetails.setCreatedAt(LocalDateTime.now());
-//        orderDetails.setUpdatedAt(LocalDateTime.now());
         orderDetails = orderRepository.saveAndFlush(orderDetails);
-        Long customerOrderId = orderDetails.getCustomerOrderId(); // Changed from orderId
+
         if (customerOrderId == null) {
             log.error("CustomerOrderId is null after saving order for customer: {}", orderRequest.getCustomerName());
             com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
@@ -259,10 +262,7 @@ public class VehicleOrderController {
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }
-        log.info("Order saved with customerOrderId: {}", customerOrderId); // Updated log
-
-        // Set the customerOrderId in the OrderRequest
-        orderRequest.setCustomerOrderId(customerOrderId);
+        log.info("Order saved with customerOrderId: {}", customerOrderId);
 
         // Start the VehicleSalesParentWorkflow
         String workflowId = "parent-" + customerOrderId;
@@ -272,95 +272,178 @@ public class VehicleOrderController {
                 .setWorkflowExecutionTimeout(Duration.ofDays(7))
                 .build();
 
-        log.info("Attempting to start VehicleSalesParentWorkflow with ID: {} for customerOrderId: {}", workflowId, customerOrderId); // Updated log
+        log.info("Attempting to start VehicleSalesParentWorkflow with ID: {} for customerOrderId: {}", workflowId, customerOrderId);
         VehicleSalesParentWorkflow parentWorkflow;
         OrderResponse response;
         try {
             parentWorkflow = workflowClient.newWorkflowStub(VehicleSalesParentWorkflow.class, options);
             WorkflowExecution execution = WorkflowClient.start(parentWorkflow::processOrder, orderRequest);
-            log.info("Successfully started VehicleSalesParentWorkflow with ID: {} for customerOrderId: {}, runId: {}", workflowId, customerOrderId, execution.getRunId()); // Updated log
+            log.info("Successfully started VehicleSalesParentWorkflow with ID: {} for customerOrderId: {}, runId: {}", workflowId, customerOrderId, execution.getRunId());
 
-            // Wait briefly to ensure the workflow has started and registered its query handlers
-            Thread.sleep(3000); // Increased initial delay to 3 seconds to ensure workflow is queryable
+            Thread.sleep(3000);
 
-            // Create a new workflow stub with the specific runId to ensure accurate querying
             WorkflowStub workflowStub = workflowClient.newUntypedWorkflowStub(workflowId, Optional.of(execution.getRunId()), Optional.empty());
             int attempts = 0;
             int maxAttempts = 5;
-            long delayBetweenAttempts = 1000; // 1 second delay between attempts
+            long delayBetweenAttempts = 1000;
             response = null;
 
             while (attempts < maxAttempts) {
                 try {
                     response = workflowStub.query("getOrderStatus", OrderResponse.class);
                     if (response != null) {
-                        log.info("Successfully retrieved status {} for customerOrderId: {}", response.getOrderStatus(), customerOrderId); // Updated log
-                        break; // Exit the loop as soon as we get a valid response
+                        log.info("Successfully retrieved status {} for customerOrderId: {}", response.getOrderStatus(), customerOrderId);
+                        break;
                     }
                 } catch (Exception e) {
                     log.warn("Query attempt {}/{} failed for workflow ID: {}. Error: {}", attempts + 1, maxAttempts, workflowId, e.getMessage(), e);
                 }
                 attempts++;
                 if (attempts < maxAttempts) {
-                    Thread.sleep(delayBetweenAttempts); // Wait before retrying
+                    Thread.sleep(delayBetweenAttempts);
                 }
             }
 
-            // If we couldn't get a response after retries, use the default status from the workflow
             if (response == null) {
-                log.warn("Could not retrieve status for customerOrderId: {} after {} attempts. Defaulting to workflow's initial status.", customerOrderId, maxAttempts); // Updated log
-                response = parentWorkflow.getOrderStatus(); // Fallback to the workflow's default status (BLOCKED or PENDING)
+                log.warn("Could not retrieve status for customerOrderId: {} after {} attempts. Defaulting to workflow's initial status.", customerOrderId, maxAttempts);
+                response = parentWorkflow.getOrderStatus();
             }
         } catch (Exception e) {
-            log.error("Failed to start or query VehicleSalesParentWorkflow with ID: {} for customerOrderId: {}. Error: {}", workflowId, customerOrderId, e.getMessage(), e); // Updated log
-            orderDetails.setOrderStatus(OrderStatus.FAILED); // Set status to FAILED instead of deleting
+            log.error("Failed to start or query VehicleSalesParentWorkflow with ID: {} for customerOrderId: {}. Error: {}", workflowId, customerOrderId, e.getMessage(), e);
+            orderDetails.setOrderStatus(OrderStatus.FAILED);
             orderRepository.save(orderDetails);
             com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Failed to start or query parent workflow for customerOrderId: " + customerOrderId + ". Order marked as FAILED. Error: " + e.getMessage(), // Updated message
+                    "Failed to start or query parent workflow for customerOrderId: " + customerOrderId + ". Order marked as FAILED. Error: " + e.getMessage(),
                     null
             );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }
 
-        // Update the order status in the database
         orderDetails.setOrderStatus(response.getOrderStatus());
         orderRepository.save(orderDetails);
 
-        // Populate the OrderResponse with details from VehicleOrderDetails
         response = mapOrderDetailsToResponse(orderDetails, response.getOrderStatus());
 
         com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
                 HttpStatus.ACCEPTED.value(),
-                "Order placed successfully with customerOrderId: " + customerOrderId + ". Parent workflow started.", // Updated message
+                "Order placed successfully with customerOrderId: " + customerOrderId + ". Parent workflow started.",
                 response
         );
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(apiResponse);
     }
 
     private ResponseEntity<com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse> handleMultiOrder(@Valid MultiOrderRequest multiOrderRequest) {
-        List<OrderResponse> orderResponses = new ArrayList<>();
-        List<Long> customerOrderIds = new ArrayList<>(); // Changed from orderIds
-        List<Long> failedCustomerOrderIds = new ArrayList<>(); // Changed from failedOrderIds
+        // Validate vehicleModelId and vehicleVariantId for all orders
+        for (int i = 0; i < multiOrderRequest.getVehicleOrders().size(); i++) {
+            OrderRequest orderRequest = multiOrderRequest.getVehicleOrders().get(i);
+            if (!vehicleModelRepository.existsById(orderRequest.getVehicleModelId())) {
+                log.error("Vehicle Model with ID {} does not exist for customer: {} at order index: {}",
+                        orderRequest.getVehicleModelId(), orderRequest.getCustomerName(), i + 1);
+                com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Invalid vehicleModelId: " + orderRequest.getVehicleModelId() + " does not exist at order index: " + (i + 1),
+                        null
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+            }
+            if (!vehicleVariantRepository.existsById(orderRequest.getVehicleVariantId())) {
+                log.error("Vehicle Variant with ID {} does not exist for customer: {} at order index: {}",
+                        orderRequest.getVehicleVariantId(), orderRequest.getCustomerName(), i + 1);
+                com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Invalid vehicleVariantId: " + orderRequest.getVehicleVariantId() + " does not exist at order index: " + (i + 1),
+                        null
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+            }
+        }
 
-        for (OrderRequest orderRequest : multiOrderRequest.getVehicleOrders()) {
-            VehicleOrderDetails orderDetails = mapOrderRequestToEntity(orderRequest);
-//            orderDetails.setCreatedAt(LocalDateTime.now());
-//            orderDetails.setUpdatedAt(LocalDateTime.now());
-            orderDetails = orderRepository.saveAndFlush(orderDetails);
-            final Long customerOrderId = orderDetails.getCustomerOrderId(); // Changed from orderId
-            if (customerOrderId == null) {
-                log.error("CustomerOrderId is null after saving order for customer: {}", orderRequest.getCustomerName());
-                failedCustomerOrderIds.add(0L); // Add placeholder ID for tracking
+        // Generate unique customerOrderIds with retry mechanism
+        List<String> customerOrderIds = new ArrayList<>();
+        int maxRetries = 3;
+        int attempt = 1;
+        boolean success = false;
+
+        while (attempt <= maxRetries && !success) {
+            customerOrderIds.clear();
+            log.info("Attempt {}/{} to generate unique customerOrderIds for {} orders", attempt, maxRetries, multiOrderRequest.getVehicleOrders().size());
+
+            for (int i = 0; i < multiOrderRequest.getVehicleOrders().size(); i++) {
+                String customerOrderId = orderIdGeneratorService.generateCustomerOrderId();
+                customerOrderIds.add(customerOrderId);
+                log.info("Pre-generated customerOrderId {} for order {}/{}", customerOrderId, i + 1, multiOrderRequest.getVehicleOrders().size());
+            }
+
+            // Check for duplicates
+            Set<String> uniqueOrderIds = new HashSet<>(customerOrderIds);
+            if (uniqueOrderIds.size() == customerOrderIds.size()) {
+                success = true;
+                log.info("Successfully generated unique customerOrderIds: {}", customerOrderIds);
+            } else {
+                log.warn("Duplicate customerOrderIds detected on attempt {}/{}: {}. Expected {} unique IDs, but found {}",
+                        attempt, maxRetries, customerOrderIds, customerOrderIds.size(), uniqueOrderIds.size());
+                attempt++;
+                if (attempt <= maxRetries) {
+                    try {
+                        Thread.sleep(100); // Small delay before retrying
+                    } catch (InterruptedException e) {
+                        log.warn("Retry delay interrupted: {}", e.getMessage());
+                    }
+                }
+            }
+        }
+
+        if (!success) {
+            log.error("Failed to generate unique customerOrderIds after {} attempts: {}. Expected {} unique IDs, but found {}",
+                    maxRetries, customerOrderIds, customerOrderIds.size(), new HashSet<>(customerOrderIds).size());
+            throw new IllegalStateException("Failed to generate unique customerOrderIds for all orders");
+        }
+
+        List<OrderResponse> orderResponses = new ArrayList<>();
+        List<String> failedCustomerOrderIds = new ArrayList<>();
+        int orderIndex = 1;
+
+        // Now process each order with the pre-generated customerOrderId
+        for (int i = 0; i < multiOrderRequest.getVehicleOrders().size(); i++) {
+            OrderRequest orderRequest = multiOrderRequest.getVehicleOrders().get(i);
+            String customerOrderId = customerOrderIds.get(i);
+
+            log.info("Processing order {}/{} for customer: {} and model: {}",
+                    orderIndex, multiOrderRequest.getVehicleOrders().size(),
+                    orderRequest.getCustomerName(), orderRequest.getModelName());
+
+            // Set the customerOrderId in the OrderRequest before mapping
+            orderRequest.setCustomerOrderId(customerOrderId);
+            log.debug("Set customerOrderId {} on OrderRequest for customer: {}", customerOrderId, orderRequest.getCustomerName());
+
+            VehicleOrderDetails orderDetails;
+            try {
+                orderDetails = mapOrderRequestToEntity(orderRequest);
+            } catch (Exception e) {
+                log.error("Failed to map order request at index {} for customer: {}. Error: {}",
+                        orderIndex, orderRequest.getCustomerName(), e.getMessage(), e);
+                failedCustomerOrderIds.add(customerOrderId);
+                orderIndex++;
                 continue;
             }
-            customerOrderIds.add(customerOrderId);
-            log.info("Order saved with customerOrderId: {}", customerOrderId); // Updated log
 
-            // Set the customerOrderId in the OrderRequest
-            orderRequest.setCustomerOrderId(customerOrderId);
+            // Ensure the customerOrderId is set correctly (redundant but safe)
+            orderDetails.setCustomerOrderId(customerOrderId);
+            orderDetails = orderRepository.saveAndFlush(orderDetails);
 
-            // Start the VehicleSalesParentWorkflow for each order
+            if (orderDetails.getCustomerOrderId() == null || !orderDetails.getCustomerOrderId().equals(customerOrderId)) {
+                log.error("CustomerOrderId mismatch after saving order for customer: {} at index: {}. Expected: {}, Found: {}",
+                        orderRequest.getCustomerName(), orderIndex, customerOrderId, orderDetails.getCustomerOrderId());
+                failedCustomerOrderIds.add(customerOrderId);
+                orderIndex++;
+                continue;
+            }
+
+            log.info("Order {}/{} saved with customerOrderId: {} for model: {}",
+                    orderIndex, multiOrderRequest.getVehicleOrders().size(),
+                    customerOrderId, orderRequest.getModelName());
+
             String workflowId = "parent-" + customerOrderId;
             WorkflowOptions options = WorkflowOptions.newBuilder()
                     .setTaskQueue("vehicle-order-task-queue")
@@ -368,63 +451,67 @@ public class VehicleOrderController {
                     .setWorkflowExecutionTimeout(Duration.ofDays(7))
                     .build();
 
-            log.info("Attempting to start VehicleSalesParentWorkflow with ID: {} for customerOrderId: {}", workflowId, customerOrderId); // Updated log
+            log.info("Attempting to start VehicleSalesParentWorkflow with ID: {} for customerOrderId: {} at index: {}",
+                    workflowId, customerOrderId, orderIndex);
             VehicleSalesParentWorkflow parentWorkflow;
             OrderResponse response;
             try {
                 parentWorkflow = workflowClient.newWorkflowStub(VehicleSalesParentWorkflow.class, options);
                 WorkflowExecution execution = WorkflowClient.start(parentWorkflow::processOrder, orderRequest);
-                log.info("Successfully started VehicleSalesParentWorkflow with ID: {} for customerOrderId: {}, runId: {}", workflowId, customerOrderId, execution.getRunId()); // Updated log
+                log.info("Successfully started VehicleSalesParentWorkflow with ID: {} for customerOrderId: {} at index: {}, runId: {}",
+                        workflowId, customerOrderId, orderIndex, execution.getRunId());
 
-                // Wait briefly to ensure the workflow has started and registered its query handlers
-                Thread.sleep(3000); // Increased initial delay to 3 seconds to ensure workflow is queryable
+                Thread.sleep(3000);
 
-                // Create a new workflow stub with the specific runId to ensure accurate querying
                 WorkflowStub workflowStub = workflowClient.newUntypedWorkflowStub(workflowId, Optional.of(execution.getRunId()), Optional.empty());
                 int attempts = 0;
                 int maxAttempts = 5;
-                long delayBetweenAttempts = 1000; // 1 second delay between attempts
+                long delayBetweenAttempts = 1000;
                 response = null;
 
                 while (attempts < maxAttempts) {
                     try {
                         response = workflowStub.query("getOrderStatus", OrderResponse.class);
                         if (response != null) {
-                            log.info("Successfully retrieved status {} for customerOrderId: {}", response.getOrderStatus(), customerOrderId); // Updated log
-                            break; // Exit the loop as soon as we get a valid response
+                            log.info("Successfully retrieved status {} for customerOrderId: {} at index: {}",
+                                    response.getOrderStatus(), customerOrderId, orderIndex);
+                            break;
                         }
                     } catch (Exception e) {
-                        log.warn("Query attempt {}/{} failed for workflow ID: {}. Error: {}", attempts + 1, maxAttempts, workflowId, e.getMessage(), e);
+                        log.warn("Query attempt {}/{} failed for workflow ID: {} at index: {}. Error: {}",
+                                attempts + 1, maxAttempts, workflowId, orderIndex, e.getMessage(), e);
                     }
                     attempts++;
                     if (attempts < maxAttempts) {
-                        Thread.sleep(delayBetweenAttempts); // Wait before retrying
+                        Thread.sleep(delayBetweenAttempts);
                     }
                 }
 
-                // If we couldn't get a response after retries, use the default status from the workflow
                 if (response == null) {
-                    log.warn("Could not retrieve status for customerOrderId: {} after {} attempts. Defaulting to workflow's initial status.", customerOrderId, maxAttempts); // Updated log
-                    response = parentWorkflow.getOrderStatus(); // Fallback to the workflow's default status (BLOCKED or PENDING)
+                    log.warn("Could not retrieve status for customerOrderId: {} at index: {} after {} attempts. Defaulting to workflow's initial status.",
+                            customerOrderId, orderIndex, maxAttempts);
+                    response = parentWorkflow.getOrderStatus();
                 }
             } catch (Exception e) {
-                log.error("Failed to start or query VehicleSalesParentWorkflow with ID: {} for customerOrderId: {}. Error: {}", workflowId, customerOrderId, e.getMessage(), e); // Updated log
-                orderDetails.setOrderStatus(OrderStatus.FAILED); // Set status to FAILED instead of deleting
+                log.error("Failed to start or query VehicleSalesParentWorkflow with ID: {} for customerOrderId: {} at index: {}. Model: {}. Error: {}",
+                        workflowId, customerOrderId, orderIndex, orderRequest.getModelName(), e.getMessage(), e);
+                orderDetails.setOrderStatus(OrderStatus.FAILED);
                 orderRepository.save(orderDetails);
                 failedCustomerOrderIds.add(customerOrderId);
+                orderIndex++;
                 continue;
             }
 
             orderDetails.setOrderStatus(response.getOrderStatus());
             orderRepository.save(orderDetails);
 
-            // Populate the OrderResponse with details from VehicleOrderDetails
             response = mapOrderDetailsToResponse(orderDetails, response.getOrderStatus());
             orderResponses.add(response);
+            orderIndex++;
         }
 
         if (!failedCustomerOrderIds.isEmpty()) {
-            log.warn("Some orders failed to start: {}", failedCustomerOrderIds); // Updated log
+            log.warn("Some orders failed to start: {}", failedCustomerOrderIds);
             if (orderResponses.isEmpty()) {
                 com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
                         HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -439,13 +526,13 @@ public class VehicleOrderController {
                 HttpStatus.ACCEPTED.value(),
                 "Orders placed successfully with customerOrderIds: " + customerOrderIds.stream()
                         .filter(id -> !failedCustomerOrderIds.contains(id))
-                        .collect(Collectors.toList()), // Updated message
+                        .collect(Collectors.toList()),
                 orderResponses
         );
 
         com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
                 HttpStatus.ACCEPTED.value(),
-                "Multiple orders placed successfully. Parent workflows started. Failed orders: " + (failedCustomerOrderIds.isEmpty() ? "None" : failedCustomerOrderIds), // Updated message
+                "Multiple orders placed successfully. Parent workflows started. Failed orders: " + (failedCustomerOrderIds.isEmpty() ? "None" : failedCustomerOrderIds),
                 multiOrderResponse
         );
 
@@ -453,14 +540,14 @@ public class VehicleOrderController {
     }
 
     @PostMapping("/cancelOrder")
-    @Operation(summary = "Cancel a vehicle order", description = "Cancels an existing vehicle order by customerOrderId") // Updated description
+    @Operation(summary = "Cancel a vehicle order", description = "Cancels an existing vehicle order by customerOrderId")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Order canceled successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid customerOrderId"), // Updated description
+            @ApiResponse(responseCode = "400", description = "Invalid customerOrderId"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse> cancelOrder(@Valid @RequestParam Long customerOrderId) {
-        log.info("Canceling order with customerOrderId: {}", customerOrderId); // Updated log
+    public ResponseEntity<com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse> cancelOrder(@Valid @RequestParam String customerOrderId) {
+        log.info("Canceling order with customerOrderId: {}", customerOrderId);
         try {
             VehicleSalesParentWorkflow parentWorkflow = workflowClient.newWorkflowStub(
                     VehicleSalesParentWorkflow.class,
@@ -473,134 +560,63 @@ public class VehicleOrderController {
                     .setWorkflowId("cancel-order-" + customerOrderId)
                     .build();
 
-            VehicleCancelWorkflow workflow = workflowClient.newWorkflowStub(VehicleCancelWorkflow.class, options);
-            WorkflowClient.start(workflow::startCancelOrder, customerOrderId);
-
             OrderResponse response = workflowClient.newUntypedWorkflowStub("cancel-order-" + customerOrderId)
                     .getResult(10, TimeUnit.SECONDS, OrderResponse.class);
 
-            log.info("Cancellation workflow started and completed successfully for customerOrderId: {}", customerOrderId); // Updated log
+            log.info("Cancellation workflow started and completed successfully for customerOrderId: {}", customerOrderId);
             com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
                     HttpStatus.OK.value(),
-                    "Order canceled successfully with customerOrderId: " + customerOrderId, // Updated message
+                    "Order canceled successfully with customerOrderId: " + customerOrderId,
                     response
             );
             return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
-            log.error("Failed to start or complete cancellation workflow for customerOrderId: {} - {}", customerOrderId, e.getMessage()); // Updated log
+            log.error("Failed to start or complete cancellation workflow for customerOrderId: {} - {}", customerOrderId, e.getMessage());
             OrderResponse response = vehicleOrderService.cancelOrder(customerOrderId);
-            log.info("Fallback: Order canceled directly with customerOrderId: {}", customerOrderId); // Updated log
+            log.info("Fallback: Order canceled directly with customerOrderId: {}", customerOrderId);
             com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
                     HttpStatus.OK.value(),
-                    "Order canceled successfully with customerOrderId: " + customerOrderId + " (via fallback)", // Updated message
+                    "Order canceled successfully with customerOrderId: " + customerOrderId + " (via fallback)",
                     response
             );
             return ResponseEntity.ok(apiResponse);
         }
     }
 
-    @GetMapping("/totalOrders")
-    @Operation(summary = "Get total number of orders", description = "Returns the total number of orders in the system")
+    @GetMapping("/orderStats")
+    @Operation(summary = "Get order statistics", description = "Returns total, pending, finance pending, and closed order counts")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Total orders retrieved successfully"),
+            @ApiResponse(responseCode = "200", description = "Order stats retrieved successfully"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse> getTotalOrders() {
+    public ResponseEntity<com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse> getOrderStats() {
         try {
-            long totalOrders = vehicleOrderService.getTotalOrders();
-            com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
-                    HttpStatus.OK.value(),
-                    "Total orders retrieved successfully",
-                    totalOrders
-            );
+            long total = vehicleOrderService.getTotalOrders();
+            long pending = vehicleOrderService.getPendingOrders();
+            long financePending = vehicleOrderService.getFinancePendingOrders();
+            long closed = vehicleOrderService.getClosedOrders();
+
+            OrderStatsResponse statsResponse = new OrderStatsResponse(total, pending, financePending, closed);
+
+            com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse =
+                    new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
+                            HttpStatus.OK.value(),
+                            "Order stats retrieved successfully",
+                            statsResponse
+                    );
             return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
-            log.error("Failed to retrieve total orders: {}", e.getMessage());
-            com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Internal server error: " + e.getMessage(),
-                    null
-            );
+            log.error("Failed to retrieve order stats: {}", e.getMessage(), e);
+            com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse =
+                    new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
+                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                            "Internal server error: " + e.getMessage(),
+                            null
+                    );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }
     }
 
-    @GetMapping("/pendingOrders")
-    @Operation(summary = "Get number of pending orders", description = "Returns the number of orders with PENDING status")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Pending orders retrieved successfully"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public ResponseEntity<com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse> getPendingOrders() {
-        try {
-            long pendingOrders = vehicleOrderService.getPendingOrders();
-            com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
-                    HttpStatus.OK.value(),
-                    "Pending orders retrieved successfully",
-                    pendingOrders
-            );
-            return ResponseEntity.ok(apiResponse);
-        } catch (Exception e) {
-            log.error("Failed to retrieve pending orders: {}", e.getMessage());
-            com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Internal server error: " + e.getMessage(),
-                    null
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
-        }
-    }
-
-    @GetMapping("/financePendingOrders")
-    @Operation(summary = "Get number of finance pending orders", description = "Returns the number of orders with FINANCE_PENDING status")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Finance pending orders retrieved successfully"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public ResponseEntity<com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse> getFinancePendingOrders() {
-        try {
-            long financePendingOrders = vehicleOrderService.getFinancePendingOrders();
-            com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
-                    HttpStatus.OK.value(),
-                    "Finance pending orders retrieved successfully",
-                    financePendingOrders
-            );            return ResponseEntity.ok(apiResponse);
-        } catch (Exception e) {
-            log.error("Failed to retrieve finance pending orders: {}", e.getMessage());
-            com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Internal server error: " + e.getMessage(),
-                    null
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
-        }
-    }
-
-    @GetMapping("/closedOrders")
-    @Operation(summary = "Get number of closed orders", description = "Returns the number of orders with COMPLETED status")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Closed orders retrieved successfully"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public ResponseEntity<com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse> getClosedOrders() {
-        try {
-            long closedOrders = vehicleOrderService.getClosedOrders();
-            com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
-                    HttpStatus.OK.value(),
-                    "Closed orders retrieved successfully",
-                    closedOrders
-            );
-            return ResponseEntity.ok(apiResponse);
-        } catch (Exception e) {
-            log.error("Failed to retrieve closed orders: {}", e.getMessage());
-            com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse apiResponse = new com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Internal server error: " + e.getMessage(),
-                    null
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
-        }
-    }
     @GetMapping("/vehicleorders")
     @Operation(
             summary = "Get all vehicle orders for Kendo Grid",
@@ -641,36 +657,59 @@ public class VehicleOrderController {
         }
     }
 
+    @Transactional
     private VehicleOrderDetails mapOrderRequestToEntity(OrderRequest request) {
-        VehicleOrderDetails order = new VehicleOrderDetails();
-        order.setVehicleModelId(vehicleModelRepository.findById(request.getVehicleModelId())
-                .orElseThrow(() -> new RuntimeException("Vehicle Model not found: " + request.getVehicleModelId())));
-        order.setVehicleVariantId(vehicleVariantRepository.findById(request.getVehicleVariantId())
-                .orElseThrow(() -> new RuntimeException("Vehicle Variant not found: " + request.getVehicleVariantId())));
-        order.setCustomerName(request.getCustomerName());
-        order.setPhoneNumber(request.getPhoneNumber() != null ? request.getPhoneNumber() : "");
-        order.setEmail(request.getEmail() != null ? request.getEmail() : "");
-        order.setPermanentAddress(request.getPermanentAddress() != null ? request.getPermanentAddress() : "");
-        order.setCurrentAddress(request.getCurrentAddress() != null ? request.getCurrentAddress() : "");
-        order.setAadharNo(request.getAadharNo() != null ? request.getAadharNo() : "");
-        order.setPanNo(request.getPanNo() != null ? request.getPanNo() : "");
-        order.setModelName(request.getModelName());
-        order.setFuelType(request.getFuelType());
-        order.setColour(request.getColour());
-        order.setTransmissionType(request.getTransmissionType());
-        order.setVariant(request.getVariant());
-        order.setQuantity(request.getQuantity());
-//        order.setTotalPrice(BigDecimal.valueOf(request.getTotalPrice().doubleValue()));
-//        order.setBookingAmount(BigDecimal.valueOf(request.getBookingAmount().doubleValue()));
-        order.setPaymentMode(request.getPaymentMode() != null ? request.getPaymentMode() : "");
-//        order.setCreatedBy(request.getCreatedBy() != null ? request.getCreatedBy() : "system");
-//        order.setUpdatedBy(request.getUpdatedBy() != null ? request.getUpdatedBy() : "system");
-        //order.setCreatedAt(LocalDateTime.now());
+        try {
+            VehicleOrderDetails order = new VehicleOrderDetails();
+            log.debug("Mapping OrderRequest for customer: {} and model: {}", request.getCustomerName(), request.getModelName());
 
-        return order;
+            // These should already be validated, but keeping the checks for safety
+            order.setVehicleModelId(vehicleModelRepository.findById(request.getVehicleModelId())
+                    .orElseThrow(() -> new IllegalArgumentException("Vehicle Model with ID " + request.getVehicleModelId() + " not found")));
+            order.setVehicleVariantId(vehicleVariantRepository.findById(request.getVehicleVariantId())
+                    .orElseThrow(() -> new IllegalArgumentException("Vehicle Variant with ID " + request.getVehicleVariantId() + " not found")));
+
+            // Set customerOrderId from the request
+            order.setCustomerOrderId(request.getCustomerOrderId());
+            log.debug("Set customerOrderId {} on VehicleOrderDetails for customer: {}", request.getCustomerOrderId(), request.getCustomerName());
+
+            order.setCustomerName(request.getCustomerName());
+            order.setPhoneNumber(request.getPhoneNumber() != null ? request.getPhoneNumber() : "");
+            order.setEmail(request.getEmail());
+            order.setPermanentAddress(request.getPermanentAddress());
+            order.setCurrentAddress(request.getCurrentAddress());
+            order.setAadharNo(request.getAadharNo());
+            order.setPanNo(request.getPanNo());
+            order.setModelName(request.getModelName());
+            order.setFuelType(request.getFuelType());
+            order.setColour(request.getColour());
+            order.setTransmissionType(request.getTransmissionType());
+            order.setVariant(request.getVariant());
+            order.setQuantity(request.getQuantity());
+            order.setPaymentMode(request.getPaymentMode());
+            order.setOrderStatus(OrderStatus.PENDING);
+            log.debug("Mapped OrderRequest to VehicleOrderDetails with customerOrderId: {}", order.getCustomerOrderId());
+
+            // Validate customerOrderId
+            if (order.getCustomerOrderId() == null || order.getCustomerOrderId().isEmpty()) {
+                log.error("CustomerOrderId is null or empty for customer: {}. Request customerOrderId was: {}",
+                        request.getCustomerName(), request.getCustomerOrderId());
+                throw new IllegalStateException("CustomerOrderId must be set before saving order");
+            }
+
+            return order;
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error during mapping for customer: {}. Error: {}", request.getCustomerName(), e.getMessage(), e);
+            throw new RuntimeException("Failed to map order request: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Unexpected error during mapping for customer: {}. Request: {}. Error: {}",
+                    request.getCustomerName(), request, e.getMessage(), e);
+            throw new RuntimeException("Failed to map order request: " + e.getMessage(), e);
+        }
     }
+
     @GetMapping("/orderstatus/{orderId}")
-    public ResponseEntity<KendoGridResponse<OrderResponse>> getOrderStatusProgress(@PathVariable Long orderId) {
+    public ResponseEntity<KendoGridResponse<OrderResponse>> getOrderStatusProgress(@PathVariable String orderId) {
         return orderRepository.findByCustomerOrderId(orderId)
                 .map(order -> {
                     OrderResponse response = mapOrderDetailsToResponse(order, order.getOrderStatus());
@@ -700,14 +739,7 @@ public class VehicleOrderController {
         order.setTransmissionType(orderDetails.getTransmissionType());
         order.setVariant(orderDetails.getVariant());
         order.setQuantity(orderDetails.getQuantity());
-//        order.setTotalPrice(orderDetails.getTotalPrice());
-//        order.setBookingAmount(orderDetails.getBookingAmount());
         order.setPaymentMode(orderDetails.getPaymentMode());
-//        order.setCreatedAt(orderDetails.getCreatedAt());
-//        order.setUpdatedAt(orderDetails.getUpdatedAt());
-////        order.setCreatedBy(orderDetails.getCreatedBy());
-//        order.setUpdatedBy(orderDetails.getUpdatedBy());
         return order;
     }
-
 }

@@ -4,13 +4,11 @@ import com.vehicle.salesmanagement.enums.FinanceStatus;
 import com.vehicle.salesmanagement.enums.OrderStatus;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
 public class FinanceResponse {
 
     private Long financeId;
-    private Long customerOrderId;
+    private String customerOrderId;
     private String customerName;
     private FinanceStatus financeStatus; // PENDING, APPROVED, REJECTED
     private OrderStatus orderStatus; // BLOCKED, ALLOTTED, PENDING, etc.

@@ -3,7 +3,7 @@ package com.vehicle.salesmanagement;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication(scanBasePackages = "com.vehicle.salesmanagement")  // Ensure the package is scanned
+@SpringBootApplication
 public class SalesmanagementApplication {
 
 	public static void main(String[] args) {

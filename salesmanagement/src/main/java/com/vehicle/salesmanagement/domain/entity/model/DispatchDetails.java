@@ -8,15 +8,15 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "dispatch_details")
+@Table(name = "dispatch_details",schema="sales_tracking")
 public class DispatchDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long dispatchId;
 
-    @Column(name = "customer_order_id", nullable = false)
-    private Long customerOrderId;
+    @Column(name = "customer_order_id", nullable = false, length = 20)
+    private String customerOrderId;
 
     @Column(name = "customer_name")
     private String customerName;

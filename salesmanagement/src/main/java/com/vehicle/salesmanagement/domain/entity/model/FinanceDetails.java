@@ -4,19 +4,17 @@ import com.vehicle.salesmanagement.enums.FinanceStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
 @Entity
-@Table(name = "finance_details")
+@Table(name = "finance_details",schema="sales_tracking")
 public class FinanceDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long financeId;
 
-    @Column(nullable = false)
-    private Long customerOrderId;
+    @Column(name = "customer_order_id", nullable = false, length = 20)
+    private String customerOrderId;
 
     @Column(nullable = false)
     private String customerName;

@@ -1,0 +1,127 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: salesmanagement-app:latest
+    container_name: salesmanagement-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 123456789
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_NAMESPACE: default
+      TEMPORAL_RETRY_INITIAL_INTERVAL: 500ms
+      TEMPORAL_RETRY_MAX_INTERVAL: 10s
+      TEMPORAL_RETRY_MAX_ATTEMPTS: 30
+    networks:
+      - temporal-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    container_name: salesmanagement-db
+    environment:
+      POSTGRES_DB: temporal
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456789
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d temporal"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    networks:
+      - temporal-network
+
+  temporal-admin-tools:
+    image: temporalio/admin-tools:1.23.1-tctl-1.18.1-cli-0.12.0
+    container_name: salesmanagement-temporal-admin-tools
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    stdin_open: true
+    tty: true
+    networks:
+      - temporal-network
+
+  temporal:
+    image: temporalio/auto-setup:1.25.0
+    container_name: salesmanagement-temporal
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PWD=123456789
+      - POSTGRES_DB=temporal
+      - POSTGRES_SEEDS=db
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
+      - ENABLE_ES=false
+      - ES_SEEDS=""
+      - TEMPORAL_CLI_ADDRESS=localhost:7233
+      - TEMPORAL_ADDRESS=0.0.0.0:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+      - SKIP_SCHEMA_SETUP=false
+      - SKIP_DEFAULT_NAMESPACE_CREATION=false
+    ports:
+      - "7233:7233"  # Frontend gRPC
+      - "7234:7234"  # History gRPC
+      - "7235:7235"  # Matching gRPC
+      - "7239:7239"  # Worker gRPC
+      - "8233:8233"  # Web UI
+    volumes:
+      - ./dynamicconfig:/etc/temporal/config/dynamicconfig
+    restart: unless-stopped
+    networks:
+      - temporal-network
+    healthcheck:
+      test: [ "CMD", "tctl", "--ns", "default", "workflow", "list" ]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  temporal-web:
+    image: temporalio/ui:2.30.0
+    container_name: salesmanagement-temporal-web
+    environment:
+      - TEMPORAL_ADDRESS=localhost:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:8080
+    ports:
+      - "8081:8080"
+    depends_on:
+      - temporal
+    restart: unless-stopped
+    networks:
+      - temporal-network
+
+volumes:
+  db-data:
+
+networks:
+  temporal-network:
+    driver: bridge

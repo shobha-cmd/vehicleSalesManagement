@@ -6,13 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "vehicle_variant", schema = "sales_tracking")
+@Table(name = "vehicle_variant",schema="sales_tracking")
 public class VehicleVariant {
 
     @Id

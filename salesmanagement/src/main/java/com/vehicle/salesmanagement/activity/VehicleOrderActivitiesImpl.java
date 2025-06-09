@@ -82,10 +82,10 @@ public class VehicleOrderActivitiesImpl implements VehicleOrderActivities {
     }
 
     @Override
-    public OrderResponse cancelOrder(Long customerOrderId) {
+    public OrderResponse cancelOrder(String customerOrderId) {
         try {
             log.info("Canceling order with ID: {}", customerOrderId);
-            VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findById(customerOrderId)
+            VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findByCustomerOrderId(customerOrderId)
                     .orElseThrow(() -> new RuntimeException("Order not found with ID: " + customerOrderId));
 
             if (orderDetails.getOrderStatus() == OrderStatus.COMPLETED || orderDetails.getOrderStatus() == OrderStatus.CANCELED) {

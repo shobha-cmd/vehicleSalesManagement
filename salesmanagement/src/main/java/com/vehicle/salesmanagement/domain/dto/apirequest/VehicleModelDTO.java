@@ -1,6 +1,5 @@
 package com.vehicle.salesmanagement.domain.dto.apirequest;
 
-import jakarta.persistence.Column;
 import lombok.Data;
 
 @Data

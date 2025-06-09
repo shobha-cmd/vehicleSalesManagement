@@ -1,14 +1,7 @@
 package com.vehicle.salesmanagement.domain.dto.apiresponse;
 
 import com.vehicle.salesmanagement.enums.OrderStatus;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
@@ -16,7 +9,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class OrderResponse {
 
-    private Long customerOrderId;
+    private String customerOrderId;
     private Long vehicleModelId;
     private Long vehicleVariantId;
     private String customerName;
@@ -32,19 +25,19 @@ public class OrderResponse {
     private String transmissionType;
     private String variant;
     private Integer quantity;
-//    private BigDecimal totalPrice;
+    //    private BigDecimal totalPrice;
 //    private BigDecimal bookingAmount;
     private String paymentMode;
     @NonNull
     private OrderStatus orderStatus;
-//    private LocalDateTime createdAt;
+    //    private LocalDateTime createdAt;
 //    private LocalDateTime updatedAt;
-//  private String createdBy;
+//    private String createdBy;
 //    private String updatedBy;
     private String message;
 
     // Add custom constructor
-    public OrderResponse(Long customerOrderId, OrderStatus orderStatus) {
+    public OrderResponse(String customerOrderId, OrderStatus orderStatus) {
         this.customerOrderId = customerOrderId;
         this.orderStatus = orderStatus;
     }

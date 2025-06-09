@@ -34,8 +34,8 @@ public class DispatchDeliveryActivitiesImpl implements DispatchDeliveryActivitie
     }
 
     @Override
-    public Optional<VehicleOrderDetails> getVehicleOrderDetails(Long orderId) {
+    public Optional<VehicleOrderDetails> getVehicleOrderDetails(String orderId) {
         log.info("Activity: Fetching vehicle order details for order ID: {}", orderId);
-        return vehicleOrderDetailsRepository.findById(orderId);
+        return vehicleOrderDetailsRepository.findByCustomerOrderId(orderId);
     }
 }

@@ -1,5 +1,6 @@
 package com.vehicle.salesmanagement.workflow;
 
+import com.vehicle.salesmanagement.activity.DispatchDeliveryActivities;
 import com.vehicle.salesmanagement.domain.dto.apirequest.DeliveryRequest;
 import com.vehicle.salesmanagement.domain.dto.apirequest.DispatchRequest;
 import com.vehicle.salesmanagement.domain.dto.apirequest.FinanceRequest;
@@ -9,7 +10,6 @@ import com.vehicle.salesmanagement.domain.dto.apiresponse.DispatchResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.OrderResponse;
 import com.vehicle.salesmanagement.domain.entity.model.VehicleOrderDetails;
 import com.vehicle.salesmanagement.enums.OrderStatus;
-import com.vehicle.salesmanagement.activity.DispatchDeliveryActivities;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.ChildWorkflowOptions;
@@ -29,7 +29,7 @@ public class VehicleSalesParentWorkflowImpl implements VehicleSalesParentWorkflo
     private boolean isDispatchInitiated = false;
     private boolean isDeliveryConfirmed = false;
     private boolean isCanceled = false;
-    private Long customerOrderId;
+    private String customerOrderId;
     private FinanceRequest financeRequest;
     private DispatchRequest dispatchRequest;
     private DeliveryRequest deliveryRequest;
@@ -324,7 +324,7 @@ public class VehicleSalesParentWorkflowImpl implements VehicleSalesParentWorkflo
     }
 
     @Override
-    public void cancelOrder(Long customerOrderId) {
+    public void cancelOrder(String customerOrderId) {
         log.info("Received cancel signal for parent workflow, customerOrderId: {}", customerOrderId);
         this.customerOrderId = customerOrderId;
         isCanceled = true;

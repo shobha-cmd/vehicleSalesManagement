@@ -1,7 +1,5 @@
 package com.vehicle.salesmanagement.domain.dto.apiresponse;
 
-import com.vehicle.salesmanagement.domain.entity.model.ManufacturerOrder;
-import com.vehicle.salesmanagement.domain.entity.model.StockDetails;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

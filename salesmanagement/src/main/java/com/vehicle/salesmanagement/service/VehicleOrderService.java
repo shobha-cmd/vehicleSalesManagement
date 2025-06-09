@@ -1,10 +1,7 @@
 package com.vehicle.salesmanagement.service;
 
 import com.vehicle.salesmanagement.domain.dto.apirequest.OrderRequest;
-import com.vehicle.salesmanagement.domain.dto.apirequest.VehicleModelRequest;
-import com.vehicle.salesmanagement.domain.dto.apirequest.VehicleVariantRequest;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.OrderResponse;
-import com.vehicle.salesmanagement.domain.dto.apiresponse.VehicleModelResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.VehicleOrderGridDTO;
 import com.vehicle.salesmanagement.domain.entity.model.*;
 import com.vehicle.salesmanagement.enums.OrderStatus;
@@ -15,14 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -36,6 +30,7 @@ public class VehicleOrderService {
     private final VehicleVariantRepository variantRepository;
     private final VehicleModelRepository vehicleModelRepository;
     private final HistoryService historyService;
+    private final OrderIdGeneratorService orderIdGeneratorService;
 
     @Transactional
     public OrderResponse checkAndBlockStock(OrderRequest orderRequest) {
@@ -72,14 +67,13 @@ public class VehicleOrderService {
         log.info("Stock ID: {} for VIN: {}", stock.getStockId(), stock.getVinNumber());
 
         // Save history with the updated stock
-        //historyService.saveStockHistory(stock, orderRequest.getUpdatedBy() != null ? orderRequest.getUpdatedBy() : "system",
-          //      "Stock Blocked for Order: " + orderRequest.getCustomerOrderId());
+        historyService.saveStockHistory(stock, "Stock Blocked for Order: " + orderRequest.getCustomerOrderId());
 
         OrderResponse response = mapToOrderResponse(orderRequest);
         response.setOrderStatus(OrderStatus.BLOCKED);
-       // response.setCreatedAt(LocalDateTime.now());
         return response;
     }
+
     @Transactional
     public OrderResponse checkAndReserveMddpStock(OrderRequest orderRequest) {
         VehicleVariant vehicleVariant = variantRepository.findById(orderRequest.getVehicleVariantId())
@@ -102,6 +96,8 @@ public class VehicleOrderService {
                 newStock.setQuantity(orderRequest.getQuantity());
                 newStock.setStockStatus(StockStatus.AVAILABLE);
                 newStock.setCreatedAt(LocalDateTime.now());
+                // Set modelName from orderRequest
+                newStock.setModelName(orderRequest.getModelName());
                 stockRepository.save(newStock);
 
                 mddpStock.setQuantity(mddpStock.getQuantity() - orderRequest.getQuantity());
@@ -109,11 +105,10 @@ public class VehicleOrderService {
                     mddpStock.setStockStatus(StockStatus.DEPLETED);
                 }
                 mddpStockRepository.save(mddpStock);
-               // historyService.saveStockHistory(newStock, orderRequest.getUpdatedBy() != null ? orderRequest.getUpdatedBy() : "system", "Stock Transferred from MDDP for Order: " + orderRequest.getCustomerOrderId());
+                historyService.saveStockHistory(newStock, "Stock Transferred from MDDP for Order: " + orderRequest.getCustomerOrderId());
 
                 OrderResponse response = mapToOrderResponse(orderRequest);
                 response.setOrderStatus(OrderStatus.BLOCKED);
-                //response.setCreatedAt(LocalDateTime.now());
                 return response;
             }
         }
@@ -136,7 +131,7 @@ public class VehicleOrderService {
             throw new IllegalArgumentException("CustomerOrderId is required to confirm order");
         }
 
-        VehicleOrderDetails orderDetails = orderRepository.findById(orderResponse.getCustomerOrderId())
+        VehicleOrderDetails orderDetails = orderRepository.findByCustomerOrderId(orderResponse.getCustomerOrderId())
                 .orElseThrow(() -> new RuntimeException("Order not found with customerOrderId: " + orderResponse.getCustomerOrderId()));
 
         if (orderDetails.getOrderStatus() != OrderStatus.BLOCKED) {
@@ -145,11 +140,8 @@ public class VehicleOrderService {
         }
 
         orderDetails.setOrderStatus(OrderStatus.CONFIRMED);
-       // orderDetails.setUpdatedAt(LocalDateTime.now());
         orderDetails = orderRepository.save(orderDetails);
         log.info("Saved VehicleOrderDetails with customerOrderId: {}", orderDetails.getCustomerOrderId());
-
-        //historyService.saveOrderHistory(orderDetails, orderDetails.getUpdatedBy(), OrderStatus.CONFIRMED);
 
         return mapToOrderResponseFromDetails(orderDetails);
     }
@@ -158,22 +150,19 @@ public class VehicleOrderService {
         OrderResponse orderResponse = mapToOrderResponse(orderRequest);
         VehicleOrderDetails orderDetails = mapToOrderDetails(orderResponse);
         orderDetails.setOrderStatus(OrderStatus.NOTIFIED);
-        //orderDetails.setUpdatedAt(LocalDateTime.now());
         orderDetails = orderRepository.save(orderDetails);
-        //historyService.saveOrderHistory(orderDetails, orderDetails.getUpdatedBy(), OrderStatus.NOTIFIED);
         orderResponse.setOrderStatus(OrderStatus.NOTIFIED);
-       // orderResponse.setUpdatedAt(LocalDateTime.now());
         return orderResponse;
     }
 
     @Transactional
-    public OrderResponse cancelOrder(Long customerOrderId) {
-        VehicleOrderDetails orderDetails = orderRepository.findById(customerOrderId)
+    public OrderResponse cancelOrder(String customerOrderId) {
+        VehicleOrderDetails orderDetails = orderRepository.findByCustomerOrderId(customerOrderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with customerOrderId: " + customerOrderId));
 
         if (orderDetails.getOrderStatus() == OrderStatus.COMPLETED || orderDetails.getOrderStatus() == OrderStatus.CANCELED) {
             log.error("Order with customerOrderId: {} cannot be canceled. Current status: {}", customerOrderId, orderDetails.getOrderStatus());
-            throw new IllegalStateException("Order with customerOrderId: " + customerOrderId + " cannot be canceled. Current status: " + orderDetails.getOrderStatus());
+            throw new IllegalStateException();
         }
 
         VehicleVariant variant = orderDetails.getVehicleVariantId();
@@ -191,7 +180,7 @@ public class VehicleOrderService {
             stock.setQuantity(stock.getQuantity() + orderDetails.getQuantity());
             stock.setStockStatus(StockStatus.AVAILABLE);
             stockRepository.save(stock);
-            historyService.saveStockHistory(stock, "system", "Stock Restored for Canceled Order: " + customerOrderId);
+            historyService.saveStockHistory(stock, "Stock Restored for Canceled Order: " + customerOrderId);
         } else {
             StockDetails newStock = new StockDetails();
             newStock.setVehicleVariant(variant);
@@ -203,12 +192,13 @@ public class VehicleOrderService {
             newStock.setQuantity(orderDetails.getQuantity());
             newStock.setStockStatus(StockStatus.AVAILABLE);
             newStock.setCreatedAt(LocalDateTime.now());
+            // Set modelName from orderDetails
+            newStock.setModelName(orderDetails.getModelName());
             stockRepository.save(newStock);
         }
 
         historyService.saveOrderHistory(orderDetails, "system", OrderStatus.CANCELED);
         orderDetails.setOrderStatus(OrderStatus.CANCELED);
-        //orderDetails.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(orderDetails);
 
         return mapToOrderResponseFromDetails(orderDetails);
@@ -217,7 +207,7 @@ public class VehicleOrderService {
     public OrderResponse mapToOrderResponse(OrderRequest request) {
         if (request.getCustomerOrderId() == null) {
             log.error("CustomerOrderId is null in OrderRequest for customer: {}", request.getCustomerName());
-            return new OrderResponse(null, OrderStatus.PENDING); // This line is now compatible with the new constructor
+            return new OrderResponse(null, OrderStatus.PENDING);
         }
 
         VehicleVariant variant = variantRepository.findById(request.getVehicleVariantId())
@@ -240,23 +230,7 @@ public class VehicleOrderService {
         response.setTransmissionType(request.getTransmissionType());
         response.setVariant(request.getVariant());
         response.setQuantity(request.getQuantity());
-        //BigDecimal totalPrice = request.getTotalPrice();
-//        if (totalPrice == null) {
-//            BigDecimal quantity = new BigDecimal(request.getQuantity());
-//            totalPrice = variant.getPrice().multiply(quantity);
-//        }
-//        response.setTotalPrice(totalPrice);
-//
-//        BigDecimal bookingAmount = request.getBookingAmount();
-//        if (bookingAmount == null) {
-//            bookingAmount = totalPrice.multiply(new BigDecimal("0.1"));
-//        }
-//        response.setBookingAmount(bookingAmount);
-
         response.setPaymentMode(request.getPaymentMode() != null ? request.getPaymentMode() : "");
-       // response.setCreatedAt(LocalDateTime.now());
-//        response.setCreatedBy(request.getCreatedBy() != null ? request.getCreatedBy() : "system");
-//        response.setUpdatedBy(request.getUpdatedBy() != null ? request.getUpdatedBy() : "system");
         return response;
     }
 
@@ -267,6 +241,7 @@ public class VehicleOrderService {
                 .orElseThrow(() -> new RuntimeException("Vehicle Variant not found: " + response.getVehicleVariantId()));
 
         VehicleOrderDetails orderDetails = new VehicleOrderDetails();
+        orderDetails.setCustomerOrderId(response.getCustomerOrderId() != null ? response.getCustomerOrderId() : orderIdGeneratorService.generateCustomerOrderId());
         orderDetails.setVehicleModelId(vehicleModel);
         orderDetails.setVehicleVariantId(vehicleVariant);
         orderDetails.setCustomerName(response.getCustomerName());
@@ -282,16 +257,11 @@ public class VehicleOrderService {
         orderDetails.setTransmissionType(response.getTransmissionType());
         orderDetails.setVariant(response.getVariant());
         orderDetails.setQuantity(response.getQuantity());
-//        orderDetails.setTotalPrice(response.getTotalPrice());
-//        orderDetails.setBookingAmount(response.getBookingAmount());
         orderDetails.setPaymentMode(response.getPaymentMode());
         orderDetails.setOrderStatus(response.getOrderStatus());
-//        orderDetails.setCreatedAt(response.getCreatedAt());
-//        orderDetails.setUpdatedAt(response.getUpdatedAt());
-//        orderDetails.setCreatedBy(response.getCreatedBy());
-//        orderDetails.setUpdatedBy(response.getUpdatedBy());
         return orderDetails;
     }
+
 
     private OrderResponse mapToOrderResponseFromDetails(VehicleOrderDetails orderDetails) {
         OrderResponse response = new OrderResponse();
@@ -311,16 +281,11 @@ public class VehicleOrderService {
         response.setTransmissionType(orderDetails.getTransmissionType());
         response.setVariant(orderDetails.getVariant());
         response.setQuantity(orderDetails.getQuantity());
-//        response.setTotalPrice(orderDetails.getTotalPrice());
-//        response.setBookingAmount(orderDetails.getBookingAmount());
         response.setPaymentMode(orderDetails.getPaymentMode());
-//        response.setCreatedAt(orderDetails.getCreatedAt());
-//        response.setUpdatedAt(orderDetails.getUpdatedAt());
-//        response.setCreatedBy(orderDetails.getCreatedBy());
-//        response.setUpdatedBy(orderDetails.getUpdatedBy());
         response.setOrderStatus(orderDetails.getOrderStatus());
         return response;
     }
+
     public long getTotalOrders() {
         return orderRepository.count();
     }

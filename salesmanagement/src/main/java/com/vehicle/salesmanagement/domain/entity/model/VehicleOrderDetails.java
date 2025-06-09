@@ -8,20 +8,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
 @Entity
 @Data
-@Table(name = "vehicle_order_details", schema = "sales_tracking")
+@Table(name = "vehicle_order_details",schema="sales_tracking")
 @AllArgsConstructor
 @NoArgsConstructor
 public class VehicleOrderDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "customer_order_id")
-    private Long customerOrderId;
+    @Column(name = "customer_order_id", length = 20)
+    private String customerOrderId;
 
     @ManyToOne
     @JoinColumn(name = "vehicle_model_id", nullable = false)

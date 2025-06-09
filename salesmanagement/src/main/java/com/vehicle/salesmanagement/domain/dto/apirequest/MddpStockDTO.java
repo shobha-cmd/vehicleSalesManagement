@@ -1,7 +1,5 @@
 package com.vehicle.salesmanagement.domain.dto.apirequest;
 
-import jakarta.persistence.Column;
-
 import java.time.LocalDateTime;
 
 public class MddpStockDTO {

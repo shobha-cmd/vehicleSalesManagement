@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VehicleOrderGridDTO {
-    private Long customerOrderId;
+    private String customerOrderId;
     private String customerName;
     private String modelName;
     private Integer quantity;

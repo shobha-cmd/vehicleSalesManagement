@@ -10,13 +10,14 @@ import com.vehicle.salesmanagement.domain.entity.model.VehicleOrderDetails;
 import com.vehicle.salesmanagement.enums.OrderStatus;
 import com.vehicle.salesmanagement.repository.VehicleOrderDetailsRepository;
 import com.vehicle.salesmanagement.service.FinanceService;
-import com.vehicle.salesmanagement.workflow.FinanceWorkflow;
 import com.vehicle.salesmanagement.workflow.VehicleSalesParentWorkflow;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.temporal.client.*;
-
+import io.temporal.client.WorkflowClient;
+import io.temporal.client.WorkflowFailedException;
+import io.temporal.client.WorkflowNotFoundException;
+import io.temporal.client.WorkflowStub;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +53,7 @@ public class FinanceController {
     public ResponseEntity<ApiResponse<FinanceResponse>> initiateFinance(@Valid @RequestBody FinanceRequest financeRequest) {
         log.info("Creating finance details for order ID: {}", financeRequest.getCustomerOrderId());
 
-        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findById(financeRequest.getCustomerOrderId())
+        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findByCustomerOrderId(financeRequest.getCustomerOrderId())
                 .orElseThrow(() -> new RuntimeException("Order not found: " + financeRequest.getCustomerOrderId()));
         if (orderDetails.getOrderStatus() != OrderStatus.BLOCKED) {
             log.error("Order ID: {} is not in BLOCKED status, current status: {}", financeRequest.getCustomerOrderId(), orderDetails.getOrderStatus());

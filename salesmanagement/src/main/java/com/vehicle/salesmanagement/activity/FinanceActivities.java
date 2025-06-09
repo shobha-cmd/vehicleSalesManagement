@@ -9,9 +9,9 @@ public interface FinanceActivities {
 
     FinanceResponse createFinanceDetails(FinanceRequest request);
 
-    FinanceResponse getFinanceDetails(Long customerOrderId);
+    FinanceResponse getFinanceDetails(String customerOrderId);
 
-    FinanceResponse approveFinance(Long customerOrderId, String approvedBy);
+    FinanceResponse approveFinance(String customerOrderId, String approvedBy);
 
-    FinanceResponse rejectFinance(Long customerOrderId, String rejectedBy);
+    FinanceResponse rejectFinance(String customerOrderId, String rejectedBy);
 }

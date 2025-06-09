@@ -1,6 +1,7 @@
 package com.vehicle.salesmanagement.domain.dto.apiresponse;
 
 import lombok.Data;
+
 import java.util.List;
 @Data
 

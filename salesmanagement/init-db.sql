@@ -1,0 +1,21 @@
+---- Create the main temporal database (already created by POSTGRES_DB)
+---- CREATE DATABASE temporal;
+--
+---- Create the visibility database
+--CREATE DATABASE temporal_visibility;
+--
+---- Grant all privileges on both databases
+--GRANT ALL PRIVILEGES ON DATABASE temporal TO postgres;
+--GRANT ALL PRIVILEGES ON DATABASE temporal_visibility TO postgres;
+--
+---- Connect to temporal database and grant schema permissions
+--\c temporal;
+--GRANT ALL ON SCHEMA public TO postgres;
+--GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
+--GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;
+--
+---- Connect to temporal_visibility database and grant schema permissions
+--\c temporal_visibility;
+--GRANT ALL ON SCHEMA public TO postgres;
+--GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
+--GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;

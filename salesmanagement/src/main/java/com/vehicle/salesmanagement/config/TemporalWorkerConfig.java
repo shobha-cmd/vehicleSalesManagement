@@ -1,9 +1,11 @@
 package com.vehicle.salesmanagement.config;
 
-import com.vehicle.salesmanagement.activity.VehicleOrderActivitiesImpl;
-import com.vehicle.salesmanagement.activity.FinanceActivitiesImpl;
 import com.vehicle.salesmanagement.activity.DispatchDeliveryActivitiesImpl;
-import com.vehicle.salesmanagement.workflow.*;
+import com.vehicle.salesmanagement.activity.FinanceActivitiesImpl;
+import com.vehicle.salesmanagement.activity.VehicleOrderActivitiesImpl;
+import com.vehicle.salesmanagement.workflow.FinanceWorkflowImpl;
+import com.vehicle.salesmanagement.workflow.VehicleOrderWorkflowImpl;
+import com.vehicle.salesmanagement.workflow.VehicleSalesParentWorkflowImpl;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowClientOptions;
 import io.temporal.serviceclient.WorkflowServiceStubs;
@@ -17,6 +19,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+
+import java.time.Duration;
 
 @Slf4j
 @Configuration
@@ -39,6 +43,9 @@ public class TemporalWorkerConfig {
             return WorkflowServiceStubs.newServiceStubs(
                     WorkflowServiceStubsOptions.newBuilder()
                             .setTarget("localhost:7233")
+                            .setRpcTimeout(Duration.ofSeconds(120)) // Increased timeout
+                            .setRpcLongPollTimeout(Duration.ofSeconds(90)) // Explicit long poll timeout
+                            .setConnectionBackoffResetFrequency(Duration.ofSeconds(10)) // Retry connection
                             .build()
             );
         } catch (Exception e) {
@@ -53,7 +60,7 @@ public class TemporalWorkerConfig {
         return WorkflowClient.newInstance(
                 workflowServiceStubs,
                 WorkflowClientOptions.newBuilder()
-                        .setNamespace("default")
+                        .setNamespace("default") // Kept as default per previous working setup
                         .build()
         );
     }
@@ -71,10 +78,8 @@ public class TemporalWorkerConfig {
             Worker worker = workerFactory.newWorker("vehicle-order-task-queue");
             worker.registerWorkflowImplementationTypes(
                     VehicleSalesParentWorkflowImpl.class,
-                    VehicleOrderWorkflowImpl.class,
-                    VehicleCancelWorkflowImpl.class
+                    VehicleOrderWorkflowImpl.class
             );
-            // Register both activity implementations
             worker.registerActivitiesImplementations(vehicleOrderActivities, dispatchDeliveryActivities);
             this.vehicleOrderWorker = worker;
             return worker;
@@ -104,7 +109,6 @@ public class TemporalWorkerConfig {
         log.info("Configuring Temporal worker for task queue: dispatch-delivery-task-queue");
         try {
             Worker worker = workerFactory.newWorker("dispatch-delivery-task-queue");
-            // No longer registering DispatchDeliveryWorkflowImpl since it's now part of the parent workflow
             worker.registerActivitiesImplementations(dispatchDeliveryActivities);
             this.dispatchDeliveryWorker = worker;
             return worker;

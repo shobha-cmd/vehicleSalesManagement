@@ -25,8 +25,9 @@ public class FinanceActivitiesImpl implements FinanceActivities {
         }
     }
 
+
     @Override
-    public FinanceResponse getFinanceDetails(Long customerOrderId) {
+    public FinanceResponse getFinanceDetails(String customerOrderId) {
         try {
             log.info("Activity: Retrieving finance details for order ID: {}", customerOrderId);
             return financeService.getFinanceDetails(customerOrderId);
@@ -37,7 +38,7 @@ public class FinanceActivitiesImpl implements FinanceActivities {
     }
 
     @Override
-    public FinanceResponse approveFinance(Long customerOrderId, String approvedBy) {
+    public FinanceResponse approveFinance(String customerOrderId, String approvedBy) {
         try {
             log.info("Activity: Approving finance for order ID: {}", customerOrderId);
             return financeService.approveFinance(customerOrderId, approvedBy);
@@ -48,7 +49,7 @@ public class FinanceActivitiesImpl implements FinanceActivities {
     }
 
     @Override
-    public FinanceResponse rejectFinance(Long customerOrderId, String rejectedBy) {
+    public FinanceResponse rejectFinance(String customerOrderId, String rejectedBy) {
         try {
             log.info("Activity: Rejecting finance for order ID: {}", customerOrderId);
             return financeService.rejectFinance(customerOrderId, rejectedBy);

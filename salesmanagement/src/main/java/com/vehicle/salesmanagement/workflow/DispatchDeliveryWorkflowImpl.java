@@ -36,7 +36,7 @@ public class DispatchDeliveryWorkflowImpl implements DispatchDeliveryWorkflow {
 
     @Override
     public DeliveryResponse processDispatchAndDelivery(DispatchRequest dispatchRequest) {
-        Long customerOrderId = dispatchRequest.getCustomerOrderId(); // Changed from orderId to customerOrderId
+        String customerOrderId = dispatchRequest.getCustomerOrderId();
         if (customerOrderId == null) {
             log.error("CustomerOrderId is null in DispatchRequest");
             throw new IllegalArgumentException("CustomerOrderId cannot be null");
@@ -44,7 +44,7 @@ public class DispatchDeliveryWorkflowImpl implements DispatchDeliveryWorkflow {
         log.info("Starting dispatch and delivery workflow for customerOrderId: {}", customerOrderId);
 
         // Step 1: Check order status and initiate dispatch if ALLOTTED
-        Optional<VehicleOrderDetails> orderDetailsOpt = activities.getVehicleOrderDetails(customerOrderId); // Changed to customerOrderId
+        Optional<VehicleOrderDetails> orderDetailsOpt = activities.getVehicleOrderDetails(customerOrderId);
         if (orderDetailsOpt.isPresent()) {
             VehicleOrderDetails orderDetails = orderDetailsOpt.get();
             OrderStatus currentStatus = orderDetails.getOrderStatus();
@@ -78,7 +78,7 @@ public class DispatchDeliveryWorkflowImpl implements DispatchDeliveryWorkflow {
 
         // Step 3: Check order status and confirm delivery if DISPATCHED
         DeliveryResponse deliveryResponse = null;
-        orderDetailsOpt = activities.getVehicleOrderDetails(customerOrderId); // Changed to customerOrderId
+        orderDetailsOpt = activities.getVehicleOrderDetails(customerOrderId);
         if (orderDetailsOpt.isPresent()) {
             OrderStatus currentStatus = orderDetailsOpt.get().getOrderStatus();
             if (currentStatus.equals(OrderStatus.DISPATCHED)) {

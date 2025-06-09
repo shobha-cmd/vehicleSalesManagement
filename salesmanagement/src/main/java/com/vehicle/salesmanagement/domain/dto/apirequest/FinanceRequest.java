@@ -1,13 +1,19 @@
 package com.vehicle.salesmanagement.domain.dto.apirequest;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 public class FinanceRequest {
 
     @NotNull(message = "Customer order ID cannot be null")
-    private Long customerOrderId;
+    //@Pattern(regexp = "^TYT-\\d{4}-\\d{3}$", message = "Customer order ID must be in the format TYT-YYYY-NNN")
+   // @Size(min = 11, max = 11, message = "Customer order ID must be exactly 11 characters")
+    private String customerOrderId;
 
     @NotBlank(message = "Customer name cannot be blank")
     @Size(min = 1, max = 100, message = "Customer name must be between 1 and 100 characters")
@@ -54,8 +60,4 @@ public class FinanceRequest {
     @NotBlank(message = "Payment mode cannot be blank")
     @Size(min = 1, max = 50, message = "Payment mode must be between 1 and 50 characters")
     private String paymentMode;
-
-
-
-
 }

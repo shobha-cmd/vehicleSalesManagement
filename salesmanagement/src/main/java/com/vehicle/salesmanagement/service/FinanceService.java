@@ -13,8 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -28,31 +26,30 @@ public class FinanceService {
     public FinanceResponse createFinanceDetails(FinanceRequest request) {
         log.info("Creating finance details for order ID: {}", request.getCustomerOrderId());
 
-        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findById(request.getCustomerOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found: " + request.getCustomerOrderId()));
+        String customerOrderId = request.getCustomerOrderId();
+        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findByCustomerOrderId(customerOrderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + customerOrderId));
         if (!orderDetails.getOrderStatus().equals(OrderStatus.BLOCKED)) {
-            throw new IllegalStateException("Order must be in BLOCKED status to initiate finance: " + request.getCustomerOrderId());
+            throw new IllegalStateException("Order must be in BLOCKED status to initiate finance: " + customerOrderId);
         }
 
-        FinanceDetails existing = financeDetailsRepository.findByCustomerOrderId(request.getCustomerOrderId());
+        FinanceDetails existing = financeDetailsRepository.findByCustomerOrderId(customerOrderId);
         if (existing != null) {
-            log.warn("Finance details already exist for order ID: {} with finance status: {}", request.getCustomerOrderId(), existing.getFinanceStatus());
-            throw new IllegalStateException("Finance details already exist for order ID: " + request.getCustomerOrderId());
+            log.warn("Finance details already exist for order ID: {} with finance status: {}", customerOrderId, existing.getFinanceStatus());
+            throw new IllegalStateException("Finance details already exist for order ID: " + customerOrderId);
         }
 
         FinanceDetails financeDetails = new FinanceDetails();
-        financeDetails.setCustomerOrderId(request.getCustomerOrderId());
+        financeDetails.setCustomerOrderId(customerOrderId);
         financeDetails.setCustomerName(request.getCustomerName());
         financeDetails.setFinanceStatus(FinanceStatus.PENDING);
-//        financeDetails.setCreatedAt(LocalDateTime.now());
-//        financeDetails.setUpdatedAt(LocalDateTime.now());
         financeDetailsRepository.save(financeDetails);
 
         return mapToFinanceResponse(financeDetails, orderDetails);
     }
 
     @Transactional(readOnly = true)
-    public FinanceResponse getFinanceDetails(Long customerOrderId) {
+    public FinanceResponse getFinanceDetails(String customerOrderId) {
         log.info("Retrieving finance details for order ID: {}", customerOrderId);
 
         FinanceDetails financeDetails = financeDetailsRepository.findByCustomerOrderId(customerOrderId);
@@ -60,14 +57,14 @@ public class FinanceService {
             throw new RuntimeException("Finance details not found for order ID: " + customerOrderId);
         }
 
-        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findById(customerOrderId)
+        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findByCustomerOrderId(customerOrderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + customerOrderId));
 
         return mapToFinanceResponse(financeDetails, orderDetails);
     }
 
     @Transactional
-    public FinanceResponse approveFinance(Long customerOrderId, String approvedBy) {
+    public FinanceResponse approveFinance(String customerOrderId, String approvedBy) {
         log.info("Approving finance for order ID: {}", customerOrderId);
 
         FinanceDetails financeDetails = financeDetailsRepository.findByCustomerOrderId(customerOrderId);
@@ -78,25 +75,23 @@ public class FinanceService {
             throw new IllegalStateException("Finance request is not in PENDING status for order ID: " + customerOrderId);
         }
 
-        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findById(customerOrderId)
+        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findByCustomerOrderId(customerOrderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + customerOrderId));
 
         historyService.saveFinanceHistory(financeDetails, approvedBy);
         financeDetails.setFinanceStatus(FinanceStatus.APPROVED);
         financeDetails.setApprovedBy(approvedBy);
-        //financeDetails.setUpdatedAt(LocalDateTime.now());
         financeDetailsRepository.save(financeDetails);
 
-        historyService.saveOrderHistory(orderDetails, approvedBy, OrderStatus.ALLOTTED); // Pass new status
+        historyService.saveOrderHistory(orderDetails, approvedBy, OrderStatus.ALLOTTED);
         orderDetails.setOrderStatus(OrderStatus.ALLOTTED);
-        //orderDetails.setUpdatedAt(LocalDateTime.now());
         vehicleOrderDetailsRepository.save(orderDetails);
 
         return mapToFinanceResponse(financeDetails, orderDetails);
     }
 
     @Transactional
-    public FinanceResponse rejectFinance(Long customerOrderId, String rejectedBy) {
+    public FinanceResponse rejectFinance(String customerOrderId, String rejectedBy) {
         log.info("Rejecting finance for order ID: {}", customerOrderId);
 
         FinanceDetails financeDetails = financeDetailsRepository.findByCustomerOrderId(customerOrderId);
@@ -107,18 +102,16 @@ public class FinanceService {
             throw new IllegalStateException("Finance request is not in PENDING status for order ID: " + customerOrderId);
         }
 
-        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findById(customerOrderId)
+        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findByCustomerOrderId(customerOrderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + customerOrderId));
 
         historyService.saveFinanceHistory(financeDetails, rejectedBy);
         financeDetails.setFinanceStatus(FinanceStatus.REJECTED);
         financeDetails.setRejectedBy(rejectedBy);
-       // financeDetails.setUpdatedAt(LocalDateTime.now());
         financeDetailsRepository.save(financeDetails);
 
-        historyService.saveOrderHistory(orderDetails, rejectedBy, OrderStatus.PENDING); // Pass new status
+        historyService.saveOrderHistory(orderDetails, rejectedBy, OrderStatus.PENDING);
         orderDetails.setOrderStatus(OrderStatus.PENDING);
-        //orderDetails.setUpdatedAt(LocalDateTime.now());
         vehicleOrderDetailsRepository.save(orderDetails);
 
         return mapToFinanceResponse(financeDetails, orderDetails);
@@ -135,8 +128,6 @@ public class FinanceService {
         response.setVariant(orderDetails.getVariant());
         response.setApprovedBy(financeDetails.getApprovedBy());
         response.setRejectedBy(financeDetails.getRejectedBy());
-//        response.setCreatedAt(financeDetails.getCreatedAt());
-//        response.setUpdatedAt(financeDetails.getUpdatedAt());
         return response;
     }
 }

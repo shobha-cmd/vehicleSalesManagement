@@ -4,5 +4,5 @@ import com.vehicle.salesmanagement.domain.entity.model.DispatchDetails;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DispatchDetailsRepository extends JpaRepository<DispatchDetails, Long> {
-    DispatchDetails findByCustomerOrderId(Long customerOrderId);
+    DispatchDetails findByCustomerOrderId(String customerOrderId);
 }

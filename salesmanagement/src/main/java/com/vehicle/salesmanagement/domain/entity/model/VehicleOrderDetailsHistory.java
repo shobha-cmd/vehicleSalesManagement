@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "vehicle_order_details_history", schema = "sales_tracking")
+@Table(name = "vehicle_order_details_history",schema="sales_tracking")
 public class VehicleOrderDetailsHistory {
 
     @Id
@@ -86,11 +86,11 @@ public class VehicleOrderDetailsHistory {
 
     @ManyToOne
     @JoinColumn(name = "vehicle_model_id")
-    private VehicleModel vehicleModel;
+    private VehicleModel vehicleModelId;
 
     @ManyToOne
     @JoinColumn(name = "vehicle_variant_id")
-    private VehicleVariant vehicleVariant;
+    private VehicleVariant vehicleVariantId;
 
     @Column(name = "order_status_history")
     private String orderStatusHistory;
@@ -289,20 +289,20 @@ public class VehicleOrderDetailsHistory {
         this.variant = variant;
     }
 
-    public VehicleModel getVehicleModel() {
-        return vehicleModel;
+    public VehicleModel getVehicleModelId() {
+        return vehicleModelId;
     }
 
-    public void setVehicleModel(VehicleModel vehicleModel) {
-        this.vehicleModel = vehicleModel;
+    public void setVehicleModelId(VehicleModel vehicleModelId) {
+        this.vehicleModelId = vehicleModelId;
     }
 
-    public VehicleVariant getVehicleVariant() {
-        return vehicleVariant;
+    public VehicleVariant getVehicleVariantId() {
+        return vehicleVariantId;
     }
 
-    public void setVehicleVariant(VehicleVariant vehicleVariant) {
-        this.vehicleVariant = vehicleVariant;
+    public void setVehicleVariantId(VehicleVariant vehicleVariantId) {
+        this.vehicleVariantId = vehicleVariantId;
     }
 
     public String getOrderStatusHistory() {
@@ -313,6 +313,8 @@ public class VehicleOrderDetailsHistory {
         this.orderStatusHistory = orderStatusHistory;
     }
 
-    public void setCustomerOrderId(Long customerOrderId) {
+    public void setCustomerOrderId(String customerOrderId) {
     }
+
+
 }

@@ -34,7 +34,7 @@ public class DispatchDeliveryService {
     public DispatchResponse initiateDispatch(DispatchRequest request) {
         log.info("Initiating dispatch for order ID: {}", request.getCustomerOrderId());
 
-        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findById(request.getCustomerOrderId())
+        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findByCustomerOrderId(request.getCustomerOrderId())
                 .orElseThrow(() -> new RuntimeException("Order not found: " + request.getCustomerOrderId()));
 
         // Check if order is already in DISPATCHED or later state
@@ -45,7 +45,8 @@ public class DispatchDeliveryService {
                     request.getCustomerOrderId(), orderDetails.getOrderStatus());
             return mapToDispatchResponse(
                     dispatchDetailsRepository.findByCustomerOrderId(request.getCustomerOrderId()),
-                    orderDetails);
+                    orderDetails
+            );
         }
 
         // Validate that order is in ALLOTTED state
@@ -66,8 +67,8 @@ public class DispatchDeliveryService {
         dispatchDetails.setDispatchStatus(DispatchStatus.PREPARING);
         dispatchDetails.setDispatchedBy(request.getDispatchedBy());
         dispatchDetails.setDispatchDate(LocalDateTime.now());
-//        dispatchDetails.setCreatedAt(LocalDateTime.now());
-//        dispatchDetails.setUpdatedAt(LocalDateTime.now());
+        //dispatchDetails.setCreatedAt(LocalDateTime.now());
+        //dispatchDetails.setUpdatedAt(LocalDateTime.now());
         dispatchDetailsRepository.save(dispatchDetails);
 
         historyService.saveOrderHistory(orderDetails, request.getDispatchedBy(), OrderStatus.DISPATCHED);
@@ -84,7 +85,7 @@ public class DispatchDeliveryService {
     public DeliveryResponse confirmDelivery(DeliveryRequest request) {
         log.info("Confirming delivery for order ID: {}", request.getCustomerOrderId());
 
-        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findById(request.getCustomerOrderId())
+        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findByCustomerOrderId(request.getCustomerOrderId())
                 .orElseThrow(() -> new RuntimeException("Order not found: " + request.getCustomerOrderId()));
 
         // Check if order is already in DELIVERED or later state
@@ -115,8 +116,8 @@ public class DispatchDeliveryService {
         deliveryDetails.setDeliveryDate(LocalDateTime.now());
         deliveryDetails.setDeliveredBy(request.getDeliveredBy());
         deliveryDetails.setRecipientName(request.getRecipientName());
-//        deliveryDetails.setCreatedAt(LocalDateTime.now());
-//        deliveryDetails.setUpdatedAt(LocalDateTime.now());
+        //deliveryDetails.setCreatedAt(LocalDateTime.now());
+        //deliveryDetails.setUpdatedAt(LocalDateTime.now());
         deliveryDetailsRepository.save(deliveryDetails);
 
         historyService.saveOrderHistory(orderDetails, request.getDeliveredBy(), OrderStatus.DELIVERED);
@@ -152,8 +153,8 @@ public class DispatchDeliveryService {
         response.setVariant(orderDetails.getVariant());
         response.setDispatchDate(dispatchDetails.getDispatchDate());
         response.setDispatchedBy(dispatchDetails.getDispatchedBy());
-//        response.setCreatedAt(dispatchDetails.getCreatedAt());
-//        response.setUpdatedAt(dispatchDetails.getUpdatedAt());
+        //response.setCreatedAt(dispatchDetails.getCreatedAt());
+        //response.setUpdatedAt(dispatchDetails.getUpdatedAt());
         return response;
     }
 
@@ -176,8 +177,8 @@ public class DispatchDeliveryService {
         response.setDeliveryDate(deliveryDetails.getDeliveryDate());
         response.setDeliveredBy(deliveryDetails.getDeliveredBy());
         response.setRecipientName(deliveryDetails.getRecipientName());
-//        response.setCreatedAt(deliveryDetails.getCreatedAt());
-//        response.setUpdatedAt(deliveryDetails.getUpdatedAt());
+        //response.setCreatedAt(deliveryDetails.getCreatedAt());
+        //response.setUpdatedAt(deliveryDetails.getUpdatedAt());
         return response;
     }
 }

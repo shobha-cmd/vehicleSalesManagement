@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 public class DispatchResponse {
     private Long dispatchId;
-    private Long customerOrderId;
+    private String customerOrderId;
     private String customerName;
     private DispatchStatus dispatchStatus;
     private OrderStatus orderStatus;

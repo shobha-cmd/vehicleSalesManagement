@@ -11,5 +11,5 @@ import java.util.Optional;
 public interface VehicleOrderDetailsRepository extends JpaRepository<VehicleOrderDetails, Long> {
     long countByOrderStatus(OrderStatus orderStatus);
 
-    Optional<VehicleOrderDetails> findByCustomerOrderId(Long customerOrderId);
+    Optional<VehicleOrderDetails> findByCustomerOrderId(String customerOrderId);
 }

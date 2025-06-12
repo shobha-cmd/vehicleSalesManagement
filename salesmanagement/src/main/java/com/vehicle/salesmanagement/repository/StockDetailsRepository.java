@@ -4,6 +4,7 @@ import com.vehicle.salesmanagement.domain.entity.model.StockDetails;
 import com.vehicle.salesmanagement.domain.entity.model.VehicleModel;
 import com.vehicle.salesmanagement.domain.entity.model.VehicleVariant;
 import com.vehicle.salesmanagement.enums.StockStatus;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,4 +31,9 @@ public interface StockDetailsRepository extends JpaRepository<StockDetails, Long
 
 
     Optional<Object> findByVinNumber(String vinNumber);
+
+    List<StockDetails> findByModelNameAndVehicleVariantIdAndStockStatus(@NotBlank(message = "Model name is required") String modelName, VehicleVariant variant, StockStatus stockStatus);
+
+    @Query("SELECT s FROM StockDetails s WHERE s.modelName = :modelName AND s.vehicleVariantId.vehicleVariantId = :vehicleVariantId")
+    Optional<StockDetails> findByModelNameAndVehicleVariantIdVariantId(@Param("modelName") String modelName, @Param("vehicleVariantId") Long vehicleVariantId);
 }

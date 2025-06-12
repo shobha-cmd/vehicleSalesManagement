@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,39 +33,54 @@ public class VehicleOrderService {
 
     @Transactional
     public OrderResponse checkAndBlockStock(OrderRequest orderRequest) {
-        VehicleVariant variant = variantRepository.findById(orderRequest.getVehicleVariantId())
-                .orElseThrow(() -> new RuntimeException("Variant not found: " + orderRequest.getVehicleVariantId()));
-        List<StockDetails> stocks = stockRepository.findByVehicleVariantAndStockStatus(variant, StockStatus.AVAILABLE);
-
-        if (stocks.isEmpty()) {
+        // Validate request fields
+        if (orderRequest.getModelName() == null || orderRequest.getVariant() == null || orderRequest.getColour() == null ||
+                orderRequest.getTransmissionType() == null || orderRequest.getFuelType() == null) {
+            log.warn("Invalid request for customerOrderId: {}. Missing required fields.", orderRequest.getCustomerOrderId());
             return placeManufacturerOrder(orderRequest);
         }
 
+        // Step 1: Query stock by modelName and vehicleVariantId
+        VehicleVariant variant = variantRepository.findById(orderRequest.getVehicleVariantId())
+                .orElseThrow(() -> new RuntimeException("Variant not found: " + orderRequest.getVehicleVariantId()));
+        List<StockDetails> stocks = stockRepository.findByModelNameAndVehicleVariantIdAndStockStatus(
+                orderRequest.getModelName(), variant, StockStatus.AVAILABLE);
+
+        if (stocks.isEmpty()) {
+            log.info("No available stock for modelName: {}, vehicleVariantId: {}. Placing manufacturer order.",
+                    orderRequest.getModelName(), orderRequest.getVehicleVariantId());
+            return placeManufacturerOrder(orderRequest);
+        }
+
+        // Step 2: Filter stocks in specified order
         StockDetails stock = stocks.stream()
-                .filter(s -> s.getQuantity() >= orderRequest.getQuantity()
-                        && s.getColour().equals(orderRequest.getColour())
-                        && s.getFuelType().equals(orderRequest.getFuelType())
-                        && s.getTransmissionType().equals(orderRequest.getTransmissionType()))
+                .filter(s -> orderRequest.getVariant().equalsIgnoreCase(s.getVariant())) // Check variant
+                .filter(s -> orderRequest.getColour().equals(s.getColour())) // Check colour
+                .filter(s -> orderRequest.getTransmissionType().equals(s.getTransmissionType())) // Check transmissionType
+                .filter(s -> orderRequest.getFuelType().equals(s.getFuelType())) // Check fuelType
+                .filter(s -> s.getQuantity() >= orderRequest.getQuantity()) // Check quantity
                 .findFirst()
                 .orElse(null);
 
         if (stock == null) {
+            log.info("No matching stock found for modelName: {}, vehicleVariantId: {}, variant: {}. Placing manufacturer order.",
+                    orderRequest.getModelName(), orderRequest.getVehicleVariantId(), orderRequest.getVariant());
             return placeManufacturerOrder(orderRequest);
         }
 
+        // Block the stock
         stock.setQuantity(stock.getQuantity() - orderRequest.getQuantity());
         if (stock.getQuantity() == 0) {
             stock.setStockStatus(StockStatus.DEPLETED);
         }
-        // Save and ensure stockId is populated
         stock = stockRepository.save(stock);
         if (stock.getStockId() == null) {
             log.error("Stock ID is null after saving StockDetails for VIN: {}", stock.getVinNumber());
             throw new IllegalStateException("Stock ID is null after saving StockDetails");
         }
-        log.info("Stock ID: {} for VIN: {}", stock.getStockId(), stock.getVinNumber());
+        log.info("Stock ID: {} blocked for VIN: {}, modelName: {}, variant: {}",
+                stock.getStockId(), stock.getVinNumber(), stock.getModelName(), stock.getVariant());
 
-        // Save history with the updated stock
         historyService.saveStockHistory(stock, "Stock Blocked for Order: " + orderRequest.getCustomerOrderId());
 
         OrderResponse response = mapToOrderResponse(orderRequest);
@@ -76,49 +90,93 @@ public class VehicleOrderService {
 
     @Transactional
     public OrderResponse checkAndReserveMddpStock(OrderRequest orderRequest) {
+        // Validate request fields
+        if (orderRequest.getModelName() == null || orderRequest.getVariant() == null || orderRequest.getColour() == null ||
+                orderRequest.getTransmissionType() == null || orderRequest.getFuelType() == null) {
+            log.warn("Invalid request for customerOrderId: {}. Missing required fields.", orderRequest.getCustomerOrderId());
+            return placeManufacturerOrder(orderRequest);
+        }
+
+        // Step 1: Validate modelName and vehicleVariantId
         VehicleVariant vehicleVariant = variantRepository.findById(orderRequest.getVehicleVariantId())
                 .orElseThrow(() -> new RuntimeException("Vehicle Variant not found: " + orderRequest.getVehicleVariantId()));
+        VehicleModel vehicleModel = vehicleModelRepository.findById(orderRequest.getVehicleModelId())
+                .orElseThrow(() -> new RuntimeException("Vehicle Model not found: " + orderRequest.getVehicleModelId()));
+
+        // Query MDDP stock
         Optional<MddpStock> mddpStockOptional = mddpStockRepository.findByVehicleVariantIdAndStockStatus(
                 vehicleVariant, StockStatus.AVAILABLE);
-        if (mddpStockOptional.isPresent()) {
-            MddpStock mddpStock = mddpStockOptional.get();
-            if (mddpStock.getQuantity() >= orderRequest.getQuantity()) {
-                VehicleModel vehicleModel = vehicleModelRepository.findById(orderRequest.getVehicleModelId())
-                        .orElseThrow(() -> new RuntimeException("Vehicle Model not found: " + orderRequest.getVehicleModelId()));
 
-                StockDetails newStock = new StockDetails();
-                newStock.setVehicleVariantId(vehicleVariant);
-                newStock.setVehicleModelId(vehicleModel);
-                newStock.setColour(orderRequest.getColour());
-                newStock.setFuelType(orderRequest.getFuelType());
-                newStock.setTransmissionType(orderRequest.getTransmissionType());
-                newStock.setVariant(orderRequest.getVariant());
-                newStock.setQuantity(orderRequest.getQuantity());
-                newStock.setStockStatus(StockStatus.AVAILABLE);
-                newStock.setCreatedAt(LocalDateTime.now());
-                // Set modelName from orderRequest
-                newStock.setModelName(orderRequest.getModelName());
-                stockRepository.save(newStock);
-
-                mddpStock.setQuantity(mddpStock.getQuantity() - orderRequest.getQuantity());
-                if (mddpStock.getQuantity() == 0) {
-                    mddpStock.setStockStatus(StockStatus.DEPLETED);
-                }
-                mddpStockRepository.save(mddpStock);
-                historyService.saveStockHistory(newStock, "Stock Transferred from MDDP for Order: " + orderRequest.getCustomerOrderId());
-
-                OrderResponse response = mapToOrderResponse(orderRequest);
-                response.setOrderStatus(OrderStatus.BLOCKED);
-                return response;
-            }
+        if (mddpStockOptional.isEmpty()) {
+            log.info("No MDDP stock available for modelName: {}, vehicleVariantId: {}. Placing manufacturer order.",
+                    orderRequest.getModelName(), orderRequest.getVehicleVariantId());
+            return placeManufacturerOrder(orderRequest);
         }
-        return placeManufacturerOrder(orderRequest);
+
+        MddpStock mddpStock = mddpStockOptional.get();
+        // Step 2: Validate attributes in order
+        if (!orderRequest.getModelName().equalsIgnoreCase(mddpStock.getModelName())) {
+            log.info("MDDP stock modelName: {} does not match requested modelName: {}. Placing manufacturer order.",
+                    mddpStock.getModelName(), orderRequest.getModelName());
+            return placeManufacturerOrder(orderRequest);
+        }
+        if (!orderRequest.getVariant().equalsIgnoreCase(mddpStock.getVariant())) {
+            log.info("MDDP stock variant: {} does not match requested variant: {}. Placing manufacturer order.",
+                    mddpStock.getVariant(), orderRequest.getVariant());
+            return placeManufacturerOrder(orderRequest);
+        }
+        if (!orderRequest.getColour().equals(mddpStock.getColour())) {
+            log.info("MDDP stock colour: {} does not match requested colour: {}. Placing manufacturer order.",
+                    mddpStock.getColour(), orderRequest.getColour());
+            return placeManufacturerOrder(orderRequest);
+        }
+        if (!orderRequest.getTransmissionType().equals(mddpStock.getTransmissionType())) {
+            log.info("MDDP stock transmissionType: {} does not match requested transmissionType: {}. Placing manufacturer order.",
+                    mddpStock.getTransmissionType(), orderRequest.getTransmissionType());
+            return placeManufacturerOrder(orderRequest);
+        }
+        if (!orderRequest.getFuelType().equals(mddpStock.getFuelType())) {
+            log.info("MDDP stock fuelType: {} does not match requested fuelType: {}. Placing manufacturer order.",
+                    mddpStock.getFuelType(), orderRequest.getFuelType());
+            return placeManufacturerOrder(orderRequest);
+        }
+        if (mddpStock.getQuantity() < orderRequest.getQuantity()) {
+            log.info("MDDP stock quantity: {} is less than requested quantity: {}. Placing manufacturer order.",
+                    mddpStock.getQuantity(), orderRequest.getQuantity());
+            return placeManufacturerOrder(orderRequest);
+        }
+
+        // Reserve MDDP stock and create StockDetails
+        StockDetails newStock = new StockDetails();
+        newStock.setVehicleVariantId(vehicleVariant);
+        newStock.setVehicleModelId(vehicleModel);
+        newStock.setColour(orderRequest.getColour());
+        newStock.setFuelType(orderRequest.getFuelType());
+        newStock.setTransmissionType(orderRequest.getTransmissionType());
+        newStock.setVariant(orderRequest.getVariant());
+        newStock.setQuantity(orderRequest.getQuantity());
+        newStock.setStockStatus(StockStatus.AVAILABLE);
+        newStock.setCreatedAt(LocalDateTime.now());
+        newStock.setModelName(orderRequest.getModelName());
+        stockRepository.save(newStock);
+
+        mddpStock.setQuantity(mddpStock.getQuantity() - orderRequest.getQuantity());
+        if (mddpStock.getQuantity() == 0) {
+            mddpStock.setStockStatus(StockStatus.DEPLETED);
+        }
+        mddpStockRepository.save(mddpStock);
+        historyService.saveStockHistory(newStock, "Stock Transferred from MDDP for Order: " + orderRequest.getCustomerOrderId());
+
+        OrderResponse response = mapToOrderResponse(orderRequest);
+        response.setOrderStatus(OrderStatus.BLOCKED);
+        return response;
     }
 
     @Transactional
     public OrderResponse placeManufacturerOrder(OrderRequest orderRequest) {
         OrderResponse response = mapToOrderResponse(orderRequest);
         response.setOrderStatus(OrderStatus.PENDING);
+        log.info("Placed manufacturer order for customerOrderId: {}, variant: {}", orderRequest.getCustomerOrderId(), orderRequest.getVariant());
         return response;
     }
 
@@ -127,7 +185,7 @@ public class VehicleOrderService {
         log.info("Confirming order for customer: {}, customerOrderId: {}", orderResponse.getCustomerName(), orderResponse.getCustomerOrderId());
 
         if (orderResponse.getCustomerOrderId() == null) {
-            log.error("CustomerOrderId is null in confirmOrder for customer: {}", orderResponse.getCustomerName());
+            log.error("CustomerOrderId is null for customer: {}", orderResponse.getCustomerName());
             throw new IllegalArgumentException("CustomerOrderId is required to confirm order");
         }
 
@@ -162,17 +220,20 @@ public class VehicleOrderService {
 
         if (orderDetails.getOrderStatus() == OrderStatus.COMPLETED || orderDetails.getOrderStatus() == OrderStatus.CANCELED) {
             log.error("Order with customerOrderId: {} cannot be canceled. Current status: {}", customerOrderId, orderDetails.getOrderStatus());
-            throw new IllegalStateException();
+            throw new IllegalStateException("Order cannot be canceled, current status: " + orderDetails.getOrderStatus());
         }
 
         VehicleVariant variant = orderDetails.getVehicleVariantId();
         VehicleModel model = orderDetails.getVehicleModelId();
-        List<StockDetails> stocks = stockRepository.findByVehicleVariantAndVehicleModel(variant, model);
+        // Query stock by modelName and vehicleVariantId
+        List<StockDetails> stocks = stockRepository.findByModelNameAndVehicleVariantIdAndStockStatus(
+                orderDetails.getModelName(), variant, StockStatus.AVAILABLE);
 
         StockDetails stock = stocks.stream()
-                .filter(s -> s.getColour().equals(orderDetails.getColour())
-                        && s.getFuelType().equals(orderDetails.getFuelType())
-                        && s.getTransmissionType().equals(orderDetails.getTransmissionType()))
+                .filter(s -> orderDetails.getVariant() != null && orderDetails.getVariant().equalsIgnoreCase(s.getVariant())) // Check variant
+                .filter(s -> orderDetails.getColour() != null && orderDetails.getColour().equals(s.getColour())) // Check colour
+                .filter(s -> orderDetails.getTransmissionType() != null && orderDetails.getTransmissionType().equals(s.getTransmissionType())) // Check transmissionType
+                .filter(s -> orderDetails.getFuelType() != null && orderDetails.getFuelType().equals(s.getFuelType())) // Check fuelType
                 .findFirst()
                 .orElse(null);
 
@@ -181,10 +242,12 @@ public class VehicleOrderService {
             stock.setStockStatus(StockStatus.AVAILABLE);
             stockRepository.save(stock);
             historyService.saveStockHistory(stock, "Stock Restored for Canceled Order: " + customerOrderId);
+            log.info("Restored stock ID: {} for canceled order: {}", stock.getStockId(), customerOrderId);
         } else {
+            log.warn("No matching stock found to restore for canceled order: {}. Creating new stock.", customerOrderId);
             StockDetails newStock = new StockDetails();
-            newStock.setVehicleVariant(variant);
-            newStock.setVehicleModel(model);
+            newStock.setVehicleVariantId(variant);
+            newStock.setVehicleModelId(model);
             newStock.setColour(orderDetails.getColour());
             newStock.setFuelType(orderDetails.getFuelType());
             newStock.setTransmissionType(orderDetails.getTransmissionType());
@@ -192,15 +255,16 @@ public class VehicleOrderService {
             newStock.setQuantity(orderDetails.getQuantity());
             newStock.setStockStatus(StockStatus.AVAILABLE);
             newStock.setCreatedAt(LocalDateTime.now());
-            // Set modelName from orderDetails
             newStock.setModelName(orderDetails.getModelName());
             stockRepository.save(newStock);
+            historyService.saveStockHistory(newStock, "Stock Created for Canceled Order: " + customerOrderId);
         }
 
         historyService.saveOrderHistory(orderDetails, "system", OrderStatus.CANCELED);
         orderDetails.setOrderStatus(OrderStatus.CANCELED);
         orderRepository.save(orderDetails);
 
+        log.info("Canceled order with customerOrderId: {}", customerOrderId);
         return mapToOrderResponseFromDetails(orderDetails);
     }
 
@@ -261,7 +325,6 @@ public class VehicleOrderService {
         orderDetails.setOrderStatus(response.getOrderStatus());
         return orderDetails;
     }
-
 
     private OrderResponse mapToOrderResponseFromDetails(VehicleOrderDetails orderDetails) {
         OrderResponse response = new OrderResponse();

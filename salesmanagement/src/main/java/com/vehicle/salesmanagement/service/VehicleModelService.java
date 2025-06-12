@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,31 +29,25 @@ public class VehicleModelService {
     private final ManufacturerOrderRepository manufacturerOrderRepository;
     private final FinanceDetailsRepository financeDetailsRepository;
 
-    // Unchanged: Returns VehicleAttributesResponse as per original
-
     public VehicleAttributesResponse getDropdownData(String modelName, String variant, Long vehicleModelId, Long vehicleVariantId) {
         log.info("Fetching dropdown data with filters: modelName={}, variant={}, vehicleModelId={}, vehicleVariantId={} at {}",
                 modelName, variant, vehicleModelId, vehicleVariantId, LocalDateTime.now());
 
         VehicleAttributesResponse response = new VehicleAttributesResponse();
 
-        // Fetch models
+        // Step 1: Fetch models
         List<VehicleModel> models;
         if (vehicleModelId != null) {
             models = vehicleModelRepository.findById(vehicleModelId)
                     .map(Collections::singletonList)
                     .orElse(Collections.emptyList());
+        } else if (modelName != null) {
+            models = vehicleModelRepository.findByModelNameIgnoreCase(modelName);
         } else {
             models = vehicleModelRepository.findAll();
         }
 
-        if (modelName != null) {
-            models = models.stream()
-                    .filter(model -> model.getModelName() != null && model.getModelName().equalsIgnoreCase(modelName))
-                    .collect(Collectors.toList());
-        }
-
-        // Set model names
+        // Set model names for the first dropdown
         List<String> modelNames = models.stream()
                 .map(model -> model.getModelName() != null ? model.getModelName() : "")
                 .filter(name -> !name.isEmpty())
@@ -61,21 +56,25 @@ public class VehicleModelService {
                 .collect(Collectors.toList());
         response.setModelNames(modelNames);
 
+        // If no model is selected, return only model names
+        if (modelName == null && vehicleModelId == null) {
+            log.info("No model selected, returning only model names");
+            return response;
+        }
+
         // Initialize model details map
         Map<String, VehicleAttributesResponse.ModelAttributes> modelDetails = new HashMap<>();
         response.setModelDetails(modelDetails);
 
-        // Handle case where no models match
+        // If no models match the filter, return empty attributes
         if (models.isEmpty() && modelName != null) {
             VehicleAttributesResponse.ModelAttributes emptyAttributes = new VehicleAttributesResponse.ModelAttributes();
-            if (variant != null) {
-                emptyAttributes.setVariants(Collections.singletonList(new VehicleAttributesResponse.Variant(variant, null)));
-            }
             modelDetails.put(modelName, emptyAttributes);
+            log.info("No models found for modelName={}", modelName);
             return response;
         }
 
-        // Fetch variants
+        // Step 2: Fetch variants based on selected model
         List<VehicleVariant> variants;
         if (vehicleVariantId != null) {
             variants = vehicleVariantRepository.findById(vehicleVariantId)
@@ -85,41 +84,46 @@ public class VehicleModelService {
             variants = vehicleVariantRepository.findByVehicleModelId_ModelNameAndVariant(modelName, variant);
         } else if (modelName != null) {
             variants = vehicleVariantRepository.findByVehicleModelId_ModelName(modelName);
+        } else if (vehicleModelId != null) {
+            variants = vehicleVariantRepository.findByVehicleModelId_VehicleModelId(vehicleModelId);
         } else {
-            variants = vehicleVariantRepository.findAll();
-        }
-
-        // Filter variants by model IDs if models are filtered
-        if (!models.isEmpty()) {
             List<Long> modelIds = models.stream()
                     .map(VehicleModel::getVehicleModelId)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
-            variants = variants.stream()
-                    .filter(v -> v.getVehicleModelId() != null && modelIds.contains(v.getVehicleModelId().getVehicleModelId()))
-                    .collect(Collectors.toList());
+            variants = vehicleVariantRepository.findByVehicleModelId_VehicleModelIdIn(modelIds);
         }
 
-        // Handle empty variants for specific model or model+variant
-        if (variants.isEmpty() && modelName != null) {
+        // Filter variants by model IDs
+        List<Long> modelIds = models.stream()
+                .map(VehicleModel::getVehicleModelId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        variants = variants.stream()
+                .filter(v -> v.getVehicleModelId() != null && modelIds.contains(v.getVehicleModelId().getVehicleModelId()))
+                .collect(Collectors.toList());
+
+        // If no variants match, return empty attributes
+        if (variants.isEmpty() && (modelName != null || vehicleModelId != null)) {
+            String key = modelName != null ? modelName : models.get(0).getModelName();
             VehicleAttributesResponse.ModelAttributes emptyAttributes = new VehicleAttributesResponse.ModelAttributes();
             if (variant != null) {
                 emptyAttributes.setVariants(Collections.singletonList(new VehicleAttributesResponse.Variant(variant, null)));
             }
-            modelDetails.put(modelName, emptyAttributes);
+            modelDetails.put(key, emptyAttributes);
+            log.info("No variants found for modelName={} or vehicleModelId={}", modelName, vehicleModelId);
             return response;
         }
 
-        // Group variants by model name
+        // Step 3: Group variants by model name and populate attributes
         Map<String, List<VehicleVariant>> variantsByModel = variants.stream()
                 .filter(v -> v.getVehicleModelId() != null && v.getVehicleModelId().getModelName() != null)
                 .collect(Collectors.groupingBy(v -> v.getVehicleModelId().getModelName()));
 
-        // Populate attributes for each model
         variantsByModel.forEach((mName, modelVariants) -> {
             VehicleAttributesResponse.ModelAttributes attributes = new VehicleAttributesResponse.ModelAttributes();
 
-            // Set vehicleModelId (assuming the first variant's model ID is representative)
+            // Set vehicleModelId
             Long modelId = modelVariants.stream()
                     .map(v -> v.getVehicleModelId().getVehicleModelId())
                     .filter(Objects::nonNull)
@@ -127,15 +131,37 @@ public class VehicleModelService {
                     .orElse(null);
             attributes.setVehicleModelId(modelId);
 
-            // Set variants as a list of Variant objects with name and vehicleVariantId
-            attributes.setVariants(modelVariants.stream()
+            // Set variants for the second dropdown
+            List<VehicleAttributesResponse.Variant> variantList = modelVariants.stream()
                     .map(v -> new VehicleAttributesResponse.Variant(v.getVariant(), v.getVehicleVariantId()))
                     .filter(v -> v.getName() != null)
                     .distinct()
                     .sorted(Comparator.comparing(VehicleAttributesResponse.Variant::getName))
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList());
+            attributes.setVariants(variantList);
 
-            attributes.setColours(modelVariants.stream()
+            // Log variant count
+            log.info("Processing model: {}, variants count: {}", mName, modelVariants.size());
+
+            // Step 4: Filter variants by selected variant (if provided)
+            List<VehicleVariant> filteredVariants = modelVariants;
+            if (variant != null) {
+                filteredVariants = modelVariants.stream()
+                        .filter(v -> v.getVariant() != null && v.getVariant().equalsIgnoreCase(variant))
+                        .collect(Collectors.toList());
+            } else if (vehicleVariantId != null) {
+                filteredVariants = modelVariants.stream()
+                        .filter(v -> v.getVehicleVariantId() != null && v.getVehicleVariantId().equals(vehicleVariantId))
+                        .collect(Collectors.toList());
+            }
+            log.info("Filtered variants for model {}: count={}", mName, filteredVariants.size());
+
+            // Log sample data for debugging
+            filteredVariants.forEach(v -> log.debug("Variant ID {}: interior_colour={}, fuel_type={}, price={}",
+                    v.getVehicleVariantId(), v.getInteriorColour(), v.getFuelType(), v.getPrice()));
+
+            // Populate attributes
+            attributes.setColours(filteredVariants.stream()
                     .map(VehicleVariant::getColour)
                     .filter(Objects::nonNull)
                     .flatMap(colour -> Arrays.stream(colour.split(",\\s*")))
@@ -143,118 +169,124 @@ public class VehicleModelService {
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Colours: {}", attributes.getColours());
 
-            attributes.setEngineColours(modelVariants.stream()
+            attributes.setEngineColours(filteredVariants.stream()
                     .map(VehicleVariant::getEngineColour)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Engine colours: {}", attributes.getEngineColours());
 
-            attributes.setInteriorColours(modelVariants.stream()
+            attributes.setInteriorColours(filteredVariants.stream()
                     .map(VehicleVariant::getInteriorColour)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Interior colours: {}", attributes.getInteriorColours());
 
-            attributes.setFuelTypes(modelVariants.stream()
+            attributes.setFuelTypes(filteredVariants.stream()
                     .map(VehicleVariant::getFuelType)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Fuel types: {}", attributes.getFuelTypes());
 
-            attributes.setTransmissionTypes(modelVariants.stream()
+            attributes.setTransmissionTypes(filteredVariants.stream()
                     .map(VehicleVariant::getTransmissionType)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Transmission types: {}", attributes.getTransmissionTypes());
 
-            attributes.setPrices(modelVariants.stream()
+            attributes.setPrices(filteredVariants.stream()
                     .map(VehicleVariant::getPrice)
                     .filter(Objects::nonNull)
                     .distinct()
-                    .sorted()
-                    .collect(Collectors.toList()).reversed());
+                    .sorted(Collections.reverseOrder())
+                    .collect(Collectors.toList()));
+            log.debug("Prices: {}", attributes.getPrices());
 
-            attributes.setYearsOfManufacture(modelVariants.stream()
+            attributes.setYearsOfManufacture(filteredVariants.stream()
                     .map(VehicleVariant::getYearOfManufacture)
-                    .filter(Objects::nonNull)
-                    .map(this::parseInteger)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Years of manufacture: {}", attributes.getYearsOfManufacture());
 
-            attributes.setBodyTypes(modelVariants.stream()
+            attributes.setBodyTypes(filteredVariants.stream()
                     .map(VehicleVariant::getBodyType)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Body types: {}", attributes.getBodyTypes());
 
-            attributes.setFuelTankCapacities(modelVariants.stream()
+            attributes.setFuelTankCapacities(filteredVariants.stream()
                     .map(VehicleVariant::getFuelTankCapacity)
                     .filter(Objects::nonNull)
-                    .map(this::parseDouble)
-                    .filter(Objects::nonNull)
+                    .map(BigDecimal::doubleValue)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Fuel tank capacities: {}", attributes.getFuelTankCapacities());
 
-            attributes.setNumberOfAirbags(modelVariants.stream()
+            attributes.setNumberOfAirbags(filteredVariants.stream()
                     .map(VehicleVariant::getNumberOfAirBags)
                     .filter(Objects::nonNull)
-                    .map(this::parseInteger)
-                    .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Number of airbags: {}", attributes.getNumberOfAirbags());
 
-            attributes.setMileageCities(modelVariants.stream()
+            attributes.setMileageCities(filteredVariants.stream()
                     .map(VehicleVariant::getMileageCity)
                     .filter(Objects::nonNull)
-                    .map(this::parseDouble)
-                    .filter(Objects::nonNull)
+                    .map(BigDecimal::doubleValue)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Mileage cities: {}", attributes.getMileageCities());
 
-            attributes.setMileageHighways(modelVariants.stream()
+            attributes.setMileageHighways(filteredVariants.stream()
                     .map(VehicleVariant::getMileageHighway)
                     .filter(Objects::nonNull)
-                    .map(this::parseDouble)
-                    .filter(Objects::nonNull)
+                    .map(BigDecimal::doubleValue)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Mileage highways: {}", attributes.getMileageHighways());
 
-            attributes.setSeatingCapacities(modelVariants.stream()
+            attributes.setSeatingCapacities(filteredVariants.stream()
                     .map(VehicleVariant::getSeatingCapacity)
                     .filter(Objects::nonNull)
-                    .map(this::parseInteger)
-                    .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Seating capacities: {}", attributes.getSeatingCapacities());
 
-            attributes.setMaxPowers(modelVariants.stream()
+            attributes.setMaxPowers(filteredVariants.stream()
                     .map(VehicleVariant::getMaxPower)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Max powers: {}", attributes.getMaxPowers());
 
-            attributes.setMaxTorques(modelVariants.stream()
+            attributes.setMaxTorques(filteredVariants.stream()
                     .map(VehicleVariant::getMaxTorque)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Max torques: {}", attributes.getMaxTorques());
 
-            attributes.setTopSpeeds(modelVariants.stream()
+            attributes.setTopSpeeds(filteredVariants.stream()
                     .map(VehicleVariant::getTopSpeed)
                     .filter(Objects::nonNull)
                     .map(this::parseInteger)
@@ -262,8 +294,9 @@ public class VehicleModelService {
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Top speeds: {}", attributes.getTopSpeeds());
 
-            attributes.setWheelBases(modelVariants.stream()
+            attributes.setWheelBases(filteredVariants.stream()
                     .map(VehicleVariant::getWheelBase)
                     .filter(Objects::nonNull)
                     .map(this::parseInteger)
@@ -271,8 +304,9 @@ public class VehicleModelService {
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Wheel bases: {}", attributes.getWheelBases());
 
-            attributes.setWidths(modelVariants.stream()
+            attributes.setWidths(filteredVariants.stream()
                     .map(VehicleVariant::getWidth)
                     .filter(Objects::nonNull)
                     .map(this::parseInteger)
@@ -280,8 +314,9 @@ public class VehicleModelService {
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Widths: {}", attributes.getWidths());
 
-            attributes.setLengths(modelVariants.stream()
+            attributes.setLengths(filteredVariants.stream()
                     .map(VehicleVariant::getLength)
                     .filter(Objects::nonNull)
                     .map(this::parseInteger)
@@ -289,102 +324,53 @@ public class VehicleModelService {
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Lengths: {}", attributes.getLengths());
 
-            attributes.setSafetyFeatures(modelVariants.stream()
+            attributes.setSafetyFeatures(filteredVariants.stream()
                     .map(VehicleVariant::getSafetyFeature)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Safety features: {}", attributes.getSafetyFeatures());
 
-            attributes.setInfotainments(modelVariants.stream()
+            attributes.setInfotainments(filteredVariants.stream()
                     .map(VehicleVariant::getInfotainment)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Infotainments: {}", attributes.getInfotainments());
 
-            attributes.setComforts(modelVariants.stream()
+            attributes.setComforts(filteredVariants.stream()
                     .map(VehicleVariant::getComfort)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Comforts: {}", attributes.getComforts());
 
-            attributes.setSuffixes(modelVariants.stream()
+            attributes.setSuffixes(filteredVariants.stream()
                     .map(VehicleVariant::getSuffix)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Suffixes: {}", attributes.getSuffixes());
 
-            attributes.setEngineCapacities(modelVariants.stream()
+            attributes.setEngineCapacities(filteredVariants.stream()
                     .map(VehicleVariant::getEngineCapacity)
                     .filter(Objects::nonNull)
                     .distinct()
                     .sorted()
                     .collect(Collectors.toList()));
+            log.debug("Engine capacities: {}", attributes.getEngineCapacities());
 
             modelDetails.put(mName, attributes);
         });
 
-        log.info("Successfully fetched dropdown data");
+        log.info("Successfully fetched dropdown data for modelName={}", modelName);
         return response;
-    }
-
-    // Helper methods for parsing
-    private Integer parseInteger(Object value) {
-        if (value == null) {
-            return null;
-        }
-        try {
-            if (value instanceof Integer) {
-                return (Integer) value;
-            } else if (value instanceof String) {
-                String str = ((String) value).trim();
-                if (str.isEmpty()) {
-                    return null;
-                }
-                str = str.replaceAll("[^0-9.]", "");
-                if (str.isEmpty()) {
-                    return null;
-                }
-                return Double.valueOf(str).intValue();
-            } else if (value instanceof Number) {
-                return ((Number) value).intValue();
-            }
-            log.warn("Unsupported type for integer parsing: {}", value.getClass());
-        } catch (NumberFormatException e) {
-            log.error("Failed to parse integer from value: {}, error: {}", value, e.getMessage());
-        }
-        return null;
-    }
-
-    private Double parseDouble(Object value) {
-        if (value == null) {
-            return null;
-        }
-        try {
-            if (value instanceof Double) {
-                return (Double) value;
-            } else if (value instanceof String) {
-                String str = ((String) value).trim();
-                if (str.isEmpty()) {
-                    return null;
-                }
-                str = str.replaceAll("[^0-9.]", "");
-                if (str.isEmpty()) {
-                    return null;
-                }
-                return Double.valueOf(str);
-            } else if (value instanceof Number) {
-                return ((Number) value).doubleValue();
-            }
-            log.warn("Unsupported type for double parsing: {}", value.getClass());
-        } catch (NumberFormatException e) {
-            log.error("Failed to parse double from value: {}, error: {}", value, e.getMessage());
-        }
-        return null;
     }
 
     @Transactional
@@ -414,10 +400,6 @@ public class VehicleModelService {
                 .map(dto -> {
                     VehicleModel model = new VehicleModel();
                     model.setModelName(dto.getModelName());
-//                    model.setCreatedAt(LocalDateTime.now());
-//                    model.setUpdatedAt(LocalDateTime.now());
-//                    model.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "admin");
-//                    model.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "admin");
                     return model;
                 })
                 .collect(Collectors.toList());
@@ -494,10 +476,6 @@ public class VehicleModelService {
                     variant.setNumberOfAirBags(dto.getNumberOfAirBags());
                     variant.setMileageCity(dto.getMileageCity());
                     variant.setMileageHighway(dto.getMileageHighway());
-//                    variant.setCreatedAt(LocalDateTime.now());
-//                    variant.setUpdatedAt(LocalDateTime.now());
-//                    variant.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-//                    variant.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
                     return variant;
                 })
                 .collect(Collectors.toList());
@@ -511,6 +489,7 @@ public class VehicleModelService {
             return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save vehicle variants: " + e.getMessage(), null);
         }
     }
+
     @Transactional
     public KendoGridResponse<VehicleVariant> updateVehicleVariants(List<VehicleVariantDTO> dtos) {
         log.info("Updating {} vehicle variant entries", dtos != null ? dtos.size() : 0);
@@ -523,25 +502,21 @@ public class VehicleModelService {
         List<VehicleVariant> updatedVehicleVariants = new ArrayList<>();
 
         for (VehicleVariantDTO dto : dtos) {
-            // Validate required fields
             if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
                 log.error("VIN number is required for update");
                 return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
             }
 
-            // Find existing VehicleVariant by VIN
             VehicleVariant existingVariant = vehicleVariantRepository.findByVinNumber(dto.getVinNumber())
                     .orElseThrow(() -> {
                         log.error("VehicleVariant not found with VIN: {}", dto.getVinNumber());
                         return new IllegalArgumentException("VehicleVariant not found with VIN: " + dto.getVinNumber());
                     });
 
-            // Update fields from DTO
-
             if (dto.getVehicleModelId() != null) {
                 existingVariant.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
             }
-            if(dto.getModelName()!=null){
+            if (dto.getModelName() != null) {
                 existingVariant.setModelName(dto.getModelName());
             }
             if (dto.getVariant() != null) {
@@ -620,16 +595,12 @@ public class VehicleModelService {
                 existingVariant.setMileageHighway(dto.getMileageHighway());
             }
 
-            // Update audit fields
-//            existingVariant.setUpdatedAt(LocalDateTime.now());
-//            existingVariant.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
-
             updatedVehicleVariants.add(existingVariant);
         }
 
         try {
             List<VehicleVariant> savedVehicleVariants = vehicleVariantRepository.saveAll(updatedVehicleVariants);
-            log.info("Successfully updated {} vehicle variant entries", savedVehicleVariants.size());
+            log.info("Successfully updated {} vehicle variants entries", savedVehicleVariants.size());
             return new KendoGridResponse<>(savedVehicleVariants, (long) savedVehicleVariants.size(), null, null);
         } catch (Exception e) {
             log.error("Failed to update vehicle variants: {}", e.getMessage(), e);
@@ -678,8 +649,6 @@ public class VehicleModelService {
                     stock.setVinNumber(dto.getVinNumber());
                     stock.setCreatedAt(LocalDateTime.now());
                     stock.setUpdatedAt(LocalDateTime.now());
-//                    stock.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-//                    stock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
                     return stock;
                 })
                 .collect(Collectors.toList());
@@ -693,7 +662,6 @@ public class VehicleModelService {
             return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save stock details: " + e.getMessage(), null);
         }
     }
-
 
     @Transactional
     public KendoGridResponse<MddpStock> saveMddpStock(List<MddpStockDTO> dtos) {
@@ -744,10 +712,6 @@ public class VehicleModelService {
                     stock.setVinNumber(dto.getVinNumber());
                     stock.setExpectedDispatchDate(dto.getExpectedDispatchDate());
                     stock.setExpectedDeliveryDate(dto.getExpectedDeliveryDate());
-//                    stock.setCreatedAt(LocalDateTime.now());
-//                    stock.setUpdatedAt(LocalDateTime.now());
-//                    stock.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-//                    stock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
                     return stock;
                 })
                 .collect(Collectors.toList());
@@ -762,7 +726,7 @@ public class VehicleModelService {
         }
     }
 
-        @Transactional
+    @Transactional
     public KendoGridResponse<StockDetails> updateStockDetails(List<StockDetailsDTO> dtos) {
         log.info("Updating {} stock entries", dtos != null ? dtos.size() : 0);
 
@@ -774,24 +738,21 @@ public class VehicleModelService {
         List<StockDetails> updatedStockDetails = new ArrayList<>();
 
         for (StockDetailsDTO dto : dtos) {
-            // Validate required fields
             if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
                 log.error("VIN number is required for update");
                 return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
             }
 
-            // Find existing stock by VIN
             StockDetails existingStock = (StockDetails) stockDetailsRepository.findByVinNumber(dto.getVinNumber())
                     .orElseThrow(() -> {
                         log.error("Stock not found with VIN: {}", dto.getVinNumber());
                         return new IllegalArgumentException("Stock not found with VIN: " + dto.getVinNumber());
                     });
 
-            // Update fields from DTO (based on screenshot fields)
             if (dto.getVehicleModelId() != null) {
                 existingStock.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
             }
-            if (dto.getModelName()!=null){
+            if (dto.getModelName() != null) {
                 existingStock.setModelName(dto.getModelName());
             }
             if (dto.getVehicleVariantId() != null) {
@@ -803,7 +764,7 @@ public class VehicleModelService {
             if (dto.getTransmissionType() != null) {
                 existingStock.setTransmissionType(dto.getTransmissionType());
             }
-            if (dto.getVariant() != null) { // Grade is mapped to Variant in the DTO
+            if (dto.getVariant() != null) {
                 existingStock.setVariant(dto.getVariant());
             }
             if (dto.getQuantity() != null) {
@@ -812,20 +773,17 @@ public class VehicleModelService {
             if (dto.getSuffix() != null) {
                 existingStock.setSuffix(dto.getSuffix());
             }
-            if (dto.getColour() != null) { // Color
+            if (dto.getColour() != null) {
                 existingStock.setColour(dto.getColour());
             }
-            if (dto.getEngineColour() != null) { // Exterior Color (E.Color)
+            if (dto.getEngineColour() != null) {
                 existingStock.setEngineColour(dto.getEngineColour());
             }
             if (dto.getInteriorColour() != null) {
                 existingStock.setInteriorColour(dto.getInteriorColour());
             }
 
-            // Update audit fields
             existingStock.setUpdatedAt(LocalDateTime.now());
-           // existingStock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
-
             updatedStockDetails.add(existingStock);
         }
 
@@ -838,6 +796,7 @@ public class VehicleModelService {
             return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to update stock details: " + e.getMessage(), null);
         }
     }
+
     @Transactional
     public KendoGridResponse<MddpStock> updateMddpStock(List<MddpStockDTO> dtos) {
         log.info("Updating {} MDDP stock entries", dtos != null ? dtos.size() : 0);
@@ -850,27 +809,24 @@ public class VehicleModelService {
         List<MddpStock> updatedMddpStockDetails = new ArrayList<>();
 
         for (MddpStockDTO dto : dtos) {
-            // Validate required fields
             if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
                 log.error("VIN number is required for update");
                 return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
             }
 
-            // Find existing MDDP stock by VIN
-            MddpStock existingStock = (MddpStock) mddpStockRepository.findByVinNumber(dto.getVinNumber())
+            MddpStock existingStock = mddpStockRepository.findByVinNumber(dto.getVinNumber())
                     .orElseThrow(() -> {
                         log.error("MDDP stock not found with VIN: {}", dto.getVinNumber());
                         return new IllegalArgumentException("MDDP stock not found with VIN: " + dto.getVinNumber());
                     });
 
-            // Update fields from DTO (based on screenshot fields and MDDP-specific fields)
             if (dto.getVehicleModelId() != null) {
                 existingStock.setVehicleModelId(getVehicleModelEntity(dto.getVehicleModelId()));
             }
             if (dto.getVehicleVariantId() != null) {
                 existingStock.setVehicleVariantId(getVehicleVariantEntity(dto.getVehicleVariantId()));
             }
-            if(dto.getModelName()!=null){
+            if (dto.getModelName() != null) {
                 existingStock.setModelName(dto.getModelName());
             }
             if (dto.getFuelType() != null) {
@@ -879,7 +835,7 @@ public class VehicleModelService {
             if (dto.getTransmissionType() != null) {
                 existingStock.setTransmissionType(dto.getTransmissionType());
             }
-            if (dto.getVariant() != null) { // Grade is mapped to Variant in the DTO
+            if (dto.getVariant() != null) {
                 existingStock.setVariant(dto.getVariant());
             }
             if (dto.getQuantity() != null) {
@@ -888,10 +844,10 @@ public class VehicleModelService {
             if (dto.getSuffix() != null) {
                 existingStock.setSuffix(dto.getSuffix());
             }
-            if (dto.getColour() != null) { // Color
+            if (dto.getColour() != null) {
                 existingStock.setColour(dto.getColour());
             }
-            if (dto.getEngineColour() != null) { // Exterior Color (E.Color)
+            if (dto.getEngineColour() != null) {
                 existingStock.setEngineColour(dto.getEngineColour());
             }
             if (dto.getInteriorColour() != null) {
@@ -906,10 +862,6 @@ public class VehicleModelService {
             if (dto.getExpectedDeliveryDate() != null) {
                 existingStock.setExpectedDeliveryDate(dto.getExpectedDeliveryDate());
             }
-
-            // Update audit fields
-//            existingStock.setUpdatedAt(LocalDateTime.now());
-//            existingStock.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
 
             updatedMddpStockDetails.add(existingStock);
         }
@@ -947,7 +899,6 @@ public class VehicleModelService {
                         log.error("Order status is required");
                         throw new IllegalArgumentException("Order status is required");
                     }
-                    // Validate vinNumber uniqueness if provided
                     if (dto.getVinNumber() != null && !dto.getVinNumber().trim().isEmpty()) {
                         if (manufacturerOrderRepository.findByVinNumber(dto.getVinNumber()).isPresent()) {
                             log.error("Duplicate VIN number: {}", dto.getVinNumber());
@@ -961,7 +912,6 @@ public class VehicleModelService {
                     order.setManufacturerLocation(dto.getManufacturerLocation());
                     order.setOrderStatus(OrderStatus.valueOf(dto.getOrderStatus()));
                     order.setEstimatedArrivalDate(dto.getEstimatedArrivalDate());
-                    // Map additional fields
                     order.setModelName(dto.getModelName());
                     order.setFuelType(dto.getFuelType());
                     order.setColour(dto.getColour());
@@ -971,8 +921,6 @@ public class VehicleModelService {
                     order.setInteriorColour(dto.getInteriorColour());
                     order.setEngineColour(dto.getEngineColour());
                     order.setTransmissionType(dto.getTransmissionType());
-//                    order.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system");
-//                    order.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
                     return order;
                 })
                 .collect(Collectors.toList());
@@ -986,6 +934,7 @@ public class VehicleModelService {
             return new KendoGridResponse<>(Collections.emptyList(), 0L, "Failed to save manufacturer orders: " + e.getMessage(), null);
         }
     }
+
     private VehicleModel getVehicleModelEntity(Long modelId) {
         return vehicleModelRepository.findById(modelId)
                 .orElseThrow(() -> {
@@ -1001,6 +950,7 @@ public class VehicleModelService {
                     return new IllegalArgumentException("Invalid VehicleVariant ID: " + variantId);
                 });
     }
+
     public List<StockDetailsDTO> getAllStockDetails() {
         return stockDetailsRepository.findAll().stream().map(stock -> {
             StockDetailsDTO dto = new StockDetailsDTO();
@@ -1041,13 +991,12 @@ public class VehicleModelService {
             dto.setStockStatus(stock.getStockStatus() != null ? stock.getStockStatus().name() : null);
             dto.setExpectedDispatchDate(stock.getExpectedDispatchDate());
             dto.setExpectedDeliveryDate(stock.getExpectedDeliveryDate());
-//            dto.setCreatedBy(stock.getCreatedBy());
-//            dto.setUpdatedBy(stock.getUpdatedBy());
             return dto;
         }).collect(Collectors.toList());
 
         return new KendoGridResponse<>(dtoList, dtoList.size(), null, null);
     }
+
     public KendoGridResponse<FinanceDTO> getAllFinanceDetails() {
         List<FinanceDTO> dtoList = financeDetailsRepository.findAll().stream().map(entity -> {
             FinanceDTO dto = new FinanceDTO();
@@ -1062,6 +1011,7 @@ public class VehicleModelService {
 
         return new KendoGridResponse<>(dtoList, dtoList.size(), null, null);
     }
+
     public KendoGridResponse<ManufacturerOrderDTO> getAllManufacturerOrders() {
         log.info("Retrieving all manufacturer orders");
 
@@ -1078,6 +1028,7 @@ public class VehicleModelService {
             return new KendoGridResponse<>(Collections.emptyList(), 0L, "Error retrieving manufacturer orders: " + e.getMessage(), null);
         }
     }
+
     @Transactional
     public KendoGridResponse<ManufacturerOrder> updateManufacturerOrders(List<ManufacturerOrderDTO> dtos) {
         log.info("Updating {} manufacturer order entries", dtos != null ? dtos.size() : 0);
@@ -1090,20 +1041,17 @@ public class VehicleModelService {
         List<ManufacturerOrder> updatedOrders = new ArrayList<>();
 
         for (ManufacturerOrderDTO dto : dtos) {
-            // Validate required fields
             if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
                 log.error("VIN number is required for update");
                 return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
             }
 
-            // Find existing manufacturer order by VIN
             ManufacturerOrder existingOrder = manufacturerOrderRepository.findByVinNumber(dto.getVinNumber())
                     .orElseThrow(() -> {
                         log.error("Manufacturer order not found with VIN: {}", dto.getVinNumber());
                         return new IllegalArgumentException("Manufacturer order not found with VIN: " + dto.getVinNumber());
                     });
 
-            // Update fields from DTO
             if (dto.getManufacturerId() != null) {
                 existingOrder.setManufacturerId(dto.getManufacturerId());
             }
@@ -1144,10 +1092,6 @@ public class VehicleModelService {
                 existingOrder.setTransmissionType(dto.getTransmissionType());
             }
 
-            // Update audit fields
-//            existingOrder.setUpdatedAt(LocalDateTime.now());
-//            existingOrder.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
-
             updatedOrders.add(existingOrder);
         }
 
@@ -1177,15 +1121,200 @@ public class VehicleModelService {
         dto.setTransmissionType(order.getTransmissionType());
         dto.setOrderStatus(order.getOrderStatus() != null ? order.getOrderStatus().name() : null);
         dto.setEstimatedArrivalDate(order.getEstimatedArrivalDate());
-//        dto.setCreatedBy(order.getCreatedBy());
-//        dto.setUpdatedBy(order.getUpdatedBy());
         return dto;
     }
+
     public KendoGridResponse<VehicleVariant> getAllVehicleVariants() {
-        List<VehicleVariant> variants =vehicleVariantRepository.findAll();
+        List<VehicleVariant> variants = vehicleVariantRepository.findAll();
         return new KendoGridResponse<>(variants, variants.size(), null, null);
     }
 
+    private Integer parseInteger(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            log.warn("Failed to parse integer: {}", value, e);
+            return null;
+        }
+    }
 
+    private Double parseDouble(String value) {
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            log.warn("Failed to parse double: {}", value, e);
+            return null;
+        }
+    }
 
+    public StockDetailsDTO getStockDetailByModelAndVariant(String modelName, Long vehicleVariantId) {
+        log.info("Fetching stock detail for modelName: {} and vehicleVariantId: {} at {}", modelName, vehicleVariantId, LocalDateTime.now());
+        try {
+            if (modelName == null || modelName.trim().isEmpty()) {
+                log.error("Model name cannot be empty for fetching stock details");
+                throw new IllegalArgumentException("Model name cannot be empty");
+            }
+            if (vehicleVariantId == null) {
+                log.error("Vehicle variant ID cannot be null for fetching stock details");
+                throw new IllegalArgumentException("Vehicle variant ID cannot be null");
+            }
+            Optional<StockDetails> stockDetail = stockDetailsRepository.findByModelNameAndVehicleVariantIdVariantId(modelName, vehicleVariantId);
+            if (stockDetail.isEmpty()) {
+                log.warn("No stock detail found for modelName: {} and vehicleVariantId: {}", modelName, vehicleVariantId);
+                return null;
+            }
+            StockDetailsDTO dto = new StockDetailsDTO();
+            dto.setStockId(stockDetail.get().getStockId());
+            dto.setVehicleModelId(stockDetail.get().getVehicleModelId().getVehicleModelId());
+            dto.setVehicleVariantId(stockDetail.get().getVehicleVariantId().getVehicleVariantId());
+            dto.setModelName(stockDetail.get().getModelName());
+            dto.setVariant(stockDetail.get().getVariant());
+            dto.setColour(stockDetail.get().getColour());
+            dto.setEngineColour(stockDetail.get().getEngineColour());
+            dto.setInteriorColour(stockDetail.get().getInteriorColour());
+            dto.setFuelType(stockDetail.get().getFuelType());
+            dto.setTransmissionType(stockDetail.get().getTransmissionType());
+            dto.setQuantity(stockDetail.get().getQuantity());
+            dto.setVinNumber(stockDetail.get().getVinNumber());
+            dto.setStockStatus(stockDetail.get().getStockStatus() != null ? stockDetail.get().getStockStatus().name() : null);
+            dto.setSuffix(stockDetail.get().getSuffix());
+            log.info("Successfully retrieved stock detail for modelName: {} and vehicleVariantId: {} at {}", modelName, vehicleVariantId, LocalDateTime.now());
+            return dto;
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error while fetching stock detail: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch stock detail: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Error fetching stock detail for modelName: {} and vehicleVariantId: {}: {}", modelName, vehicleVariantId, e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch stock detail: " + e.getMessage(), e);
+        }
+    }
+
+    public MddpStockDTO getMddpStockByModelAndVariant(String modelName, Long vehicleVariantId) {
+        log.info("Fetching MDDP stock detail for modelName: {} and vehicleVariantId: {} at {}", modelName, vehicleVariantId, LocalDateTime.now());
+        try {
+            if (modelName == null || modelName.trim().isEmpty()) {
+                log.error("Model name cannot be empty for fetching MDDP stock details");
+                throw new IllegalArgumentException("Model name cannot be empty");
+            }
+            if (vehicleVariantId == null) {
+                log.error("Vehicle variant ID cannot be null for fetching MDDP stock details");
+                throw new IllegalArgumentException("Vehicle variant ID cannot be null");
+            }
+            Optional<MddpStock> mddpStock = mddpStockRepository.findByModelNameAndVehicleVariantIdVariantId(modelName, vehicleVariantId);
+            if (mddpStock.isEmpty()) {
+                log.warn("No MDDP stock detail found for modelName: {} and vehicleVariantId: {}", modelName, vehicleVariantId);
+                return null;
+            }
+            MddpStockDTO dto = new MddpStockDTO();
+            dto.setMddpId(mddpStock.get().getMddpId());
+            dto.setVehicleModelId(mddpStock.get().getVehicleModelId().getVehicleModelId());
+            dto.setVehicleVariantId(mddpStock.get().getVehicleVariantId().getVehicleVariantId());
+            dto.setVariant(mddpStock.get().getVariant());
+            dto.setModelName(mddpStock.get().getModelName());
+            dto.setSuffix(mddpStock.get().getSuffix());
+            dto.setColour(mddpStock.get().getColour());
+            dto.setEngineColour(mddpStock.get().getEngineColour());
+            dto.setInteriorColour(mddpStock.get().getInteriorColour());
+            dto.setFuelType(mddpStock.get().getFuelType());
+            dto.setTransmissionType(mddpStock.get().getTransmissionType());
+            dto.setQuantity(mddpStock.get().getQuantity());
+            dto.setVinNumber(mddpStock.get().getVinNumber());
+            dto.setStockStatus(mddpStock.get().getStockStatus() != null ? mddpStock.get().getStockStatus().name() : null);
+            dto.setExpectedDispatchDate(mddpStock.get().getExpectedDispatchDate());
+            dto.setExpectedDeliveryDate(mddpStock.get().getExpectedDeliveryDate());
+            log.info("Successfully retrieved MDDP stock detail for modelName: {} and vehicleVariantId: {} at {}", modelName, vehicleVariantId, LocalDateTime.now());
+            return dto;
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error while fetching MDDP stock detail: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch MDDP stock detail: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Error fetching MDDP stock detail for modelName: {} and vehicleVariantId: {}: {}", modelName, vehicleVariantId, e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch MDDP stock detail: " + e.getMessage(), e);
+        }
+    }
+
+    public ManufacturerOrderDTO getManufacturerOrderByModelAndVariant(String modelName, Long vehicleVariantId) {
+        log.info("Fetching manufacturer order for modelName: {} and vehicleVariantId: {} at {}", modelName, vehicleVariantId, LocalDateTime.now());
+        try {
+            if (modelName == null || modelName.trim().isEmpty()) {
+                log.error("Model name cannot be empty for fetching manufacturer orders");
+                throw new IllegalArgumentException("Model name cannot be empty");
+            }
+            if (vehicleVariantId == null) {
+                log.error("Vehicle variant ID cannot be null for fetching manufacturer orders");
+                throw new IllegalArgumentException("Vehicle variant ID cannot be null");
+            }
+            Optional<ManufacturerOrder> manufacturerOrder = manufacturerOrderRepository.findByModelNameAndVehicleVariantIdVariantId(modelName, vehicleVariantId);
+            if (manufacturerOrder.isEmpty()) {
+                log.warn("No manufacturer order found for modelName: {} and vehicleVariantId: {}", modelName, vehicleVariantId);
+                return null;
+            }
+            ManufacturerOrderDTO dto = mapToManufacturerOrderDTO(manufacturerOrder.get());
+            log.info("Successfully retrieved manufacturer order for modelName: {} and vehicleVariantId: {} at {}", modelName, vehicleVariantId, LocalDateTime.now());
+            return dto;
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error while fetching manufacturer order: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch manufacturer order: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Error fetching manufacturer order for modelName: {} and vehicleVariantId: {}: {}", modelName, vehicleVariantId, e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch manufacturer order: " + e.getMessage(), e);
+        }
+    }
+
+    public VehicleVariantDTO getVehicleVariantByModelAndVariant(String modelName, Long vehicleVariantId) {
+        log.info("Fetching vehicle variant for modelName: {} and vehicleVariantId: {} at {}", modelName, vehicleVariantId, LocalDateTime.now());
+        try {
+            if (modelName == null || modelName.trim().isEmpty()) {
+                log.error("Model name cannot be empty for fetching vehicle variants");
+                throw new IllegalArgumentException("Model name cannot be empty");
+            }
+            if (vehicleVariantId == null) {
+                log.error("Vehicle variant ID cannot be null for fetching vehicle variants");
+                throw new IllegalArgumentException("Vehicle variant ID cannot be null");
+            }
+            Optional<VehicleVariant> vehicleVariant = vehicleVariantRepository.findByModelNameAndVehicleVariantId(modelName, vehicleVariantId);
+            if (vehicleVariant.isEmpty()) {
+                log.warn("No vehicle variant found for modelName: {} and vehicleVariantId: {}", modelName, vehicleVariantId);
+                return null;
+            }
+            VehicleVariantDTO dto = new VehicleVariantDTO();
+            VehicleVariant variant = vehicleVariant.get();
+            dto.setVehicleModelId(variant.getVehicleModelId().getVehicleModelId());
+            dto.setModelName(variant.getModelName());
+            dto.setVariant(variant.getVariant());
+            dto.setSuffix(variant.getSuffix());
+            dto.setSafetyFeature(variant.getSafetyFeature());
+            dto.setColour(variant.getColour());
+            dto.setEngineColour(variant.getEngineColour());
+            dto.setTransmissionType(variant.getTransmissionType());
+            dto.setInteriorColour(variant.getInteriorColour());
+            dto.setVinNumber(variant.getVinNumber());
+            dto.setEngineCapacity(variant.getEngineCapacity());
+            dto.setFuelType(variant.getFuelType());
+            dto.setPrice(variant.getPrice());
+            dto.setYearOfManufacture(variant.getYearOfManufacture());
+            dto.setBodyType(variant.getBodyType());
+            dto.setFuelTankCapacity(variant.getFuelTankCapacity());
+            dto.setSeatingCapacity(variant.getSeatingCapacity());
+            dto.setMaxPower(variant.getMaxPower());
+            dto.setMaxTorque(variant.getMaxTorque());
+            dto.setTopSpeed(variant.getTopSpeed());
+            dto.setWheelBase(variant.getWheelBase());
+            dto.setWidth(variant.getWidth());
+            dto.setLength(variant.getLength());
+            dto.setInfotainment(variant.getInfotainment());
+            dto.setComfort(variant.getComfort());
+            dto.setNumberOfAirBags(variant.getNumberOfAirBags());
+            dto.setMileageCity(variant.getMileageCity());
+            dto.setMileageHighway(variant.getMileageHighway());
+            log.info("Successfully retrieved vehicle variant for modelName: {} and vehicleVariantId: {} at {}", modelName, vehicleVariantId, LocalDateTime.now());
+            return dto;
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error while fetching vehicle variant: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch vehicle variant: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Error fetching vehicle variant for modelName: {} and vehicleVariantId: {}: {}", modelName, vehicleVariantId, e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch vehicle variant: " + e.getMessage(), e);
+        }
+    }
 }

@@ -109,8 +109,4 @@ public class VehicleVariantRequest {
     @NotNull(message = "Mileage highway cannot be null")
     @DecimalMin(value = "0.0", message = "Mileage highway cannot be negative")
     private BigDecimal mileageHighway;
-
-    @NotBlank(message = "Created by cannot be blank")
-    @Size(min = 1, max = 100, message = "Created by must be between 1 and 100 characters")
-    private String createdBy;
 }

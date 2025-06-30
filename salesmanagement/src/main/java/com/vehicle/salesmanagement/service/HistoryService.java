@@ -46,10 +46,10 @@ public class HistoryService {
         history.setPermanentAddress(orderDetails.getPermanentAddress());
         history.setPhoneNumber(orderDetails.getPhoneNumber());
         history.setQuantity(orderDetails.getQuantity());
-        history.setTransmissionType(history.getTransmissionType());
-        history.setVariant(history.getVariant());
-        history.setVehicleModelId(history.getVehicleModelId());
-        history.setVehicleVariantId(history.getVehicleVariantId());
+        history.setTransmissionType(orderDetails.getTransmissionType()); // Fix: Use orderDetails
+        history.setVariant(orderDetails.getVariant()); // Fix: Use orderDetails
+        history.setVehicleModelId(orderDetails.getVehicleModelId()); // Fix: Use orderDetails
+        history.setVehicleVariantId(orderDetails.getVehicleVariantId()); // Fix: Use orderDetails
         history.setChangedAt(LocalDateTime.now());
         history.setOrderStatusHistory(String.format("Order status updated from %s to %s at %s",
                 orderDetails.getOrderStatus().name(), newStatus.name(), history.getChangedAt()));

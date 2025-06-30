@@ -11,6 +11,7 @@ public class ApiResponse<T> {
     private String statusMessage;
     private T data;
 
+
     public int getStatusCode() {
         return statusCode;
     }
@@ -34,4 +35,6 @@ public class ApiResponse<T> {
     public void setData(T data) {
         this.data = data;
     }
+
+
 }

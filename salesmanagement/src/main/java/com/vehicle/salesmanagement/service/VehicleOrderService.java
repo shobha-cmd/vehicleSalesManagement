@@ -156,7 +156,7 @@ public class VehicleOrderService {
         newStock.setVariant(orderRequest.getVariant());
         newStock.setQuantity(orderRequest.getQuantity());
         newStock.setStockStatus(StockStatus.AVAILABLE);
-        newStock.setCreatedAt(LocalDateTime.now());
+       // newStock.setCreatedAt(LocalDateTime.now());
         newStock.setModelName(orderRequest.getModelName());
         stockRepository.save(newStock);
 
@@ -254,7 +254,7 @@ public class VehicleOrderService {
             newStock.setVariant(orderDetails.getVariant());
             newStock.setQuantity(orderDetails.getQuantity());
             newStock.setStockStatus(StockStatus.AVAILABLE);
-            newStock.setCreatedAt(LocalDateTime.now());
+          //  newStock.setCreatedAt(LocalDateTime.now());
             newStock.setModelName(orderDetails.getModelName());
             stockRepository.save(newStock);
             historyService.saveStockHistory(newStock, "Stock Created for Canceled Order: " + customerOrderId);

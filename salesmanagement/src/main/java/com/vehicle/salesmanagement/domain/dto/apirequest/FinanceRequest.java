@@ -60,4 +60,7 @@ public class FinanceRequest {
     @NotBlank(message = "Payment mode cannot be blank")
     @Size(min = 1, max = 50, message = "Payment mode must be between 1 and 50 characters")
     private String paymentMode;
+
+    public void setFinanceStatus(String approved) {
+    }
 }

@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -26,6 +27,7 @@ import java.time.Duration;
 @Configuration
 @EnableScheduling
 @RequiredArgsConstructor
+@Profile("!test")
 public class TemporalWorkerConfig {
 
     private final VehicleOrderActivitiesImpl vehicleOrderActivities;

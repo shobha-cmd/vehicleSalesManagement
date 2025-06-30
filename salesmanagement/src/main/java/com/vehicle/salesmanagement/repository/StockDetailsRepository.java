@@ -36,4 +36,5 @@ public interface StockDetailsRepository extends JpaRepository<StockDetails, Long
 
     @Query("SELECT s FROM StockDetails s WHERE s.modelName = :modelName AND s.vehicleVariantId.vehicleVariantId = :vehicleVariantId")
     Optional<StockDetails> findByModelNameAndVehicleVariantIdVariantId(@Param("modelName") String modelName, @Param("vehicleVariantId") Long vehicleVariantId);
+
 }

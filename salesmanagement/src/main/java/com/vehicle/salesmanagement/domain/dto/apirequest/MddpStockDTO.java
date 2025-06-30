@@ -16,8 +16,6 @@ public class MddpStockDTO {
     private String stockStatus;
     private String interiorColour;
     private String vinNumber;
-    private String createdBy;
-    private String updatedBy;
     private LocalDateTime expectedDispatchDate;
     private LocalDateTime expectedDeliveryDate;
 
@@ -123,22 +121,6 @@ public class MddpStockDTO {
 
     public void setVinNumber(String vinNumber) {
         this.vinNumber = vinNumber;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
     }
 
     public LocalDateTime getExpectedDispatchDate() {

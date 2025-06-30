@@ -6,6 +6,5 @@ import lombok.Data;
 public class VehicleModelDTO {
 
     private String modelName;
-    private String createdBy;
-    private String updatedBy;
+
 }

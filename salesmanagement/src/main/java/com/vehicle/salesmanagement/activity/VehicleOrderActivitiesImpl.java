@@ -68,6 +68,7 @@ public class VehicleOrderActivitiesImpl implements VehicleOrderActivities {
         }
     }
 
+
     @Override
     public OrderResponse confirmOrder(OrderResponse orderResponse) {
         try {

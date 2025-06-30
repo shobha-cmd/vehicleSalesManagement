@@ -647,8 +647,8 @@ public class VehicleModelService {
                     stock.setStockStatus(StockStatus.valueOf(dto.getStockStatus()));
                     stock.setInteriorColour(dto.getInteriorColour());
                     stock.setVinNumber(dto.getVinNumber());
-                    stock.setCreatedAt(LocalDateTime.now());
-                    stock.setUpdatedAt(LocalDateTime.now());
+//                    stock.setCreatedAt(LocalDateTime.now());
+//                    stock.setUpdatedAt(LocalDateTime.now());
                     return stock;
                 })
                 .collect(Collectors.toList());
@@ -783,7 +783,7 @@ public class VehicleModelService {
                 existingStock.setInteriorColour(dto.getInteriorColour());
             }
 
-            existingStock.setUpdatedAt(LocalDateTime.now());
+            // existingStock.setUpdatedAt(LocalDateTime.now());
             updatedStockDetails.add(existingStock);
         }
 
@@ -1130,8 +1130,18 @@ public class VehicleModelService {
     }
 
     private Integer parseInteger(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            log.warn("Cannot parse null or empty value");
+            return null;
+        }
         try {
-            return Integer.parseInt(value);
+            // Extract numeric part by removing non-digit characters (except for negative signs if needed)
+            String numericPart = value.replaceAll("[^0-9-]", "");
+            if (numericPart.isEmpty()) {
+                log.warn("No numeric value found in: {}", value);
+                return null;
+            }
+            return Integer.parseInt(numericPart);
         } catch (NumberFormatException e) {
             log.warn("Failed to parse integer: {}", value, e);
             return null;

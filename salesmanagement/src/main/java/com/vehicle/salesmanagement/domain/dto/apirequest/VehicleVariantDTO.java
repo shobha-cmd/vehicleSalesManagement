@@ -33,8 +33,6 @@ public class VehicleVariantDTO {
     private Integer numberOfAirBags;
     private BigDecimal mileageCity;
     private BigDecimal mileageHighway;
-    private String createdBy;
-    private String updatedBy;
 
     public String getModelName() {
         return modelName;
@@ -261,19 +259,4 @@ public class VehicleVariantDTO {
         this.mileageHighway = mileageHighway;
     }
 
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
 }

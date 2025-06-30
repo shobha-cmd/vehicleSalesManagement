@@ -17,8 +17,6 @@ public class ManufacturerOrderDTO {
     private String interiorColour;
     private String engineColour;
     private String transmissionType;
-    private String createdBy;
-    private String updatedBy;
 
     public String getTransmissionType() {
         return transmissionType;
@@ -122,22 +120,6 @@ public class ManufacturerOrderDTO {
 
     public void setEstimatedArrivalDate(LocalDateTime estimatedArrivalDate) {
         this.estimatedArrivalDate = estimatedArrivalDate;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
     }
 
     public Long getManufacturerId() {

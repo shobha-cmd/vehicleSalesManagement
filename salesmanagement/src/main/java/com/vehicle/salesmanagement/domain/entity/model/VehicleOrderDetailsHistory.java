@@ -24,8 +24,8 @@ public class VehicleOrderDetailsHistory {
     @Column(name = "aadhar_no")
     private String aadharNo;
 
-    @Column(name = "booking_amount")
-    private BigDecimal bookingAmount;
+//    @Column(name = "booking_amount")
+//    private BigDecimal bookingAmount;
 
     @Column(name = "colour")
     private String colour;
@@ -69,8 +69,8 @@ public class VehicleOrderDetailsHistory {
     @Column(name = "quantity")
     private Integer quantity;
 
-    @Column(name = "total_price")
-    private BigDecimal totalPrice;
+//    @Column(name = "total_price")
+//    private BigDecimal totalPrice;
 
     @Column(name = "transmission_type")
     private String transmissionType;
@@ -129,13 +129,13 @@ public class VehicleOrderDetailsHistory {
         this.aadharNo = aadharNo;
     }
 
-    public BigDecimal getBookingAmount() {
-        return bookingAmount;
-    }
-
-    public void setBookingAmount(BigDecimal bookingAmount) {
-        this.bookingAmount = bookingAmount;
-    }
+//    public BigDecimal getBookingAmount() {
+//        return bookingAmount;
+//    }
+//
+//    public void setBookingAmount(BigDecimal bookingAmount) {
+//        this.bookingAmount = bookingAmount;
+//    }
 
     public String getColour() {
         return colour;
@@ -249,13 +249,13 @@ public class VehicleOrderDetailsHistory {
         this.quantity = quantity;
     }
 
-    public BigDecimal getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(BigDecimal totalPrice) {
-        this.totalPrice = totalPrice;
-    }
+//    public BigDecimal getTotalPrice() {
+//        return totalPrice;
+//    }
+//
+//    public void setTotalPrice(BigDecimal totalPrice) {
+//        this.totalPrice = totalPrice;
+//    }
 
     public String getTransmissionType() {
         return transmissionType;

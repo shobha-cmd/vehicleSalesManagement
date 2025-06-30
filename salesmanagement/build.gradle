@@ -1,4 +1,9 @@
 plugins {
+    id 'jacoco'  // ✅ Add this
+}
+
+
+plugins {
 	id 'org.springframework.boot' version '3.2.3' // Matches spring-webmvc-6.1.3
 	id 'io.spring.dependency-management' version '1.1.6'
 	id 'java'
@@ -7,7 +12,17 @@ plugins {
 group = 'com.vehicle'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17' // Matches Java version from logs
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
 repositories {
 	mavenCentral()
 }
@@ -42,10 +57,34 @@ dependencies {
 
     // Test dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
 }
 
 
 
 tasks.named('test') {
 	useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = true
+    }
+
+    reports {
+        html.required.set(true)
+        junitXml.required.set(true)
+    }
+
+    // Summary in console
+    afterSuite { desc, result ->
+        if (!desc.parent) {
+            println "\n==================== TEST SUMMARY ===================="
+            println "✅ Total Tests : ${result.testCount}"
+            println "🟢 Passed      : ${result.successfulTestCount}"
+            println "🔴 Failed      : ${result.failedTestCount}"
+            println "⚪ Skipped     : ${result.skippedTestCount}"
+            println "⏱️  Duration   : ${result.endTime - result.startTime} ms"
+            println "======================================================"
+        }
+    }
 }

@@ -4,6 +4,8 @@ import com.vehicle.salesmanagement.domain.dto.apirequest.OrderRequest;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.OrderResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.VehicleOrderGridDTO;
 import com.vehicle.salesmanagement.domain.entity.model.*;
+import com.vehicle.salesmanagement.enums.DeliveryStatus;
+import com.vehicle.salesmanagement.enums.FinanceStatus;
 import com.vehicle.salesmanagement.enums.OrderStatus;
 import com.vehicle.salesmanagement.enums.StockStatus;
 import com.vehicle.salesmanagement.repository.*;
@@ -32,6 +34,8 @@ public class VehicleOrderService {
     private final VehicleModelRepository vehicleModelRepository;
     private final HistoryService historyService;
     private final OrderIdGeneratorService orderIdGeneratorService;
+    private final FinanceDetailsRepository financeDetailsRepository; // New repository
+    private final DeliveryDetailsRepository deliveryDetailsRepository; // Ne
 
     @Transactional
     public OrderResponse checkAndBlockStock(OrderRequest orderRequest) {
@@ -334,20 +338,49 @@ public class VehicleOrderService {
         return response;
     }
 
-    public long getTotalOrders() {
-        return orderRepository.count();
-    }
+//    public long getTotalOrders() {
+//        return orderRepository.count();
+//    }
+//
+//    public long getPendingOrders() {
+//        return orderRepository.countByOrderStatus(OrderStatus.PENDING);
+//    }
+//
+//    public long getFinancePendingOrders() {
+//        return orderRepository.countByOrderStatus(OrderStatus.FINANCE_PENDING);
+//    }
+//
+//    public long getClosedOrders() {
+//        return orderRepository.countByOrderStatus(OrderStatus.COMPLETED);
+//    }
+//
+//    public List<VehicleOrderGridDTO> getAllOrders() {
+//        return orderRepository.findAll().stream()
+//                .map(order -> new VehicleOrderGridDTO(
+//                        order.getCustomerOrderId(),
+//                        order.getCustomerName(),
+//                        order.getModelName(),
+//                        order.getQuantity(),
+//                        order.getVariant(),
+//                        order.getOrderStatus(),
+//                        order.getExpectedDeliveryDate()
+//                ))
+//                .collect(Collectors.toList());
+//    }
+public long getTotalOrders() {
+    return orderRepository.count();
+}
 
     public long getPendingOrders() {
         return orderRepository.countByOrderStatus(OrderStatus.PENDING);
     }
 
     public long getFinancePendingOrders() {
-        return orderRepository.countByOrderStatus(OrderStatus.FINANCE_PENDING);
+        return financeDetailsRepository.countByFinanceStatus(FinanceStatus.PENDING);
     }
 
     public long getClosedOrders() {
-        return orderRepository.countByOrderStatus(OrderStatus.COMPLETED);
+        return deliveryDetailsRepository.countByDeliveryStatus(DeliveryStatus.DELIVERED);
     }
 
     public List<VehicleOrderGridDTO> getAllOrders() {

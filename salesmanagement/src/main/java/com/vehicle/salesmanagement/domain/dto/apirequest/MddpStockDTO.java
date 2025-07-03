@@ -18,14 +18,7 @@ public class MddpStockDTO {
     private String vinNumber;
     private LocalDateTime expectedDispatchDate;
     private LocalDateTime expectedDeliveryDate;
-
-    public String getModelName() {
-        return modelName;
-    }
-
-    public void setModelName(String modelName) {
-        this.modelName = modelName;
-    }
+    private String stockArrivalDate;
 
     public Long getVehicleModelId() {
         return vehicleModelId;
@@ -41,6 +34,14 @@ public class MddpStockDTO {
 
     public void setVehicleVariantId(Long vehicleVariantId) {
         this.vehicleVariantId = vehicleVariantId;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 
     public String getSuffix() {
@@ -137,6 +138,14 @@ public class MddpStockDTO {
 
     public void setExpectedDeliveryDate(LocalDateTime expectedDeliveryDate) {
         this.expectedDeliveryDate = expectedDeliveryDate;
+    }
+
+    public String getStockArrivalDate() {
+        return stockArrivalDate;
+    }
+
+    public void setStockArrivalDate(String stockArrivalDate) {
+        this.stockArrivalDate = stockArrivalDate;
     }
 
     public void setMddpId(Integer mddpId) {

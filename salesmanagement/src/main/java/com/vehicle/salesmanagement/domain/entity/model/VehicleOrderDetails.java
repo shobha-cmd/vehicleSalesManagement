@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Data
 @Table(name = "vehicle_order_details",schema="sales_tracking")
@@ -90,6 +92,9 @@ public class VehicleOrderDetails {
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status")
     private OrderStatus orderStatus;
+
+    @Column(name = "expected_delivery_date")
+    private LocalDate expectedDeliveryDate;
 
 //    @Column(name = "created_at", nullable = false)
 //   // @NotNull(message = "Created at is required")

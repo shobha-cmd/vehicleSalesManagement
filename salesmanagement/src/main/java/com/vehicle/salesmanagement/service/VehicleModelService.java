@@ -13,7 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -645,6 +647,7 @@ public class VehicleModelService {
                     stock.setVariant(dto.getVariant());
                     stock.setQuantity(dto.getQuantity());
                     stock.setStockStatus(StockStatus.valueOf(dto.getStockStatus()));
+                    stock.setStockArrivalDate(String.valueOf(dto.getStockArrivalDate() != null ? LocalDate.parse(dto.getStockArrivalDate()) : LocalDate.now()));
                     stock.setInteriorColour(dto.getInteriorColour());
                     stock.setVinNumber(dto.getVinNumber());
 //                    stock.setCreatedAt(LocalDateTime.now());
@@ -694,6 +697,18 @@ public class VehicleModelService {
                         log.error("Expected delivery date is required");
                         throw new IllegalArgumentException("Expected delivery date is required");
                     }
+                    if (dto.getStockArrivalDate() != null && !dto.getStockArrivalDate().isEmpty()) {
+                        try {
+                            LocalDate.parse(dto.getStockArrivalDate()); // Validate date format
+                        } catch (DateTimeParseException e) {
+                            log.error("Invalid stockArrivalDate format for VIN {}: {}", dto.getVinNumber(), dto.getStockArrivalDate());
+                            throw new IllegalArgumentException("Invalid stockArrivalDate format: " + dto.getStockArrivalDate());
+                        }
+                    } else {
+                        log.debug("stockArrivalDate is null for VIN: {}", dto.getVinNumber());
+                        // Optionally set default value
+                        dto.setStockArrivalDate(String.valueOf(LocalDate.now())); // Default to current date
+                    }
                 })
                 .map(dto -> {
                     MddpStock stock = new MddpStock();
@@ -712,6 +727,7 @@ public class VehicleModelService {
                     stock.setVinNumber(dto.getVinNumber());
                     stock.setExpectedDispatchDate(dto.getExpectedDispatchDate());
                     stock.setExpectedDeliveryDate(dto.getExpectedDeliveryDate());
+                    stock.setStockArrivalDate(dto.getStockArrivalDate() != null ? dto.getStockArrivalDate() : String.valueOf(LocalDate.now()));
                     return stock;
                 })
                 .collect(Collectors.toList());

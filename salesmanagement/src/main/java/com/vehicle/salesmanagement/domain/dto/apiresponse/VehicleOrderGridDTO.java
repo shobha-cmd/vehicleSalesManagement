@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,4 +17,5 @@ public class VehicleOrderGridDTO {
     private Integer quantity;
     private String variant;
     private OrderStatus orderStatus;
+    private LocalDate expectedDeliveryDate;
 }

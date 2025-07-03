@@ -1,5 +1,6 @@
 package com.vehicle.salesmanagement.service;
 
+import com.vehicle.salesmanagement.domain.dto.apirequest.FinanceDTO;
 import com.vehicle.salesmanagement.domain.dto.apirequest.FinanceRequest;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.FinanceResponse;
 import com.vehicle.salesmanagement.domain.entity.model.FinanceDetails;
@@ -8,10 +9,14 @@ import com.vehicle.salesmanagement.enums.FinanceStatus;
 import com.vehicle.salesmanagement.enums.OrderStatus;
 import com.vehicle.salesmanagement.repository.FinanceDetailsRepository;
 import com.vehicle.salesmanagement.repository.VehicleOrderDetailsRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Slf4j
 @Service
@@ -116,6 +121,38 @@ public class FinanceService {
 
         return mapToFinanceResponse(financeDetails, orderDetails);
     }
+    @Transactional
+    public FinanceResponse updateFinanceDetails(FinanceDTO financeDTO) {
+        String customerOrderId = financeDTO.getCustomerOrderId();
+        log.info("Updating finance details for order ID: {}", customerOrderId);
+
+        FinanceDetails financeDetails = financeDetailsRepository.findByCustomerOrderId(customerOrderId);
+        if (financeDetails == null) {
+            throw new RuntimeException("Finance details not found for order ID: " + customerOrderId);
+        }
+
+        // Update fields if provided
+        if (financeDTO.getCustomerName() != null) {
+            financeDetails.setCustomerName(financeDTO.getCustomerName());
+        }
+        if (financeDTO.getFinanceStatus() != null) {
+            financeDetails.setFinanceStatus(FinanceStatus.valueOf(financeDTO.getFinanceStatus()));
+        }
+        if (financeDTO.getApprovedBy() != null) {
+            financeDetails.setApprovedBy(financeDTO.getApprovedBy());
+        }
+        if (financeDTO.getRejectedBy() != null) {
+            financeDetails.setRejectedBy(financeDTO.getRejectedBy());
+        }
+
+        financeDetailsRepository.save(financeDetails);
+
+        VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findByCustomerOrderId(customerOrderId)
+                .orElseThrow(() -> new RuntimeException("Order not found for customer order ID: " + customerOrderId));
+
+        return mapToFinanceResponse(financeDetails, orderDetails);
+    }
+
 
     private FinanceResponse mapToFinanceResponse(FinanceDetails financeDetails, VehicleOrderDetails orderDetails) {
         FinanceResponse response = new FinanceResponse();

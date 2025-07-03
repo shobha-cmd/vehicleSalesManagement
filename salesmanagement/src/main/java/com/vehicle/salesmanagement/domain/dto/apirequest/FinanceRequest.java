@@ -3,7 +3,6 @@ package com.vehicle.salesmanagement.domain.dto.apirequest;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -60,6 +59,14 @@ public class FinanceRequest {
     @NotBlank(message = "Payment mode cannot be blank")
     @Size(min = 1, max = 50, message = "Payment mode must be between 1 and 50 characters")
     private String paymentMode;
+
+    public String getCustomerOrderId() {
+        return customerOrderId;
+    }
+
+    public void setCustomerOrderId(String customerOrderId) {
+        this.customerOrderId = customerOrderId;
+    }
 
     public void setFinanceStatus(String approved) {
     }

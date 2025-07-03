@@ -1,7 +1,5 @@
 package com.vehicle.salesmanagement.domain.dto.apirequest;
 
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -16,4 +14,12 @@ public class FinanceDTO {
     private String financeStatus;
     private String approvedBy;
     private String rejectedBy;
+
+    public Long getFinanceId() {
+        return financeId;
+    }
+
+    public void setFinanceId(Long financeId) {
+        this.financeId = financeId;
+    }
 }

@@ -89,11 +89,8 @@ public class VehicleOrderController {
                                                     "  \"transmissionType\": \"string\",\n" +
                                                     "  \"variant\": \"string\",\n" +
                                                     "  \"quantity\": \"integer\",\n" +
-                                                    "  \"totalPrice\": \"number\",\n" +
-                                                    "  \"bookingAmount\": \"number\",\n" +
                                                     "  \"paymentMode\": \"string\",\n" +
-                                                    "  \"createdBy\": \"string\",\n" +
-                                                    "  \"updatedBy\": \"string\"\n" +
+                                                    "  \"expectedDeliveryDate\": \"string\"\n" +
                                                     "}"
                                     ),
                                     @ExampleObject(
@@ -114,37 +111,12 @@ public class VehicleOrderController {
                                                     "      \"panNo\": \"string\",\n" +
                                                     "      \"modelName\": \"string\",\n" +
                                                     "      \"fuelType\": \"string\",\n" +
-                                                    "      \"colour\": \"string\",\n" +
+                                                    "27;      \"colour\": \"string\",\n" +
                                                     "      \"transmissionType\": \"string\",\n" +
                                                     "      \"variant\": \"string\",\n" +
                                                     "      \"quantity\": \"integer\",\n" +
-                                                    "      \"totalPrice\": \"number\",\n" +
-                                                    "      \"bookingAmount\": \"number\",\n" +
                                                     "      \"paymentMode\": \"string\",\n" +
-                                                    "      \"createdBy\": \"string\",\n" +
-                                                    "      \"updatedBy\": \"string\"\n" +
-                                                    "    },\n" +
-                                                    "    {\n" +
-                                                    "      \"vehicleModelId\": \"integer\",\n" +
-                                                    "      \"vehicleVariantId\": \"integer\",\n" +
-                                                    "      \"customerName\": \"string\",\n" +
-                                                    "      \"phoneNumber\": \"string\",\n" +
-                                                    "      \"email\": \"string\",\n" +
-                                                    "      \"permanentAddress\": \"string\",\n" +
-                                                    "      \"currentAddress\": \"string\",\n" +
-                                                    "      \"aadharNo\": \"string\",\n" +
-                                                    "      \"panNo\": \"string\",\n" +
-                                                    "      \"modelName\": \"string\",\n" +
-                                                    "      \"fuelType\": \"string\",\n" +
-                                                    "      \"colour\": \"string\",\n" +
-                                                    "      \"transmissionType\": \"string\",\n" +
-                                                    "      \"variant\": \"string\",\n" +
-                                                    "      \"quantity\": \"integer\",\n" +
-                                                    "      \"totalPrice\": \"number\",\n" +
-                                                    "      \"bookingAmount\": \"number\",\n" +
-                                                    "      \"paymentMode\": \"string\",\n" +
-                                                    "      \"createdBy\": \"string\",\n" +
-                                                    "      \"updatedBy\": \"string\"\n" +
+                                                    "      \"expectedDeliveryDate\": \"string\"\n" +
                                                     "    }\n" +
                                                     "  ]\n" +
                                                     "}"
@@ -688,6 +660,7 @@ public class VehicleOrderController {
             order.setQuantity(request.getQuantity());
             order.setPaymentMode(request.getPaymentMode());
             order.setOrderStatus(OrderStatus.PENDING);
+            order.setExpectedDeliveryDate(request.getExpectedDeliveryDate());
             log.debug("Mapped OrderRequest to VehicleOrderDetails with customerOrderId: {}", order.getCustomerOrderId());
 
             // Validate customerOrderId
@@ -740,6 +713,7 @@ public class VehicleOrderController {
         order.setVariant(orderDetails.getVariant());
         order.setQuantity(orderDetails.getQuantity());
         order.setPaymentMode(orderDetails.getPaymentMode());
+        order.setExpectedDeliveryDate(orderDetails.getExpectedDeliveryDate());
         return order;
     }
 }

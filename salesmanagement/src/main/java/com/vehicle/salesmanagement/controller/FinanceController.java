@@ -2,6 +2,7 @@ package com.vehicle.salesmanagement.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vehicle.salesmanagement.domain.dto.apirequest.ApproveFinanceRequest;
+import com.vehicle.salesmanagement.domain.dto.apirequest.FinanceDTO;
 import com.vehicle.salesmanagement.domain.dto.apirequest.FinanceRequest;
 import com.vehicle.salesmanagement.domain.dto.apirequest.RejectFinanceRequest;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse;
@@ -24,11 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 @Slf4j
@@ -222,6 +222,67 @@ public class FinanceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Failed to reject finance for workflowId='" + workflowId + "': " + e.getMessage(),
+                    null
+            ));
+        }
+    }
+    @GetMapping("/financeDetails/{customerOrderId}")
+    @Operation(summary = "Get finance details by customer order ID", description = "Retrieves finance details including finance status for a specific customer order ID")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Finance details retrieved successfully"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Finance details or order not found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<ApiResponse<FinanceResponse>> getFinanceDetails(@PathVariable String customerOrderId) {
+        log.info("Retrieving finance details for order ID: {}", customerOrderId);
+
+        try {
+            FinanceResponse financeResponse = financeService.getFinanceDetails(customerOrderId);
+            return ResponseEntity.ok(new ApiResponse<>(
+                    HttpStatus.OK.value(),
+                    "Finance details retrieved successfully",
+                    financeResponse
+            ));
+        } catch (RuntimeException e) {
+            log.error("Failed to retrieve finance details for order ID: {}: {}", customerOrderId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(
+                    HttpStatus.NOT_FOUND.value(),
+                    "Finance details or order not found for order ID: " + customerOrderId,
+                    null
+            ));
+        } catch (Exception e) {
+            log.error("Unexpected error retrieving finance details for order ID: {}: {}", customerOrderId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Unexpected error retrieving finance details: " + e.getMessage(),
+                    null
+            ));
+        }
+    }
+    @PutMapping("/financeUpdate")
+    @Operation(summary = "Update finance details", description = "Updates existing finance details based on customerOrderId")
+    public ResponseEntity<ApiResponse<FinanceResponse>> updateFinanceDetails(@Valid @RequestBody FinanceDTO financeDTO) {
+        log.info("Updating finance details for order ID: {}", financeDTO.getCustomerOrderId());
+
+        try {
+            FinanceResponse response = financeService.updateFinanceDetails(financeDTO);
+            return ResponseEntity.ok(new ApiResponse<>(
+                    HttpStatus.OK.value(),
+                    "Finance details updated successfully",
+                    response
+            ));
+        } catch (RuntimeException e) {
+            log.error("Failed to update finance details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(
+                    HttpStatus.NOT_FOUND.value(),
+                    e.getMessage(),
+                    null
+            ));
+        } catch (Exception e) {
+            log.error("Unexpected error updating finance details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Failed to update finance details: " + e.getMessage(),
                     null
             ));
         }

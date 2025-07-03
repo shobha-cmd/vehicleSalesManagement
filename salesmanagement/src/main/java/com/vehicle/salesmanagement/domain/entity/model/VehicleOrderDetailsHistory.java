@@ -2,11 +2,11 @@ package com.vehicle.salesmanagement.domain.entity.model;
 
 import jakarta.persistence.*;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "vehicle_order_details_history",schema="sales_tracking")
+@Table(name = "vehicle_order_details_history", schema = "sales_tracking")
 public class VehicleOrderDetailsHistory {
 
     @Id
@@ -24,17 +24,8 @@ public class VehicleOrderDetailsHistory {
     @Column(name = "aadhar_no")
     private String aadharNo;
 
-//    @Column(name = "booking_amount")
-//    private BigDecimal bookingAmount;
-
     @Column(name = "colour")
     private String colour;
-
-//    @Column(name = "created_at")
-//    private LocalDateTime createdAt;
-//
-//    @Column(name = "created_by")
-//    private String createdBy;
 
     @Column(name = "current_address")
     private String currentAddress;
@@ -69,17 +60,8 @@ public class VehicleOrderDetailsHistory {
     @Column(name = "quantity")
     private Integer quantity;
 
-//    @Column(name = "total_price")
-//    private BigDecimal totalPrice;
-
     @Column(name = "transmission_type")
     private String transmissionType;
-
-//    @Column(name = "updated_at")
-//    private LocalDateTime updatedAt;
-//
-//    @Column(name = "updated_by")
-//    private String updatedBy;
 
     @Column(name = "variant")
     private String variant;
@@ -94,6 +76,9 @@ public class VehicleOrderDetailsHistory {
 
     @Column(name = "order_status_history")
     private String orderStatusHistory;
+
+    @Column(name = "expected_delivery_date")
+    private LocalDate expectedDeliveryDate;
 
     // Getters and Setters
 
@@ -129,14 +114,6 @@ public class VehicleOrderDetailsHistory {
         this.aadharNo = aadharNo;
     }
 
-//    public BigDecimal getBookingAmount() {
-//        return bookingAmount;
-//    }
-//
-//    public void setBookingAmount(BigDecimal bookingAmount) {
-//        this.bookingAmount = bookingAmount;
-//    }
-
     public String getColour() {
         return colour;
     }
@@ -144,22 +121,6 @@ public class VehicleOrderDetailsHistory {
     public void setColour(String colour) {
         this.colour = colour;
     }
-
-//    public LocalDateTime getCreatedAt() {
-//        return createdAt;
-//    }
-//
-//    public void setCreatedAt(LocalDateTime createdAt) {
-//        this.createdAt = createdAt;
-//    }
-//
-//    public String getCreatedBy() {
-//        return createdBy;
-//    }
-//
-//    public void setCreatedBy(String createdBy) {
-//        this.createdBy = createdBy;
-//    }
 
     public String getCurrentAddress() {
         return currentAddress;
@@ -249,14 +210,6 @@ public class VehicleOrderDetailsHistory {
         this.quantity = quantity;
     }
 
-//    public BigDecimal getTotalPrice() {
-//        return totalPrice;
-//    }
-//
-//    public void setTotalPrice(BigDecimal totalPrice) {
-//        this.totalPrice = totalPrice;
-//    }
-
     public String getTransmissionType() {
         return transmissionType;
     }
@@ -264,22 +217,6 @@ public class VehicleOrderDetailsHistory {
     public void setTransmissionType(String transmissionType) {
         this.transmissionType = transmissionType;
     }
-
-//    public LocalDateTime getUpdatedAt() {
-//        return updatedAt;
-//    }
-//
-//    public void setUpdatedAt(LocalDateTime updatedAt) {
-//        this.updatedAt = updatedAt;
-//    }
-//
-//    public String getUpdatedBy() {
-//        return updatedBy;
-//    }
-//
-//    public void setUpdatedBy(String updatedBy) {
-//        this.updatedBy = updatedBy;
-//    }
 
     public String getVariant() {
         return variant;
@@ -313,8 +250,15 @@ public class VehicleOrderDetailsHistory {
         this.orderStatusHistory = orderStatusHistory;
     }
 
-    public void setCustomerOrderId(String customerOrderId) {
+    public LocalDate getExpectedDeliveryDate() {
+        return expectedDeliveryDate;
     }
 
+    public void setExpectedDeliveryDate(LocalDate expectedDeliveryDate) {
+        this.expectedDeliveryDate = expectedDeliveryDate;
+    }
 
+    public void setCustomerOrderId(String customerOrderId) {
+        // No implementation needed as customerOrderId is managed via vehicleOrderDetailsId
+    }
 }

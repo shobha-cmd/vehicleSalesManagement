@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -53,6 +54,8 @@ public class HistoryService {
         history.setChangedAt(LocalDateTime.now());
         history.setOrderStatusHistory(String.format("Order status updated from %s to %s at %s",
                 orderDetails.getOrderStatus().name(), newStatus.name(), history.getChangedAt()));
+        LocalDate expectedDeliveryDate = orderDetails.getExpectedDeliveryDate();
+        history.setExpectedDeliveryDate(expectedDeliveryDate);
 
         orderHistoryRepository.save(history);
         log.info("VehicleOrderDetailsHistory saved for order ID: {}", orderDetails.getCustomerOrderId());
@@ -106,25 +109,25 @@ public class HistoryService {
     }
 
     @Transactional
-    public void saveStockHistory(StockDetails stockDetails, String action) {
+    public void saveStockHistory(StockDetails stock, String historyMessage) {
         StockDetailsHistory history = new StockDetailsHistory();
-        history.setStockId(stockDetails);
+        history.setStockId(stock);
         history.setChangedAt(LocalDateTime.now());
-        history.setVehicleModelId(stockDetails.getVehicleModelId());
-        history.setVehicleVariantId(stockDetails.getVehicleVariantId());
-        history.setSuffix(stockDetails.getSuffix());
-        history.setFuelType(stockDetails.getFuelType());
-        history.setColour(stockDetails.getColour());
-        history.setEngineColour(stockDetails.getEngineColour());
-        history.setTransmissionType(stockDetails.getTransmissionType());
-        history.setVariant(stockDetails.getVariant());
-        history.setQuantity(stockDetails.getQuantity());
-        history.setStockStatus(stockDetails.getStockStatus().name());
-        history.setInteriorColour(stockDetails.getInteriorColour());
-        history.setVinNumber(stockDetails.getVinNumber());
-        history.setModelName(stockDetails.getModelName());
-        history.setStockHistory(action);
-
+        history.setVehicleModelId(stock.getVehicleModelId());
+        history.setVehicleVariantId(stock.getVehicleVariantId());
+        history.setModelName(stock.getModelName());
+        history.setSuffix(stock.getSuffix());
+        history.setFuelType(stock.getFuelType());
+        history.setColour(stock.getColour());
+        history.setEngineColour(stock.getEngineColour());
+        history.setTransmissionType(stock.getTransmissionType());
+        history.setVariant(stock.getVariant());
+        history.setQuantity(stock.getQuantity());
+        history.setStockStatus(stock.getStockStatus().name());
+        history.setInteriorColour(stock.getInteriorColour());
+       // history.setVinNumber(stock.getVinNumber());
+        history.setStockArrivalDate(stock.getStockArrivalDate());
+        history.setStockHistory(historyMessage);
         stockDetailsHistoryRepository.save(history);
     }
 }

@@ -5,11 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Data
 public class OrderRequest {
 
     //@Pattern(regexp = "^TYT-\\d{4}-\\d{3}$", message = "Customer order ID must be in the format TYT-YYYY-NNN")
-   // @Size(min = 11, max = 11, message = "Customer order ID must be exactly 11 characters")
+    //@Size(min = 11, max = 11, message = "Customer order ID must be exactly 11 characters")
     private String customerOrderId;
 
     @NotNull(message = "Vehicle model ID cannot be null")
@@ -68,25 +70,12 @@ public class OrderRequest {
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;
 
-//    @NotNull(message = "Total price cannot be null")
-//    @DecimalMin(value = "0.01", message = "Total price must be greater than 0")
-//    private BigDecimal totalPrice;
-//
-//    @NotNull(message = "Booking amount cannot be null")
-//    @DecimalMin(value = "0.01", message = "Booking amount must be greater than 0")
-//    private BigDecimal bookingAmount;
-
     @NotBlank(message = "Payment mode cannot be blank")
     @Size(min = 1, max = 50, message = "Payment mode must be between 1 and 50 characters")
     private String paymentMode;
 
-//    @NotBlank(message = "Created by cannot be blank")
-//    @Size(min = 1, max = 100, message = "Created by must be between 1 and 100 characters")
-//    private String createdBy;
-//
-//    @NotBlank(message = "Updated by cannot be blank")
-//    @Size(min = 1, max = 100, message = "Created by must be between 1 and 100 characters")
-//    private String updatedBy;
+    @Future(message = "Expected delivery date must be in the future")
+    private LocalDate expectedDeliveryDate;
 
     public OrderRequest() {
     }
@@ -109,11 +98,8 @@ public class OrderRequest {
             @JsonProperty("transmissionType") String transmissionType,
             @JsonProperty("variant") String variant,
             @JsonProperty("quantity") Integer quantity,
-            // @JsonProperty("totalPrice") BigDecimal totalPrice,
-            // @JsonProperty("bookingAmount") BigDecimal bookingAmount,
-            @JsonProperty("paymentMode") String paymentMode) {
-        // @JsonProperty("createdBy") String createdBy,
-        // @JsonProperty("updatedBy") String updatedBy) {
+            @JsonProperty("paymentMode") String paymentMode,
+            @JsonProperty("expectedDeliveryDate") LocalDate expectedDeliveryDate) {
         this.customerOrderId = customerOrderId;
         this.vehicleModelId = vehicleModelId;
         this.vehicleVariantId = vehicleVariantId;
@@ -130,13 +116,32 @@ public class OrderRequest {
         this.transmissionType = transmissionType;
         this.variant = variant;
         this.quantity = quantity;
-        // this.totalPrice = totalPrice;
-        // this.bookingAmount = bookingAmount;
         this.paymentMode = paymentMode;
-        // this.createdBy = createdBy;
-        // this.updatedBy = updatedBy;
+        this.expectedDeliveryDate = expectedDeliveryDate;
     }
 
-    public OrderRequest(Long vehicleModelId, Long vehicleVariantId, @Size(min = 1, max = 100, message = "Customer name must be between 1 and 100 characters") String customerName, @Pattern(regexp = "^\\d{10}$", message = "Phone number must be exactly 10 digits") @Size(min = 10, max = 10, message = "Phone number must be exactly 10 digits") String phoneNumber, @Email(message = "Email must be a valid email address") @Size(max = 100, message = "Email must not exceed 100 characters") String email, @Pattern(regexp = "^\\d{12}$", message = "Aadhar number must be exactly 12 numeric digits") @Size(min = 12, max = 12, message = "Aadhar number must be exactly 12 digits") String aadharNo, @Pattern(regexp = "^[A-Z]{5}[0-9]{4}[A-Z]{1}$", message = "PAN number must be in the format ABCDE1234F") @Size(min = 10, max = 10, message = "PAN number must be exactly 10 characters") String panNo, @Size(min = 1, max = 100, message = "Model name must be between 1 and 100 characters") String modelName, @Min(value = 1, message = "Quantity must be at least 1") Integer quantity, @Size(min = 1, max = 50, message = "Payment mode must be between 1 and 50 characters") String paymentMode) {
+    public OrderRequest(
+            Long vehicleModelId,
+            Long vehicleVariantId,
+            @Size(min = 1, max = 100, message = "Customer name must be between 1 and 100 characters") String customerName,
+            @Pattern(regexp = "^\\d{10}$", message = "Phone number must be exactly 10 digits") @Size(min = 10, max = 10, message = "Phone number must be exactly 10 digits") String phoneNumber,
+            @Email(message = "Email must be a valid email address") @Size(max = 100, message = "Email must not exceed 100 characters") String email,
+            @Pattern(regexp = "^\\d{12}$", message = "Aadhar number must be exactly 12 numeric digits") @Size(min = 12, max = 12, message = "Aadhar number must be exactly 12 digits") String aadharNo,
+            @Pattern(regexp = "^[A-Z]{5}[0-9]{4}[A-Z]{1}$", message = "PAN number must be in the format ABCDE1234F") @Size(min = 10, max = 10, message = "PAN number must be exactly 10 characters") String panNo,
+            @Size(min = 1, max = 100, message = "Model name must be between 1 and 100 characters") String modelName,
+            @Min(value = 1, message = "Quantity must be at least 1") Integer quantity,
+            @Size(min = 1, max = 50, message = "Payment mode must be between 1 and 50 characters") String paymentMode,
+            @Future(message = "Expected delivery date must be in the future") LocalDate expectedDeliveryDate) {
+        this.vehicleModelId = vehicleModelId;
+        this.vehicleVariantId = vehicleVariantId;
+        this.customerName = customerName;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
+        this.aadharNo = aadharNo;
+        this.panNo = panNo;
+        this.modelName = modelName;
+        this.quantity = quantity;
+        this.paymentMode = paymentMode;
+        this.expectedDeliveryDate = expectedDeliveryDate;
     }
 }

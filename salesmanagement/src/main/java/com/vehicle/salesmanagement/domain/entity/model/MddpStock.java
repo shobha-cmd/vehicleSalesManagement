@@ -1,6 +1,5 @@
 package com.vehicle.salesmanagement.domain.entity.model;
 
-
 import com.vehicle.salesmanagement.enums.StockStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "mddp_stock",schema="sales_tracking")
+@Table(name = "mddp_stock", schema = "sales_tracking")
 @AllArgsConstructor
 @NoArgsConstructor
 public class MddpStock {
@@ -33,9 +32,8 @@ public class MddpStock {
     @JoinColumn(name = "vehicle_variant_id", nullable = false)
     private VehicleVariant vehicleVariantId;
 
-    @Column(name="model_name",length=50)
+    @Column(name = "model_name", length = 50)
     private String modelName;
-
 
     @Column(name = "suffix", length = 50)
     private String suffix;
@@ -59,13 +57,7 @@ public class MddpStock {
     private Integer quantity;
 
     @Enumerated(EnumType.STRING)
-    private StockStatus stockStatus; // Block/Reserve
-
-//    @Column(name = "created_at", updatable = false)
-//    private LocalDateTime createdAt;
-//
-//    @Column(name = "updated_at")
-//    private LocalDateTime updatedAt;
+    private StockStatus stockStatus;
 
     @Column(name = "interior_colour", length = 50)
     private String interiorColour;
@@ -73,11 +65,8 @@ public class MddpStock {
     @Column(name = "vin_Number", length = 50, unique = true, nullable = false)
     private String vinNumber;
 
-//    @Column(name = "created_by", length = 100)
-//    private String createdBy;
-//
-//    @Column(name = "updated_by", length = 100)
-//    private String updatedBy;
+    @Column(name = "stock_arrival_date")
+    private String stockArrivalDate;
 
     public Integer getMddpId() {
         return mddpId;
@@ -119,6 +108,14 @@ public class MddpStock {
         this.vehicleVariantId = vehicleVariantId;
     }
 
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
+
     public String getSuffix() {
         return suffix;
     }
@@ -129,14 +126,6 @@ public class MddpStock {
 
     public String getFuelType() {
         return fuelType;
-    }
-
-    public String getModelName() {
-        return modelName;
-    }
-
-    public void setModelName(String modelName) {
-        this.modelName = modelName;
     }
 
     public void setFuelType(String fuelType) {
@@ -191,22 +180,6 @@ public class MddpStock {
         this.stockStatus = stockStatus;
     }
 
-//    public LocalDateTime getCreatedAt() {
-//        return createdAt;
-//    }
-//
-//    public void setCreatedAt(LocalDateTime createdAt) {
-//        this.createdAt = createdAt;
-//    }
-//
-//    public LocalDateTime getUpdatedAt() {
-//        return updatedAt;
-//    }
-//
-//    public void setUpdatedAt(LocalDateTime updatedAt) {
-//        this.updatedAt = updatedAt;
-//    }
-
     public String getInteriorColour() {
         return interiorColour;
     }
@@ -223,19 +196,11 @@ public class MddpStock {
         this.vinNumber = vinNumber;
     }
 
-//    public String getCreatedBy() {
-//        return createdBy;
-//    }
-//
-//    public void setCreatedBy(String createdBy) {
-//        this.createdBy = createdBy;
-//    }
-//
-//    public String getUpdatedBy() {
-//        return updatedBy;
-//    }
-//
-//    public void setUpdatedBy(String updatedBy) {
-//        this.updatedBy = updatedBy;
-//    }
+    public String getStockArrivalDate() {
+        return stockArrivalDate;
+    }
+
+    public void setStockArrivalDate(String stockArrivalDate) {
+        this.stockArrivalDate = stockArrivalDate;
+    }
 }

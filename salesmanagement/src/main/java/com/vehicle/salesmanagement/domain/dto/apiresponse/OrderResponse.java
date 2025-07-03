@@ -3,6 +3,8 @@ package com.vehicle.salesmanagement.domain.dto.apiresponse;
 import com.vehicle.salesmanagement.enums.OrderStatus;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,6 +37,7 @@ public class OrderResponse {
 //    private String createdBy;
 //    private String updatedBy;
     private String message;
+    private LocalDate expectedDeliveryDate;
 
     // Add custom constructor
     public OrderResponse(String customerOrderId, OrderStatus orderStatus) {

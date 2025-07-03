@@ -1,17 +1,14 @@
 package com.vehicle.salesmanagement.domain.entity.model;
 
-
 import com.vehicle.salesmanagement.enums.StockStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Data
-@Table(name = "stock_details",schema="sales_tracking")
+@Table(name = "stock_details", schema = "sales_tracking")
 @AllArgsConstructor
 @NoArgsConstructor
 public class StockDetails {
@@ -29,7 +26,7 @@ public class StockDetails {
     @JoinColumn(name = "vehicle_variant_id", nullable = false)
     private VehicleVariant vehicleVariantId;
 
-    @Column(name="modelName",length=50)
+    @Column(name = "modelName", length = 50)
     private String modelName;
 
     @Column(name = "suffix", length = 10)
@@ -54,13 +51,7 @@ public class StockDetails {
     private Integer quantity;
 
     @Enumerated(EnumType.STRING)
-    private StockStatus stockStatus; // Block/Reserve
-
-//    @Column(name = "created_at", updatable = false)
-//    private LocalDateTime createdAt;
-//
-//    @Column(name = "updated_at")
-//    private LocalDateTime updatedAt;
+    private StockStatus stockStatus;
 
     @Column(name = "interior_colour", length = 50)
     private String interiorColour;
@@ -68,22 +59,11 @@ public class StockDetails {
     @Column(name = "vin_number", unique = true, length = 50)
     private String vinNumber;
 
-//    @Column(name = "created_by", length = 100)
-//    private String createdBy;
-//
-//    @Column(name = "updated_by", length = 100)
-//    private String updatedBy;
+    @Column(name = "stock_arrival_date")
+    private String stockArrivalDate;
 
     public Long getStockId() {
         return stockId;
-    }
-
-    public String getModelName() {
-        return modelName;
-    }
-
-    public void setModelName(String modelName) {
-        this.modelName = modelName;
     }
 
     public void setStockId(Long stockId) {
@@ -104,6 +84,14 @@ public class StockDetails {
 
     public void setVehicleVariantId(VehicleVariant vehicleVariantId) {
         this.vehicleVariantId = vehicleVariantId;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 
     public String getSuffix() {
@@ -170,22 +158,6 @@ public class StockDetails {
         this.stockStatus = stockStatus;
     }
 
-//    public LocalDateTime getCreatedAt() {
-//        return createdAt;
-//    }
-//
-//    public void setCreatedAt(LocalDateTime createdAt) {
-//        this.createdAt = createdAt;
-//    }
-//
-//    public LocalDateTime getUpdatedAt() {
-//        return updatedAt;
-//    }
-//
-//    public void setUpdatedAt(LocalDateTime updatedAt) {
-//        this.updatedAt = updatedAt;
-//    }
-
     public String getInteriorColour() {
         return interiorColour;
     }
@@ -202,26 +174,17 @@ public class StockDetails {
         this.vinNumber = vinNumber;
     }
 
-//    public String getCreatedBy() {
-//        return createdBy;
-//    }
-//
-//    public void setCreatedBy(String createdBy) {
-//        this.createdBy = createdBy;
-//    }
-//
-//    public String getUpdatedBy() {
-//        return updatedBy;
-//    }
-//
-//    public void setUpdatedBy(String updatedBy) {
-//        this.updatedBy = updatedBy;
-//    }
+    public String getStockArrivalDate() {
+        return stockArrivalDate;
+    }
+
+    public void setStockArrivalDate(String stockArrivalDate) {
+        this.stockArrivalDate = stockArrivalDate;
+    }
 
     public void setVehicleVariant(VehicleVariant vehicleVariant) {
     }
 
     public void setVehicleModel(VehicleModel vehicleModel) {
-
     }
 }

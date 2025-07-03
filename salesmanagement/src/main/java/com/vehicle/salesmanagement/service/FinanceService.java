@@ -83,7 +83,7 @@ public class FinanceService {
         VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findByCustomerOrderId(customerOrderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + customerOrderId));
 
-        historyService.saveFinanceHistory(financeDetails, approvedBy);
+        historyService.saveFinanceHistory(financeDetails, approvedBy, FinanceStatus.APPROVED);
         financeDetails.setFinanceStatus(FinanceStatus.APPROVED);
         financeDetails.setApprovedBy(approvedBy);
         financeDetailsRepository.save(financeDetails);
@@ -110,7 +110,7 @@ public class FinanceService {
         VehicleOrderDetails orderDetails = vehicleOrderDetailsRepository.findByCustomerOrderId(customerOrderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + customerOrderId));
 
-        historyService.saveFinanceHistory(financeDetails, rejectedBy);
+        historyService.saveFinanceHistory(financeDetails, rejectedBy, FinanceStatus.REJECTED);
         financeDetails.setFinanceStatus(FinanceStatus.REJECTED);
         financeDetails.setRejectedBy(rejectedBy);
         financeDetailsRepository.save(financeDetails);

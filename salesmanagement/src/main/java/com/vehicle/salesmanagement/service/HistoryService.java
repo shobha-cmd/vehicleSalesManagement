@@ -1,6 +1,7 @@
 package com.vehicle.salesmanagement.service;
 
 import com.vehicle.salesmanagement.domain.entity.model.*;
+import com.vehicle.salesmanagement.enums.FinanceStatus;
 import com.vehicle.salesmanagement.enums.OrderStatus;
 import com.vehicle.salesmanagement.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -47,10 +48,10 @@ public class HistoryService {
         history.setPermanentAddress(orderDetails.getPermanentAddress());
         history.setPhoneNumber(orderDetails.getPhoneNumber());
         history.setQuantity(orderDetails.getQuantity());
-        history.setTransmissionType(orderDetails.getTransmissionType()); // Fix: Use orderDetails
-        history.setVariant(orderDetails.getVariant()); // Fix: Use orderDetails
-        history.setVehicleModelId(orderDetails.getVehicleModelId()); // Fix: Use orderDetails
-        history.setVehicleVariantId(orderDetails.getVehicleVariantId()); // Fix: Use orderDetails
+        history.setTransmissionType(orderDetails.getTransmissionType());
+        history.setVariant(orderDetails.getVariant());
+        history.setVehicleModelId(orderDetails.getVehicleModelId());
+        history.setVehicleVariantId(orderDetails.getVehicleVariantId());
         history.setChangedAt(LocalDateTime.now());
         history.setOrderStatusHistory(String.format("Order status updated from %s to %s at %s",
                 orderDetails.getOrderStatus().name(), newStatus.name(), history.getChangedAt()));
@@ -62,17 +63,18 @@ public class HistoryService {
     }
 
     @Transactional
-    public void saveFinanceHistory(FinanceDetails financeDetails, String updatedBy) {
+    public void saveFinanceHistory(FinanceDetails financeDetails, String updatedBy, FinanceStatus newStatus) {
         log.info("Saving history for FinanceDetails with ID: {}", financeDetails.getFinanceId());
         FinanceDetailsHistory history = new FinanceDetailsHistory();
         history.setFinanceDetails(financeDetails);
         history.setCustomerOrderId(financeDetails.getCustomerOrderId());
         history.setCustomerName(financeDetails.getCustomerName());
-        history.setFinanceStatus(financeDetails.getFinanceStatus());
+        history.setFinanceStatus(newStatus); // Fixed: Use newStatus directly instead of newStatus.name()
         history.setApprovedBy(financeDetails.getApprovedBy());
         history.setRejectedBy(financeDetails.getRejectedBy());
         history.setChangedAt(LocalDateTime.now());
-        history.setFinanceStatusHistory("Finance status changed to: " + financeDetails.getFinanceStatus().name() + " at " + history.getChangedAt());
+        history.setFinanceStatusHistory(String.format("Finance status changed from %s to %s at %s",
+                financeDetails.getFinanceStatus().name(), newStatus.name(), history.getChangedAt()));
         financeHistoryRepository.save(history);
         log.info("FinanceDetailsHistory saved for finance ID: {}", financeDetails.getFinanceId());
     }
@@ -104,6 +106,8 @@ public class HistoryService {
         history.setDeliveryDate(deliveryDetails.getDeliveryDate());
         history.setDeliveredBy(deliveryDetails.getDeliveredBy());
         history.setRecipientName(deliveryDetails.getRecipientName());
+        history.setDeliveryStatusHistory("Dispatch status changed to: " + deliveryDetails.getDeliveryStatus().name() + " at " );
+
         deliveryHistoryRepository.save(history);
         log.info("DeliveryDetailsHistory saved for delivery ID: {}", deliveryDetails.getDeliveryId());
     }
@@ -125,7 +129,7 @@ public class HistoryService {
         history.setQuantity(stock.getQuantity());
         history.setStockStatus(stock.getStockStatus().name());
         history.setInteriorColour(stock.getInteriorColour());
-       // history.setVinNumber(stock.getVinNumber());
+        history.setVinNumber(stock.getVinNumber());
         history.setStockArrivalDate(stock.getStockArrivalDate());
         history.setStockHistory(historyMessage);
         stockDetailsHistoryRepository.save(history);

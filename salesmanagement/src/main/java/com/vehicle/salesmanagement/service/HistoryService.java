@@ -55,7 +55,7 @@ public class HistoryService {
         history.setChangedAt(LocalDateTime.now());
         history.setOrderStatusHistory(String.format("Order status updated from %s to %s at %s",
                 orderDetails.getOrderStatus().name(), newStatus.name(), history.getChangedAt()));
-        LocalDate expectedDeliveryDate = orderDetails.getExpectedDeliveryDate();
+        String expectedDeliveryDate = orderDetails.getExpectedDeliveryDate();
         history.setExpectedDeliveryDate(expectedDeliveryDate);
 
         orderHistoryRepository.save(history);

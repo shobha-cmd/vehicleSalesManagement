@@ -7,6 +7,7 @@ import com.vehicle.salesmanagement.domain.dto.apirequest.FinanceRequest;
 import com.vehicle.salesmanagement.domain.dto.apirequest.RejectFinanceRequest;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.ApiResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.FinanceResponse;
+import com.vehicle.salesmanagement.domain.dto.apiresponse.KendoGridResponse;
 import com.vehicle.salesmanagement.domain.entity.model.VehicleOrderDetails;
 import com.vehicle.salesmanagement.enums.OrderStatus;
 import com.vehicle.salesmanagement.repository.VehicleOrderDetailsRepository;
@@ -29,6 +30,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -233,58 +236,36 @@ public class FinanceController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Finance details or order not found"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<ApiResponse<FinanceResponse>> getFinanceDetails(@PathVariable String customerOrderId) {
+    public ResponseEntity<KendoGridResponse<FinanceResponse>> getFinanceDetails(@PathVariable String customerOrderId) {
         log.info("Retrieving finance details for order ID: {}", customerOrderId);
 
         try {
-            FinanceResponse financeResponse = financeService.getFinanceDetails(customerOrderId);
-            return ResponseEntity.ok(new ApiResponse<>(
-                    HttpStatus.OK.value(),
-                    "Finance details retrieved successfully",
-                    financeResponse
-            ));
+            FinanceResponse response = financeService.getFinanceDetails(customerOrderId);
+            return ResponseEntity.ok(new KendoGridResponse<>(List.of(response), 1L, null, null));
         } catch (RuntimeException e) {
-            log.error("Failed to retrieve finance details for order ID: {}: {}", customerOrderId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(
-                    HttpStatus.NOT_FOUND.value(),
-                    "Finance details or order not found for order ID: " + customerOrderId,
-                    null
-            ));
+            log.warn("Finance not found: {}", e.getMessage());
+            return ResponseEntity.ok(new KendoGridResponse<>(Collections.emptyList(), 0L, e.getMessage(), null));
         } catch (Exception e) {
-            log.error("Unexpected error retrieving finance details for order ID: {}: {}", customerOrderId, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Unexpected error retrieving finance details: " + e.getMessage(),
-                    null
-            ));
+            log.error("Error retrieving finance details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Unexpected error: " + e.getMessage(), null));
         }
     }
     @PutMapping("/financeUpdate")
     @Operation(summary = "Update finance details", description = "Updates existing finance details based on customerOrderId")
-    public ResponseEntity<ApiResponse<FinanceResponse>> updateFinanceDetails(@Valid @RequestBody FinanceDTO financeDTO) {
+    public ResponseEntity<KendoGridResponse<FinanceResponse>> updateFinanceDetails(@Valid @RequestBody FinanceDTO financeDTO) {
         log.info("Updating finance details for order ID: {}", financeDTO.getCustomerOrderId());
 
         try {
             FinanceResponse response = financeService.updateFinanceDetails(financeDTO);
-            return ResponseEntity.ok(new ApiResponse<>(
-                    HttpStatus.OK.value(),
-                    "Finance details updated successfully",
-                    response
-            ));
+            return ResponseEntity.ok(new KendoGridResponse<>(List.of(response), 1L, null, null));
         } catch (RuntimeException e) {
-            log.error("Failed to update finance details: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(
-                    HttpStatus.NOT_FOUND.value(),
-                    e.getMessage(),
-                    null
-            ));
+            log.warn("Update failed: {}", e.getMessage());
+            return ResponseEntity.ok(new KendoGridResponse<>(Collections.emptyList(), 0L, e.getMessage(), null));
         } catch (Exception e) {
-            log.error("Unexpected error updating finance details: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Failed to update finance details: " + e.getMessage(),
-                    null
-            ));
+            log.error("Error updating finance details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Unexpected error: " + e.getMessage(), null));
         }
     }
 }

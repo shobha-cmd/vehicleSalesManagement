@@ -17,5 +17,5 @@ public class VehicleOrderGridDTO {
     private Integer quantity;
     private String variant;
     private OrderStatus orderStatus;
-    private LocalDate expectedDeliveryDate;
+    private String expectedDeliveryDate;
 }

@@ -4,8 +4,11 @@ import com.vehicle.salesmanagement.domain.dto.apirequest.DeliveryRequest;
 import com.vehicle.salesmanagement.domain.dto.apirequest.DispatchRequest;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.DeliveryResponse;
 import com.vehicle.salesmanagement.domain.dto.apiresponse.DispatchResponse;
+import com.vehicle.salesmanagement.domain.dto.apiresponse.KendoGridResponse;
 import com.vehicle.salesmanagement.service.DispatchDeliveryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,10 +20,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 @Slf4j
 @RestController
@@ -142,5 +148,103 @@ public class DispatchDeliveryController {
                 "Delivery confirmed successfully",
                 deliveryResponse
         );
+    }
+    @GetMapping("/dispatchdetails")
+    @Operation(summary = "Get all dispatch details", description = "Retrieves all dispatch details")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Dispatch details retrieved successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class)))
+    })
+    public ResponseEntity<KendoGridResponse<DispatchResponse>> getAllDispatchDetails() {
+        log.info("Received request to retrieve all dispatch details at {}", java.time.LocalDateTime.now());
+        try {
+            List<DispatchResponse> dispatchDetails = dispatchDeliveryService.getAllDispatchDetails();
+            log.info("Successfully retrieved {} dispatch records", dispatchDetails.size());
+            return ResponseEntity.ok(new KendoGridResponse<>(dispatchDetails, (long) dispatchDetails.size(), null, null));
+        } catch (Exception e) {
+            log.error("Error retrieving dispatch details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Error retrieving dispatch details: " + e.getMessage(), null));
+        }
+    }
+    @GetMapping("/deliverydetails")
+    @Operation(summary = "Get all delivery details", description = "Retrieves all delivery details")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Delivery details retrieved successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class)))
+    })
+    public ResponseEntity<KendoGridResponse<DeliveryResponse>> getAllDeliveryDetails() {
+        log.info("Received request to retrieve all delivery details at {}", java.time.LocalDateTime.now());
+        try {
+            List<DeliveryResponse> deliveryDetails = dispatchDeliveryService.getAllDeliveryDetails();
+            log.info("Successfully retrieved {} delivery records", deliveryDetails.size());
+            return ResponseEntity.ok(new KendoGridResponse<>(deliveryDetails, (long) deliveryDetails.size(), null, null));
+        } catch (Exception e) {
+            log.error("Error retrieving delivery details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Error retrieving delivery details: " + e.getMessage(), null));
+        }
+    }
+    @GetMapping("/dispatchdetails/{customerOrderId}")
+    @Operation(summary = "Get dispatch details by Customer Order ID", description = "Retrieves dispatch detail for a specific customer order in KendoGrid format")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Dispatch detail retrieved successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Dispatch detail not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<KendoGridResponse<DispatchResponse>> getDispatchDetailsByCustomerOrderId(
+            @PathVariable String customerOrderId) {
+
+        log.info("Fetching dispatch details for customerOrderId: {}", customerOrderId);
+        try {
+            DispatchResponse dispatch = dispatchDeliveryService.getDispatchDetailsByCustomerOrderId(customerOrderId);
+            return ResponseEntity.ok(new KendoGridResponse<>(
+                    List.of(dispatch), 1L, null, null
+            ));
+        } catch (NoSuchElementException e) {
+            log.warn("Dispatch not found for orderId: {}", customerOrderId);
+            return ResponseEntity.ok(new KendoGridResponse<>(Collections.emptyList(), 0L, "Dispatch not found", null));
+        } catch (Exception e) {
+            log.error("Error fetching dispatch details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Internal error: " + e.getMessage(), null));
+        }
+    }
+    @GetMapping("/deliverydetails/{customerOrderId}")
+    @Operation(summary = "Get delivery details by Customer Order ID", description = "Retrieves delivery detail for a specific customer order in KendoGrid format")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Delivery detail retrieved successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = KendoGridResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Delivery detail not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<KendoGridResponse<DeliveryResponse>> getDeliveryDetailsByCustomerOrderId(
+            @PathVariable String customerOrderId) {
+
+        log.info("Fetching delivery details for customerOrderId: {}", customerOrderId);
+        try {
+            DeliveryResponse delivery = dispatchDeliveryService.getDeliveryDetailsByCustomerOrderId(customerOrderId);
+            return ResponseEntity.ok(new KendoGridResponse<>(
+                    List.of(delivery), 1L, null, null
+            ));
+        } catch (NoSuchElementException e) {
+            log.warn("Delivery not found for orderId: {}", customerOrderId);
+            return ResponseEntity.ok(new KendoGridResponse<>(Collections.emptyList(), 0L, "Delivery not found", null));
+        } catch (Exception e) {
+            log.error("Error fetching delivery details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new KendoGridResponse<>(Collections.emptyList(), 0L, "Internal error: " + e.getMessage(), null));
+        }
     }
 }

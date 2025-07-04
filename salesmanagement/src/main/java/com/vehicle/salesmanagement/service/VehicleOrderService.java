@@ -338,35 +338,7 @@ public class VehicleOrderService {
         return response;
     }
 
-//    public long getTotalOrders() {
-//        return orderRepository.count();
-//    }
-//
-//    public long getPendingOrders() {
-//        return orderRepository.countByOrderStatus(OrderStatus.PENDING);
-//    }
-//
-//    public long getFinancePendingOrders() {
-//        return orderRepository.countByOrderStatus(OrderStatus.FINANCE_PENDING);
-//    }
-//
-//    public long getClosedOrders() {
-//        return orderRepository.countByOrderStatus(OrderStatus.COMPLETED);
-//    }
-//
-//    public List<VehicleOrderGridDTO> getAllOrders() {
-//        return orderRepository.findAll().stream()
-//                .map(order -> new VehicleOrderGridDTO(
-//                        order.getCustomerOrderId(),
-//                        order.getCustomerName(),
-//                        order.getModelName(),
-//                        order.getQuantity(),
-//                        order.getVariant(),
-//                        order.getOrderStatus(),
-//                        order.getExpectedDeliveryDate()
-//                ))
-//                .collect(Collectors.toList());
-//    }
+
 public long getTotalOrders() {
     return orderRepository.count();
 }

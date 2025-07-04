@@ -37,7 +37,7 @@ public class OrderResponse {
 //    private String createdBy;
 //    private String updatedBy;
     private String message;
-    private LocalDate expectedDeliveryDate;
+    private String expectedDeliveryDate;
 
     // Add custom constructor
     public OrderResponse(String customerOrderId, OrderStatus orderStatus) {

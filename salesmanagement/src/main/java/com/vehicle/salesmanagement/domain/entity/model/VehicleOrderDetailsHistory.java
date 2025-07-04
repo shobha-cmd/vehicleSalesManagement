@@ -78,7 +78,7 @@ public class VehicleOrderDetailsHistory {
     private String orderStatusHistory;
 
     @Column(name = "expected_delivery_date")
-    private LocalDate expectedDeliveryDate;
+    private String expectedDeliveryDate;
 
     // Getters and Setters
 
@@ -250,11 +250,11 @@ public class VehicleOrderDetailsHistory {
         this.orderStatusHistory = orderStatusHistory;
     }
 
-    public LocalDate getExpectedDeliveryDate() {
+    public String getExpectedDeliveryDate() {
         return expectedDeliveryDate;
     }
 
-    public void setExpectedDeliveryDate(LocalDate expectedDeliveryDate) {
+    public void setExpectedDeliveryDate(String expectedDeliveryDate) {
         this.expectedDeliveryDate = expectedDeliveryDate;
     }
 

@@ -74,8 +74,8 @@ public class OrderRequest {
     @Size(min = 1, max = 50, message = "Payment mode must be between 1 and 50 characters")
     private String paymentMode;
 
-    @Future(message = "Expected delivery date must be in the future")
-    private LocalDate expectedDeliveryDate;
+    @NotBlank(message = "Expected delivery date must be in the future")
+    private String expectedDeliveryDate;
 
     public OrderRequest() {
     }
@@ -99,7 +99,7 @@ public class OrderRequest {
             @JsonProperty("variant") String variant,
             @JsonProperty("quantity") Integer quantity,
             @JsonProperty("paymentMode") String paymentMode,
-            @JsonProperty("expectedDeliveryDate") LocalDate expectedDeliveryDate) {
+            @JsonProperty("expectedDeliveryDate") String expectedDeliveryDate) {
         this.customerOrderId = customerOrderId;
         this.vehicleModelId = vehicleModelId;
         this.vehicleVariantId = vehicleVariantId;
@@ -131,7 +131,7 @@ public class OrderRequest {
             @Size(min = 1, max = 100, message = "Model name must be between 1 and 100 characters") String modelName,
             @Min(value = 1, message = "Quantity must be at least 1") Integer quantity,
             @Size(min = 1, max = 50, message = "Payment mode must be between 1 and 50 characters") String paymentMode,
-            @Future(message = "Expected delivery date must be in the future") LocalDate expectedDeliveryDate) {
+            @Future(message = "Expected delivery date must be in the future") String expectedDeliveryDate) {
         this.vehicleModelId = vehicleModelId;
         this.vehicleVariantId = vehicleVariantId;
         this.customerName = customerName;

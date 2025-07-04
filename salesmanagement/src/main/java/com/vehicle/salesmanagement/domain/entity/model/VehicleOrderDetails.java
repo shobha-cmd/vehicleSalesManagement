@@ -94,7 +94,7 @@ public class VehicleOrderDetails {
     private OrderStatus orderStatus;
 
     @Column(name = "expected_delivery_date")
-    private LocalDate expectedDeliveryDate;
+    private String expectedDeliveryDate;
 
 //    @Column(name = "created_at", nullable = false)
 //   // @NotNull(message = "Created at is required")

@@ -19,6 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 @Slf4j
 @Service
@@ -129,7 +132,72 @@ public class DispatchDeliveryService {
         historyService.saveDeliveryHistory(deliveryDetails, request.getDeliveredBy());
         return mapToDeliveryResponse(deliveryDetails, orderDetails);
     }
+    public List<DispatchResponse> getAllDispatchDetails() {
+        log.info("Fetching all dispatch records from repository...");
+        List<DispatchDetails> dispatchEntities = dispatchDetailsRepository.findAll();
+        List<DispatchResponse> responses = new ArrayList<>();
 
+        for (DispatchDetails dispatch : dispatchEntities) {
+            try {
+                VehicleOrderDetails order = vehicleOrderDetailsRepository
+                        .findByCustomerOrderId(dispatch.getCustomerOrderId())
+                        .orElse(null);
+
+                DispatchResponse response = mapToDispatchResponse(dispatch, order);
+                responses.add(response);
+            } catch (Exception e) {
+                log.warn("Skipping dispatch ID {} due to error: {}", dispatch.getDispatchId(), e.getMessage());
+            }
+        }
+
+        log.info("Total dispatch records fetched: {}", responses.size());
+        return responses;
+    }
+    public List<DeliveryResponse> getAllDeliveryDetails() {
+        log.info("Fetching all delivery records from repository...");
+        List<DeliveryDetails> deliveryEntities = deliveryDetailsRepository.findAll();
+        List<DeliveryResponse> responses = new ArrayList<>();
+
+        for (DeliveryDetails delivery : deliveryEntities) {
+            try {
+                VehicleOrderDetails order = vehicleOrderDetailsRepository
+                        .findByCustomerOrderId(delivery.getCustomerOrderId())
+                        .orElse(null);
+
+                DeliveryResponse response = mapToDeliveryResponse(delivery, order);
+                responses.add(response);
+            } catch (Exception e) {
+                log.warn("Skipping delivery ID {} due to error: {}", delivery.getDeliveryId(), e.getMessage());
+            }
+        }
+
+        log.info("Total delivery records fetched: {}", responses.size());
+        return responses;
+    }
+    public DispatchResponse getDispatchDetailsByCustomerOrderId(String customerOrderId) {
+        DispatchDetails dispatch = dispatchDetailsRepository.findByCustomerOrderId(customerOrderId);
+        if (dispatch == null) {
+            throw new NoSuchElementException("No dispatch found for orderId: " + customerOrderId);
+        }
+
+        VehicleOrderDetails order = vehicleOrderDetailsRepository
+                .findByCustomerOrderId(customerOrderId)
+                .orElse(null);
+
+        return mapToDispatchResponse(dispatch, order);
+    }
+    public DeliveryResponse getDeliveryDetailsByCustomerOrderId(String customerOrderId) {
+        DeliveryDetails delivery = deliveryDetailsRepository.findByCustomerOrderId(customerOrderId);
+        if (delivery == null) {
+            throw new NoSuchElementException("No delivery found for orderId: " + customerOrderId);
+        }
+
+        VehicleOrderDetails order = vehicleOrderDetailsRepository
+                .findByCustomerOrderId(customerOrderId)
+                .orElse(null);
+
+        return mapToDeliveryResponse(delivery, order);
+    }
     private DispatchResponse mapToDispatchResponse(DispatchDetails dispatchDetails, VehicleOrderDetails orderDetails) {
         if (dispatchDetails == null) {
             log.warn("No dispatch details found for order ID: {}. Creating response with order details only.",

@@ -404,7 +404,7 @@ public class SalesmanagementApplicationTests {
                 .andExpect(jsonPath("$.data[0].variant").value("Test Variant"));
     }
 
-        @Test
+    @Test
     void testGetStockDetailByModelAndVariant_NotFound() throws Exception {
         when(vehicleModelService.getStockDetailByModelAndVariant(anyString(), anyLong()))
                 .thenReturn(null);
@@ -503,7 +503,7 @@ public class SalesmanagementApplicationTests {
         dto.setFuelType("Petrol");
         dto.setTransmissionType("Automatic");
         dto.setQuantity(10);
-        dto.setVinNumber("TESTVIN1234567890");
+        //dto.setVinNumber("TESTVIN1234567890");
         dto.setStockStatus("AVAILABLE");
         dto.setSuffix("Test");
 
@@ -537,11 +537,10 @@ public class SalesmanagementApplicationTests {
         dto.setFuelType("Petrol");
         dto.setTransmissionType("Automatic");
         dto.setQuantity(5);
-        dto.setVinNumber("TESTVIN1234567890");
         dto.setStockStatus("AVAILABLE");
 
         MddpStock stock = new MddpStock();
-        stock.setMddpId(1);
+        stock.setMddpId(1L); // Use 1L to specify a Long literal
         stock.setModelName("Test Model");
         stock.setVariant("Test Variant");
         stock.setVehicleModelId(vehicleModel);
@@ -624,15 +623,14 @@ public class SalesmanagementApplicationTests {
         request.setVariant("Test Variant");
         request.setQuantity(1);
         request.setPaymentMode("CASH");
+        request.setExpectedDeliveryDate("2025-07-05"); // Set to tomorrow
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/placeOrder")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.statusCode").value(500));
     }
-
-
     @Test
     void testPlaceSingleOrder_ModelNotFound() throws Exception {
         OrderRequest request = new OrderRequest();
@@ -641,17 +639,22 @@ public class SalesmanagementApplicationTests {
         request.setVehicleVariantId(1L);
         request.setModelName("Test Model");
         request.setVariant("Test Variant");
-        request.setColour("Red"); // Set to avoid potential @NotBlank validation
-        request.setFuelType("Petrol"); // Set to avoid potential @NotBlank validation
-        request.setTransmissionType("Manual"); // Set to avoid potential @NotBlank validation
+        request.setColour("Red");
+        request.setFuelType("Petrol");
+        request.setTransmissionType("Manual");
         request.setQuantity(1);
         request.setPhoneNumber("1234567890");
         request.setAadharNo("123456789012");
         request.setEmail("test.customer@example.com");
         request.setPanNo("ABCDE1234F");
-        request.setPaymentMode("CASH"); // Set to avoid @NotBlank validation
+        request.setPaymentMode("CASH");
+        request.setExpectedDeliveryDate("2025-07-05"); // Set to tomorrow to pass @Future validation
 
-        when(vehicleModelRepository.findById(1L)).thenReturn(Optional.empty());
+        // Mock repository to simulate model not found
+        when(vehicleModelRepository.existsById(1L)).thenReturn(true); // Pass initial validation
+        when(vehicleModelRepository.findById(1L)).thenReturn(Optional.empty()); // Fail in mapOrderRequestToEntity
+        when(vehicleVariantRepository.existsById(1L)).thenReturn(true); // Pass variant validation
+        when(vehicleVariantRepository.findById(1L)).thenReturn(Optional.of(new VehicleVariant())); // Provide valid variant
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/placeOrder")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -660,6 +663,8 @@ public class SalesmanagementApplicationTests {
                 .andExpect(jsonPath("$.statusCode").value(500))
                 .andExpect(jsonPath("$.statusMessage").value(containsString("Vehicle Model with ID 1 not found")));
     }
+
+
 
 //    @Test
 //    void testPlaceMultiOrder_Success() throws Exception {
@@ -869,7 +874,9 @@ public class SalesmanagementApplicationTests {
 
     @Test
     void testGetVehicleOrdersForGrid_Success() throws Exception {
-        VehicleOrderGridDTO dto = new VehicleOrderGridDTO("123", "Test Customer", "Test Model", 1, "Test Variant", OrderStatus.BLOCKED);
+        // Include expectedDeliveryDate in the constructor
+        VehicleOrderGridDTO dto = new VehicleOrderGridDTO("123", "Test Customer", "Test Model", 1, "Test Variant", OrderStatus.BLOCKED, "2025-07-10");
+
         KendoGridResponse<VehicleOrderGridDTO> response = new KendoGridResponse<>();
         response.setData(Collections.singletonList(dto));
         response.setTotal(1);
@@ -882,7 +889,6 @@ public class SalesmanagementApplicationTests {
                 .andExpect(jsonPath("$.data[0].customerOrderId").value(is("123")))
                 .andExpect(jsonPath("$.data[0].customerName").value(is("Test Customer")));
     }
-
     @Test
     void testGetOrderStatusProgress_Success() throws Exception {
         when(vehicleOrderDetailsRepository.findByCustomerOrderId("123")).thenReturn(Optional.of(orderDetails));
@@ -919,9 +925,9 @@ public class SalesmanagementApplicationTests {
         request.setPaymentMode("Cash");
         return request;
     }
-    
-    private FinanceResponse createSampleFinanceResponse(String orderId, String customerName, 
-                                                       FinanceStatus financeStatus, OrderStatus orderStatus) {
+
+    private FinanceResponse createSampleFinanceResponse(String orderId, String customerName,
+                                                        FinanceStatus financeStatus, OrderStatus orderStatus) {
         FinanceResponse response = new FinanceResponse();
         response.setCustomerOrderId(orderId);
         response.setCustomerName(customerName);
@@ -931,7 +937,7 @@ public class SalesmanagementApplicationTests {
         response.setVariant("Test Variant");
         return response;
     }
-    
+
     private VehicleOrderDetails createSampleOrderDetails(String orderId, OrderStatus status) {
         VehicleOrderDetails orderDetails = new VehicleOrderDetails();
         orderDetails.setCustomerOrderId(orderId);
@@ -976,14 +982,14 @@ public class SalesmanagementApplicationTests {
     void testInitiateFinance_FinanceAlreadyExists() throws Exception {
         // Given
         FinanceRequest request = createSampleFinanceRequest();
-        
+
         VehicleOrderDetails orderDetails = new VehicleOrderDetails();
         orderDetails.setCustomerOrderId("123");
         orderDetails.setOrderStatus(OrderStatus.BLOCKED);
         when(vehicleOrderDetailsRepository.findByCustomerOrderId("123")).thenReturn(Optional.of(orderDetails));
-        
+
         when(financeService.createFinanceDetails(any(FinanceRequest.class)))
-            .thenThrow(new IllegalStateException("Finance details already exist for order ID: 123"));
+                .thenThrow(new IllegalStateException("Finance details already exist for order ID: 123"));
 
         // When & Then
         mockMvc.perform(MockMvcRequestBuilders.post("/api/order/financeInitiate")
@@ -1002,7 +1008,7 @@ public class SalesmanagementApplicationTests {
     void testInitiateFinance_OrderNotBlocked() throws Exception {
         // Given
         FinanceRequest request = createSampleFinanceRequest();
-        
+
         VehicleOrderDetails orderDetails = new VehicleOrderDetails();
         orderDetails.setCustomerOrderId("123");
         orderDetails.setOrderStatus(OrderStatus.PENDING);
@@ -1053,7 +1059,7 @@ public class SalesmanagementApplicationTests {
                 .andExpect(jsonPath("$.data.orderStatus").value("ALLOTTED"));
 
         // Verifications
-      //  verify(financeService, times(1)).approveFinance("123", "Test Approver");
+        //  verify(financeService, times(1)).approveFinance("123", "Test Approver");
         verify(workflowStub, times(1)).signal(anyString(), any());
     }
 
@@ -1289,7 +1295,7 @@ public class SalesmanagementApplicationTests {
                 .andExpect(jsonPath("$.data").isEmpty()); // Verify data is null
     }
 
-@Test
+    @Test
     void testInitiateDispatch_ServiceFailure() throws Exception {
         orderDetails.setOrderStatus(OrderStatus.BLOCKED);
         when(vehicleOrderDetailsRepository.findByCustomerOrderId("123")).thenReturn(Optional.of(orderDetails));

@@ -34,8 +34,6 @@ public class ManufacturerOrder {
     @Column(name = "variant", length = 50)
     private String variant;
 
-    @Column(name = "vin_number", unique = true, length = 50)
-    private String vinNumber;
     @Column(name = "suffix", length = 10)
     private String suffix;
     @Column(name = "interior_colour", length = 50)
@@ -99,14 +97,6 @@ public class ManufacturerOrder {
 
     public void setVariant(String variant) {
         this.variant = variant;
-    }
-
-    public String getVinNumber() {
-        return vinNumber;
-    }
-
-    public void setVinNumber(String vinNumber) {
-        this.vinNumber = vinNumber;
     }
 
     public String getSuffix() {

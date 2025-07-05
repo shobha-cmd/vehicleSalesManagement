@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface ManufacturerOrderRepository extends JpaRepository<ManufacturerOrder, Long> {
-    Optional<ManufacturerOrder> findByVinNumber(String vinNumber);
+    //Optional<ManufacturerOrder> findByVinNumber(String vinNumber);
 
     @Query("SELECT m FROM ManufacturerOrder m WHERE m.modelName = :modelName AND m.vehicleVariantId.vehicleVariantId = :vehicleVariantId")
     Optional<ManufacturerOrder> findByModelNameAndVehicleVariantIdVariantId(@Param("modelName") String modelName, @Param("vehicleVariantId") Long vehicleVariantId);

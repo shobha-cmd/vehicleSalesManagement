@@ -12,7 +12,6 @@ public class ManufacturerOrderDTO {
     private String fuelType;
     private String colour;
     private String variant;
-    private String vinNumber;
     private String suffix;
     private String interiorColour;
     private String engineColour;
@@ -56,14 +55,6 @@ public class ManufacturerOrderDTO {
 
     public void setVariant(String variant) {
         this.variant = variant;
-    }
-
-    public String getVinNumber() {
-        return vinNumber;
-    }
-
-    public void setVinNumber(String vinNumber) {
-        this.vinNumber = vinNumber;
     }
 
     public String getSuffix() {

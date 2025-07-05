@@ -435,18 +435,6 @@ public class VehicleModelService {
                         log.error("VehicleModel ID is required");
                         throw new IllegalArgumentException("VehicleModel ID is required");
                     }
-                    if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
-                        log.error("VIN number is required");
-                        throw new IllegalArgumentException("VIN number is required");
-                    }
-                })
-                .filter(dto -> {
-                    Optional<VehicleVariant> existing = vehicleVariantRepository.findByVinNumber(dto.getVinNumber());
-                    if (existing.isPresent()) {
-                        log.warn("Duplicate VIN {} skipped", dto.getVinNumber());
-                        return false;
-                    }
-                    return true;
                 })
                 .map(dto -> {
                     VehicleVariant variant = new VehicleVariant();
@@ -459,7 +447,6 @@ public class VehicleModelService {
                     variant.setEngineColour(dto.getEngineColour());
                     variant.setTransmissionType(dto.getTransmissionType());
                     variant.setInteriorColour(dto.getInteriorColour());
-                    variant.setVinNumber(dto.getVinNumber());
                     variant.setEngineCapacity(dto.getEngineCapacity());
                     variant.setFuelType(dto.getFuelType());
                     variant.setPrice(dto.getPrice());
@@ -504,15 +491,10 @@ public class VehicleModelService {
         List<VehicleVariant> updatedVehicleVariants = new ArrayList<>();
 
         for (VehicleVariantDTO dto : dtos) {
-            if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
-                log.error("VIN number is required for update");
-                return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
-            }
-
-            VehicleVariant existingVariant = vehicleVariantRepository.findByVinNumber(dto.getVinNumber())
+            VehicleVariant existingVariant = vehicleVariantRepository.findById(dto.getVehicleVariantId())
                     .orElseThrow(() -> {
-                        log.error("VehicleVariant not found with VIN: {}", dto.getVinNumber());
-                        return new IllegalArgumentException("VehicleVariant not found with VIN: " + dto.getVinNumber());
+                        log.error("VehicleVariant not found with ID: {}", dto.getVehicleVariantId());
+                        return new IllegalArgumentException("VehicleVariant not found with ID: " + dto.getVehicleVariantId());
                     });
 
             if (dto.getVehicleModelId() != null) {
@@ -629,10 +611,6 @@ public class VehicleModelService {
                         log.error("VehicleVariant ID is required");
                         throw new IllegalArgumentException("VehicleVariant ID is required");
                     }
-                    if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
-                        log.error("VIN number is required");
-                        throw new IllegalArgumentException("VIN number is required");
-                    }
                 })
                 .map(dto -> {
                     StockDetails stock = new StockDetails();
@@ -649,9 +627,6 @@ public class VehicleModelService {
                     stock.setStockStatus(StockStatus.valueOf(dto.getStockStatus()));
                     stock.setStockArrivalDate(String.valueOf(dto.getStockArrivalDate() != null ? LocalDate.parse(dto.getStockArrivalDate()) : LocalDate.now()));
                     stock.setInteriorColour(dto.getInteriorColour());
-                    stock.setVinNumber(dto.getVinNumber());
-//                    stock.setCreatedAt(LocalDateTime.now());
-//                    stock.setUpdatedAt(LocalDateTime.now());
                     return stock;
                 })
                 .collect(Collectors.toList());
@@ -685,10 +660,6 @@ public class VehicleModelService {
                         log.error("VehicleVariant ID is required");
                         throw new IllegalArgumentException("VehicleVariant ID is required");
                     }
-                    if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
-                        log.error("VIN number is required");
-                        throw new IllegalArgumentException("VIN number is required");
-                    }
                     if (dto.getExpectedDispatchDate() == null) {
                         log.error("Expected dispatch date is required");
                         throw new IllegalArgumentException("Expected dispatch date is required");
@@ -699,15 +670,14 @@ public class VehicleModelService {
                     }
                     if (dto.getStockArrivalDate() != null && !dto.getStockArrivalDate().isEmpty()) {
                         try {
-                            LocalDate.parse(dto.getStockArrivalDate()); // Validate date format
+                            LocalDate.parse(dto.getStockArrivalDate());
                         } catch (DateTimeParseException e) {
-                            log.error("Invalid stockArrivalDate format for VIN {}: {}", dto.getVinNumber(), dto.getStockArrivalDate());
+                            log.error("Invalid stockArrivalDate format: {}", dto.getStockArrivalDate());
                             throw new IllegalArgumentException("Invalid stockArrivalDate format: " + dto.getStockArrivalDate());
                         }
                     } else {
-                        log.debug("stockArrivalDate is null for VIN: {}", dto.getVinNumber());
-                        // Optionally set default value
-                        dto.setStockArrivalDate(String.valueOf(LocalDate.now())); // Default to current date
+                        log.debug("stockArrivalDate is null");
+                        dto.setStockArrivalDate(String.valueOf(LocalDate.now()));
                     }
                 })
                 .map(dto -> {
@@ -724,7 +694,6 @@ public class VehicleModelService {
                     stock.setQuantity(dto.getQuantity());
                     stock.setStockStatus(StockStatus.valueOf(dto.getStockStatus()));
                     stock.setInteriorColour(dto.getInteriorColour());
-                    stock.setVinNumber(dto.getVinNumber());
                     stock.setExpectedDispatchDate(dto.getExpectedDispatchDate());
                     stock.setExpectedDeliveryDate(dto.getExpectedDeliveryDate());
                     stock.setStockArrivalDate(dto.getStockArrivalDate() != null ? dto.getStockArrivalDate() : String.valueOf(LocalDate.now()));
@@ -754,15 +723,10 @@ public class VehicleModelService {
         List<StockDetails> updatedStockDetails = new ArrayList<>();
 
         for (StockDetailsDTO dto : dtos) {
-            if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
-                log.error("VIN number is required for update");
-                return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
-            }
-
-            StockDetails existingStock = (StockDetails) stockDetailsRepository.findByVinNumber(dto.getVinNumber())
+            StockDetails existingStock = stockDetailsRepository.findById(dto.getStockId())
                     .orElseThrow(() -> {
-                        log.error("Stock not found with VIN: {}", dto.getVinNumber());
-                        return new IllegalArgumentException("Stock not found with VIN: " + dto.getVinNumber());
+                        log.error("Stock not found with ID: {}", dto.getStockId());
+                        return new IllegalArgumentException("Stock not found with ID: " + dto.getStockId());
                     });
 
             if (dto.getVehicleModelId() != null) {
@@ -799,7 +763,6 @@ public class VehicleModelService {
                 existingStock.setInteriorColour(dto.getInteriorColour());
             }
 
-            // existingStock.setUpdatedAt(LocalDateTime.now());
             updatedStockDetails.add(existingStock);
         }
 
@@ -825,15 +788,10 @@ public class VehicleModelService {
         List<MddpStock> updatedMddpStockDetails = new ArrayList<>();
 
         for (MddpStockDTO dto : dtos) {
-            if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
-                log.error("VIN number is required for update");
-                return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
-            }
-
-            MddpStock existingStock = mddpStockRepository.findByVinNumber(dto.getVinNumber())
+            MddpStock existingStock = mddpStockRepository.findById(dto.getMddpId())
                     .orElseThrow(() -> {
-                        log.error("MDDP stock not found with VIN: {}", dto.getVinNumber());
-                        return new IllegalArgumentException("MDDP stock not found with VIN: " + dto.getVinNumber());
+                        log.error("MDDP stock not found with ID: {}", dto.getMddpId());
+                        return new IllegalArgumentException("MDDP stock not found with ID: " + dto.getMddpId());
                     });
 
             if (dto.getVehicleModelId() != null) {
@@ -915,12 +873,6 @@ public class VehicleModelService {
                         log.error("Order status is required");
                         throw new IllegalArgumentException("Order status is required");
                     }
-                    if (dto.getVinNumber() != null && !dto.getVinNumber().trim().isEmpty()) {
-                        if (manufacturerOrderRepository.findByVinNumber(dto.getVinNumber()).isPresent()) {
-                            log.error("Duplicate VIN number: {}", dto.getVinNumber());
-                            throw new IllegalArgumentException("VIN number already exists: " + dto.getVinNumber());
-                        }
-                    }
                 })
                 .map(dto -> {
                     ManufacturerOrder order = new ManufacturerOrder();
@@ -932,7 +884,6 @@ public class VehicleModelService {
                     order.setFuelType(dto.getFuelType());
                     order.setColour(dto.getColour());
                     order.setVariant(dto.getVariant());
-                    order.setVinNumber(dto.getVinNumber());
                     order.setSuffix(dto.getSuffix());
                     order.setInteriorColour(dto.getInteriorColour());
                     order.setEngineColour(dto.getEngineColour());
@@ -981,7 +932,6 @@ public class VehicleModelService {
             dto.setFuelType(stock.getFuelType());
             dto.setTransmissionType(stock.getTransmissionType());
             dto.setQuantity(stock.getQuantity());
-            dto.setVinNumber(stock.getVinNumber());
             dto.setStockStatus(stock.getStockStatus() != null ? stock.getStockStatus().name() : null);
             dto.setSuffix(stock.getSuffix());
             return dto;
@@ -1003,7 +953,6 @@ public class VehicleModelService {
             dto.setFuelType(stock.getFuelType());
             dto.setTransmissionType(stock.getTransmissionType());
             dto.setQuantity(stock.getQuantity());
-            dto.setVinNumber(stock.getVinNumber());
             dto.setStockStatus(stock.getStockStatus() != null ? stock.getStockStatus().name() : null);
             dto.setExpectedDispatchDate(stock.getExpectedDispatchDate());
             dto.setExpectedDeliveryDate(stock.getExpectedDeliveryDate());
@@ -1057,15 +1006,10 @@ public class VehicleModelService {
         List<ManufacturerOrder> updatedOrders = new ArrayList<>();
 
         for (ManufacturerOrderDTO dto : dtos) {
-            if (dto.getVinNumber() == null || dto.getVinNumber().trim().isEmpty()) {
-                log.error("VIN number is required for update");
-                return new KendoGridResponse<>(Collections.emptyList(), 0L, "VIN number is required", null);
-            }
-
-            ManufacturerOrder existingOrder = manufacturerOrderRepository.findByVinNumber(dto.getVinNumber())
+            ManufacturerOrder existingOrder = manufacturerOrderRepository.findById(dto.getManufacturerId())
                     .orElseThrow(() -> {
-                        log.error("Manufacturer order not found with VIN: {}", dto.getVinNumber());
-                        return new IllegalArgumentException("Manufacturer order not found with VIN: " + dto.getVinNumber());
+                        log.error("Manufacturer order not found with ID: {}", dto.getManufacturerId());
+                        return new IllegalArgumentException("Manufacturer order not found with ID: " + dto.getManufacturerId());
                     });
 
             if (dto.getManufacturerId() != null) {
@@ -1130,7 +1074,6 @@ public class VehicleModelService {
         dto.setFuelType(order.getFuelType());
         dto.setColour(order.getColour());
         dto.setVariant(order.getVariant());
-        dto.setVinNumber(order.getVinNumber());
         dto.setSuffix(order.getSuffix());
         dto.setInteriorColour(order.getInteriorColour());
         dto.setEngineColour(order.getEngineColour());
@@ -1151,7 +1094,6 @@ public class VehicleModelService {
             return null;
         }
         try {
-            // Extract numeric part by removing non-digit characters (except for negative signs if needed)
             String numericPart = value.replaceAll("[^0-9-]", "");
             if (numericPart.isEmpty()) {
                 log.warn("No numeric value found in: {}", value);
@@ -1201,7 +1143,6 @@ public class VehicleModelService {
             dto.setFuelType(stockDetail.get().getFuelType());
             dto.setTransmissionType(stockDetail.get().getTransmissionType());
             dto.setQuantity(stockDetail.get().getQuantity());
-            dto.setVinNumber(stockDetail.get().getVinNumber());
             dto.setStockStatus(stockDetail.get().getStockStatus() != null ? stockDetail.get().getStockStatus().name() : null);
             dto.setSuffix(stockDetail.get().getSuffix());
             log.info("Successfully retrieved stock detail for modelName: {} and vehicleVariantId: {} at {}", modelName, vehicleVariantId, LocalDateTime.now());
@@ -1244,7 +1185,6 @@ public class VehicleModelService {
             dto.setFuelType(mddpStock.get().getFuelType());
             dto.setTransmissionType(mddpStock.get().getTransmissionType());
             dto.setQuantity(mddpStock.get().getQuantity());
-            dto.setVinNumber(mddpStock.get().getVinNumber());
             dto.setStockStatus(mddpStock.get().getStockStatus() != null ? mddpStock.get().getStockStatus().name() : null);
             dto.setExpectedDispatchDate(mddpStock.get().getExpectedDispatchDate());
             dto.setExpectedDeliveryDate(mddpStock.get().getExpectedDeliveryDate());
@@ -1314,7 +1254,6 @@ public class VehicleModelService {
             dto.setEngineColour(variant.getEngineColour());
             dto.setTransmissionType(variant.getTransmissionType());
             dto.setInteriorColour(variant.getInteriorColour());
-            dto.setVinNumber(variant.getVinNumber());
             dto.setEngineCapacity(variant.getEngineCapacity());
             dto.setFuelType(variant.getFuelType());
             dto.setPrice(variant.getPrice());

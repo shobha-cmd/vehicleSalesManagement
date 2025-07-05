@@ -4,6 +4,7 @@ public class StockDetailsDTO {
 
     private Long vehicleModelId;
     private Long vehicleVariantId;
+    private Long stockId;
     private String suffix;
     private String fuelType;
     private String colour;
@@ -13,7 +14,6 @@ public class StockDetailsDTO {
     private Integer quantity;
     private String stockStatus;
     private String interiorColour;
-    private String vinNumber;
     private String modelName;
     private String stockArrivalDate;
 
@@ -85,6 +85,10 @@ public class StockDetailsDTO {
         return quantity;
     }
 
+    public Long getStockId() {
+        return stockId;
+    }
+
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
@@ -103,14 +107,6 @@ public class StockDetailsDTO {
 
     public void setInteriorColour(String interiorColour) {
         this.interiorColour = interiorColour;
-    }
-
-    public String getVinNumber() {
-        return vinNumber;
-    }
-
-    public void setVinNumber(String vinNumber) {
-        this.vinNumber = vinNumber;
     }
 
     public String getModelName() {

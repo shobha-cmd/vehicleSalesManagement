@@ -16,7 +16,7 @@ public interface VehicleVariantRepository extends JpaRepository<VehicleVariant, 
     List<VehicleVariant> findByVehicleModelId(@Param("vehicleModel") VehicleModel vehicleModelId);
 
 
-    Optional<VehicleVariant> findByVinNumber(String vinNumber);
+    //Optional<VehicleVariant> findByVinNumber(String vinNumber);
 
 
     List<VehicleVariant> findByVehicleModelId_ModelNameAndVariant(String modelName, String variant);

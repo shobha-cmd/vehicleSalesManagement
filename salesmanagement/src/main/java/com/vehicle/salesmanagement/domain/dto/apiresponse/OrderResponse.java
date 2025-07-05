@@ -3,8 +3,6 @@ package com.vehicle.salesmanagement.domain.dto.apiresponse;
 import com.vehicle.salesmanagement.enums.OrderStatus;
 import lombok.*;
 
-import java.time.LocalDate;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

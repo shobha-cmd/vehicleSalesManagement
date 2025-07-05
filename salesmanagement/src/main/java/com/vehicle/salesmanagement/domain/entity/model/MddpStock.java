@@ -16,7 +16,7 @@ public class MddpStock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "mddp_Id", nullable = false)
-    private Integer mddpId;
+    private Long mddpId;
 
     @Column(name = "expected_dispatch_date", nullable = false)
     private LocalDateTime expectedDispatchDate;
@@ -62,17 +62,14 @@ public class MddpStock {
     @Column(name = "interior_colour", length = 50)
     private String interiorColour;
 
-    @Column(name = "vin_Number", length = 50, unique = true, nullable = false)
-    private String vinNumber;
-
     @Column(name = "stock_arrival_date")
     private String stockArrivalDate;
 
-    public Integer getMddpId() {
+    public Long getMddpId() {
         return mddpId;
     }
 
-    public void setMddpId(Integer mddpId) {
+    public void setMddpId(Long mddpId) {
         this.mddpId = mddpId;
     }
 
@@ -186,14 +183,6 @@ public class MddpStock {
 
     public void setInteriorColour(String interiorColour) {
         this.interiorColour = interiorColour;
-    }
-
-    public String getVinNumber() {
-        return vinNumber;
-    }
-
-    public void setVinNumber(String vinNumber) {
-        this.vinNumber = vinNumber;
     }
 
     public String getStockArrivalDate() {

@@ -47,10 +47,6 @@ public class VehicleVariant {
     @Column(name = "transmission_type", length = 100) // Increased from 50 to 100
     private String transmissionType;
 
-
-    @Column(name = "vin_number", length = 50, unique = true)
-    private String vinNumber;
-
     @Column(name = "engine_capacity", length = 50)
     private String engineCapacity;
 
@@ -195,14 +191,6 @@ public class VehicleVariant {
 
     public void setInteriorColour(String interiorColour) {
         this.interiorColour = interiorColour;
-    }
-
-    public String getVinNumber() {
-        return vinNumber;
-    }
-
-    public void setVinNumber(String vinNumber) {
-        this.vinNumber = vinNumber;
     }
 
     public String getEngineCapacity() {

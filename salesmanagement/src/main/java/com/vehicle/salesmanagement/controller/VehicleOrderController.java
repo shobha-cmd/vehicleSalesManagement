@@ -111,7 +111,7 @@ public class VehicleOrderController {
                                                     "      \"panNo\": \"string\",\n" +
                                                     "      \"modelName\": \"string\",\n" +
                                                     "      \"fuelType\": \"string\",\n" +
-                                                    "27;      \"colour\": \"string\",\n" +
+                                                    "      \"colour\": \"string\",\n" +
                                                     "      \"transmissionType\": \"string\",\n" +
                                                     "      \"variant\": \"string\",\n" +
                                                     "      \"quantity\": \"integer\",\n" +

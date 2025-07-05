@@ -30,7 +30,7 @@ public interface StockDetailsRepository extends JpaRepository<StockDetails, Long
     List<StockDetails> findByStockStatus(StockStatus stockStatus);
 
 
-    Optional<Object> findByVinNumber(String vinNumber);
+   // Optional<Object> findByVinNumber(String vinNumber);
 
     List<StockDetails> findByModelNameAndVehicleVariantIdAndStockStatus(@NotBlank(message = "Model name is required") String modelName, VehicleVariant variant, StockStatus stockStatus);
 

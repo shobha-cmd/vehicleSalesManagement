@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public class MddpStockDTO {
     private Long vehicleModelId;
     private Long vehicleVariantId;
+    private Long mddpId;
     private String modelName;
     private String suffix;
     private String fuelType;
@@ -15,7 +16,6 @@ public class MddpStockDTO {
     private Integer quantity;
     private String stockStatus;
     private String interiorColour;
-    private String vinNumber;
     private LocalDateTime expectedDispatchDate;
     private LocalDateTime expectedDeliveryDate;
     private String stockArrivalDate;
@@ -46,6 +46,14 @@ public class MddpStockDTO {
 
     public String getSuffix() {
         return suffix;
+    }
+
+    public Long getMddpId() {
+        return mddpId;
+    }
+
+    public void setMddpId(Long mddpId) {
+        this.mddpId = mddpId;
     }
 
     public void setSuffix(String suffix) {
@@ -116,14 +124,6 @@ public class MddpStockDTO {
         this.interiorColour = interiorColour;
     }
 
-    public String getVinNumber() {
-        return vinNumber;
-    }
-
-    public void setVinNumber(String vinNumber) {
-        this.vinNumber = vinNumber;
-    }
-
     public LocalDateTime getExpectedDispatchDate() {
         return expectedDispatchDate;
     }
@@ -148,6 +148,5 @@ public class MddpStockDTO {
         this.stockArrivalDate = stockArrivalDate;
     }
 
-    public void setMddpId(Integer mddpId) {
-    }
+
 }

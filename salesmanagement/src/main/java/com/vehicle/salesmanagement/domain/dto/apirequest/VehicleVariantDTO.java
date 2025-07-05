@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 public class VehicleVariantDTO {
 
     private Long vehicleModelId;
+    private Long vehicleVariantId;
     private String modelName;
     private String variant;
     private String suffix;
@@ -14,7 +15,6 @@ public class VehicleVariantDTO {
     private String engineColour;
     private String transmissionType;
     private String interiorColour;
-    private String vinNumber;
     private String engineCapacity;
     private String fuelType;
     private BigDecimal price;
@@ -36,6 +36,14 @@ public class VehicleVariantDTO {
 
     public String getModelName() {
         return modelName;
+    }
+
+    public Long getVehicleVariantId() {
+        return vehicleVariantId;
+    }
+
+    public void setVehicleVariantId(Long vehicleVariantId) {
+        this.vehicleVariantId = vehicleVariantId;
     }
 
     public void setModelName(String modelName) {
@@ -105,14 +113,6 @@ public class VehicleVariantDTO {
 
     public void setInteriorColour(String interiorColour) {
         this.interiorColour = interiorColour;
-    }
-
-    public String getVinNumber() {
-        return vinNumber;
-    }
-
-    public void setVinNumber(String vinNumber) {
-        this.vinNumber = vinNumber;
     }
 
     public String getEngineCapacity() {

@@ -35,10 +35,6 @@ public class VehicleVariantRequest {
     @Size(max = 50, message = "Interior colour must not exceed 50 characters")
     private String interiorColour;
 
-    @NotBlank(message = "VIN number cannot be blank")
-    @Pattern(regexp = "^[A-HJ-NPR-Z0-9]{17}$", message = "VIN number must be 17 alphanumeric characters (excluding I, O, Q)")
-    private String vinNumber;
-
     @NotBlank(message = "Engine capacity cannot be blank")
     @Size(max = 20, message = "Engine capacity must not exceed 20 characters")
     private String engineCapacity;

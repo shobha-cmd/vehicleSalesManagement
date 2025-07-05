@@ -58,9 +58,6 @@ public class StockDetailsHistory {
     @Column(name = "interior_colour")
     private String interiorColour;
 
-    @Column(name = "vin_number")
-    private String vinNumber;
-
     @Column(name = "stock_arrival_date")
     private String stockArrivalDate;
 
@@ -185,14 +182,6 @@ public class StockDetailsHistory {
 
     public void setInteriorColour(String interiorColour) {
         this.interiorColour = interiorColour;
-    }
-
-    public String getVinNumber() {
-        return vinNumber;
-    }
-
-    public void setVinNumber(String vinNumber) {
-        this.vinNumber = vinNumber;
     }
 
     public String getStockArrivalDate() {

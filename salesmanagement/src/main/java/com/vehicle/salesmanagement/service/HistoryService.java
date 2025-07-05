@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -129,7 +128,7 @@ public class HistoryService {
         history.setQuantity(stock.getQuantity());
         history.setStockStatus(stock.getStockStatus().name());
         history.setInteriorColour(stock.getInteriorColour());
-        history.setVinNumber(stock.getVinNumber());
+       // history.setVinNumber(stock.getVinNumber());
         history.setStockArrivalDate(stock.getStockArrivalDate());
         history.setStockHistory(historyMessage);
         stockDetailsHistoryRepository.save(history);
